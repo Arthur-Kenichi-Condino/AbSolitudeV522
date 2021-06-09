@@ -19,6 +19,16 @@ public static int GetvxlIdx(int vcx,int vcy,int vcz){return vcy*FlattenOffset+vc
 public static Vector2Int cCoordTocnkRgn(Vector2Int cCoord){return new Vector2Int(cCoord.x*Width,cCoord.y*Depth);}
 public static Vector2Int cnkRgnTocCoord(Vector2Int cnkRgn){return new Vector2Int(cnkRgn.x/Width,cnkRgn.y/Depth);}
 public static int GetcnkIdx(int cx,int cy){return cy+cx*(World.Depth+1);}
+#region ValidateCoord
+public static void ValidateCoord(ref Vector2Int region,ref Vector3Int vxlCoord){int a,c;
+a=region.x;c=vxlCoord.x;ValidateCoordAxis(ref a,ref c,Width);region.x=a;vxlCoord.x=c;
+a=region.y;c=vxlCoord.z;ValidateCoordAxis(ref a,ref c,Depth);region.y=a;vxlCoord.z=c;
+}
+public static void ValidateCoordAxis(ref int axis,ref int coord,int axisLength){
+      if(coord<0){          axis-=axisLength*Mathf.CeilToInt (Math.Abs(coord)/(float)axisLength);coord=(coord%axisLength)+axisLength;
+}else if(coord>=axisLength){axis+=axisLength*Mathf.FloorToInt(Math.Abs(coord)/(float)axisLength);coord=(coord%axisLength);}
+}
+#endregion
 /// <summary>
 ///  Lista de tipos de material de terreno.
 /// </summary>
@@ -147,6 +157,7 @@ for(vCoord1.x=0             ;vCoord1.x<Width ;vCoord1.x++){
 for(vCoord1.z=0             ;vCoord1.z<Depth ;vCoord1.z++){
                                     
 //...
+
 int corner=0;Vector3Int vCoord2=vCoord1;                        if(vCoord1.z>0)polygonCell[corner]=voxelsBuffer1[0][0][0];else if(vCoord1.x>0)polygonCell[corner]=voxelsBuffer1[1][vCoord1.z][0];else if(vCoord1.y>0)polygonCell[corner]=voxelsBuffer1[2][vCoord1.z+vCoord1.x*Depth][0];else SetVoxel();
 corner++;vCoord2=vCoord1;vCoord2.x+=1;                          if(vCoord1.z>0)polygonCell[corner]=voxelsBuffer1[0][0][1];                                                                       else if(vCoord1.y>0)polygonCell[corner]=voxelsBuffer1[2][vCoord1.z+vCoord1.x*Depth][1];else SetVoxel();
 corner++;vCoord2=vCoord1;vCoord2.x+=1;vCoord2.y+=1;             if(vCoord1.z>0)polygonCell[corner]=voxelsBuffer1[0][0][2];                                                                                                                                                              else SetVoxel();
@@ -173,10 +184,13 @@ if(vCoord2.y<=0){polygonCell[corner]=Voxel.Bedrock;
 }else{
 Vector2Int cnkRgn2=cnkRgn1;
 Vector2Int cCoord2=cCoord1;
+if(vCoord2.x<0||vCoord2.x>=Width||
+   vCoord2.z<0||vCoord2.z>=Depth){ValidateCoord(ref cnkRgn2,ref vCoord2);cCoord2=cnkRgnTocCoord(cnkRgn2);}
+       int vxlIdx2=GetvxlIdx(vCoord2.x,vCoord2.y,vCoord2.z);
 
 //...
     polygonCell[corner]=Voxel.Air;
-//if(vCoord2.y<=128){polygonCell[corner]=new Voxel(100,Vector3.up,MaterialId.Dirt);}
+    if(vCoord2.y<=128){polygonCell[corner]=new Voxel(100,Vector3.up,MaterialId.Dirt);}
 
 }
 }
@@ -291,11 +305,14 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
 void Update(){
-if(backgroundData.WaitOne(0)){
+if(backgroundData.WaitOne(0)){_repeat:{}
 if(baking){
-
-//...
-
+if(bakingHandle.IsCompleted){bakingHandle.Complete();baking=false;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("mesh baked",this);
+collider.sharedMesh=null;
+collider.sharedMesh=mesh;
+goto _repeat;
+}
 }else if(bake){bake=false;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("hora de construir:TempVer.Length.."+TempVer.Length+"..TempTriangles.Length.."+TempTri.Length,this);
 baking=true;
@@ -315,21 +332,17 @@ mesh.SetIndexBufferData(TempTri.AsArray(),0,0,TempTri.Length,meshFlags);
 mesh.SetSubMesh(0,new SubMeshDescriptor(0,TempTri.Length){firstVertex=0,vertexCount=TempVer.Length},meshFlags);
 #endregion 
 bakingHandle=bakeJob.Schedule();
-//...
-
+goto _repeat;
 }else if(rebuild){rebuild=false;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("hora de calcular reconstrução",this);
-
 cCoord1=cCoord;
 cnkRgn1=cnkRgn;
-//...
-
 backgroundData.Reset();foregroundData.Set();
 }
 }
 }
-public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord){
-this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
+[NonSerialized]bool init=true;public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord){
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
