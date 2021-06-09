@@ -8,6 +8,7 @@ public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float
 public const int Width=6250;
 public const int Depth=6250;
 public GameObject ChunkPrefab;
+[NonSerialized]public static readonly BiomeBase biome=new BiomeBase();
 [SerializeField]public int targetFrameRate=60;
 void Awake(){
 QualitySettings.vSyncCount=0;Application.targetFrameRate=targetFrameRate;
@@ -15,6 +16,8 @@ QualitySettings.vSyncCount=0;Application.targetFrameRate=targetFrameRate;
 //...
 
 TerrainChunk.AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial);
+            
+//...
 
 var gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,0));
                                 //gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,0));
@@ -46,6 +49,15 @@ UI_FPS_RefreshTimer=0;
 }
 }
 public class BiomeBase{
+protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
+public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];
+                                                      noiseInput+=_deround;
+                
+//...
+           if(vCoord2.y<=128){v=new TerrainChunk.Voxel(100,Vector3.up,TerrainChunk.MaterialId.Dirt);return;}
+    if(vCoord2.z<=4&&vCoord2.y<=132){v=new TerrainChunk.Voxel(100,Vector3.up,TerrainChunk.MaterialId.Dirt);return;}
+
+v=TerrainChunk.Voxel.Air;}
 }
 public class Plains:BiomeBase{
 }
