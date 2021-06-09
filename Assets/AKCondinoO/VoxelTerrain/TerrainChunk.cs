@@ -9,7 +9,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
-public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;
+namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;
 public const ushort Height=(256);
 public const ushort Width=(16);
 public const ushort Depth=(16);
@@ -342,7 +342,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 [NonSerialized]bool init=true;public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord){
-if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
@@ -355,6 +355,7 @@ new VertexAttributeDescriptor(VertexAttribute.TexCoord1,VertexAttributeFormat.Fl
 new VertexAttributeDescriptor(VertexAttribute.TexCoord2,VertexAttributeFormat.Float32,2),
 new VertexAttributeDescriptor(VertexAttribute.TexCoord3,VertexAttributeFormat.Float32,2),
 };
+}
 }
 namespace paulbourke.MarchingCubes{
     public static class Tables{

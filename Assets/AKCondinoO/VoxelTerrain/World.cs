@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-public class World:MonoBehaviour{
+namespace AKCondinoO.Voxels{public class World:MonoBehaviour{
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
 public const int Width=6250;
 public const int Depth=6250;
@@ -18,7 +18,7 @@ TerrainChunk.AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().s
 
 var gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,0));
                                 //gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,0));
-    //gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,1));
+    gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,1));
 //...
 
 }
@@ -43,6 +43,11 @@ UI_FPS_RefreshTimer+=Time.deltaTime;
 if(UI_FPS_RefreshTimer>=UI_FPS_RefreshTime){
 UI_FPS.text="FPS:"+FPS;
 UI_FPS_RefreshTimer=0;
+}
+}
+public class BiomeBase{
+}
+public class Plains:BiomeBase{
 }
 }
 }
