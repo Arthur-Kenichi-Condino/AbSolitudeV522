@@ -54,8 +54,8 @@ public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noi
                                                       noiseInput+=_deround;
                 
 //...
-           if(vCoord2.y<=128){v=new TerrainChunk.Voxel(100,Vector3.zero,TerrainChunk.MaterialId.Dirt);return;}
-    if(vCoord2.z<=4&&vCoord2.y<=132){v=new TerrainChunk.Voxel(100,Vector3.zero,TerrainChunk.MaterialId.Dirt);return;}
+                  if(vCoord2.y<=128){v=new TerrainChunk.Voxel(100,Vector3.zero,TerrainChunk.MaterialId.Dirt);return;}
+    if(vCoord2.z>=1&&vCoord2.z<=4&&vCoord2.y<=132){v=new TerrainChunk.Voxel(100,Vector3.zero,TerrainChunk.MaterialId.Rock);return;}
 
 v=TerrainChunk.Voxel.Air;}
 }

@@ -129,12 +129,14 @@ Vector3[][][]verticesBuffer=new Vector3[3][][]{new Vector3[1][]{new Vector3[4],}
 MaterialId[]materials=new MaterialId[12];
    Vector3[] vertices=new Vector3[12];
    Vector3[]  normals=new Vector3[12];
-double[]density=new double[2];Vector3[]vertex=new Vector3[2];MaterialId[]material=new MaterialId[2];float[]distance=new float[2];int[]idx=new int[3];
+double[]density=new double[2];Vector3[]vertex=new Vector3[2];MaterialId[]material=new MaterialId[2];float[]distance=new float[2];
+int[]idx=new int[3];Vector3[]verPos=new Vector3[3];Dictionary<Vector3,List<Vector2>>UVByVertex=new Dictionary<Vector3,List<Vector2>>();
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;lock(tasksBusyCount_Syn){tasksBusyCount++;}queue.WaitOne(tasksBusyCount*5000);
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terreno:"+cCoord1);watch.Restart();}
 Array.Clear(voxels,0,voxels.Length);
 TempVer.Clear();
 TempTri.Clear();
+UVByVertex.Clear();
 lock(load_Syn){
 
 //...
@@ -186,7 +188,7 @@ Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                            noiseInput.z+=cnkRgn2.y;
 World.biome.result(vCoord2,noiseInput,ref noiseCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
 }
-if(polygonCell[corner].Normal==Vector3.zero){//  calcular normal
+if(polygonCell[corner].Material!=MaterialId.Air&&polygonCell[corner].Normal==Vector3.zero){//  calcular normal
 int tmpIdx=0;Vector3Int vCoord3=vCoord2;vCoord3.x++;                                                                                                                                                                SetpolygonCellNormalSettmpVxl();
 tmpIdx++;vCoord3=vCoord2;               vCoord3.x--;if(vCoord2.z>1&&vCoord2.x>1&&vCoord2.y>1&&voxelsBuffer2[1][vCoord2.z].IsCreated)                tmpVxl[tmpIdx]=voxelsBuffer2[1][vCoord2.z];                else SetpolygonCellNormalSettmpVxl();
 tmpIdx++;vCoord3=vCoord2;               vCoord3.y++;                                                                                                                                                                SetpolygonCellNormalSettmpVxl();
@@ -307,9 +309,9 @@ for(int i=0;Tables.TriangleTable[edgeIndex][i]!=-1;i+=3){idx[0]=Tables.TriangleT
                                                  Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
                                                                                                             (int)materials[idx[1]],
                                                                                                             (int)materials[idx[2]]));
-TempVer.Add(new Vertex(pos+vertices[idx[0]],normals[idx[0]],materialUV));
-TempVer.Add(new Vertex(pos+vertices[idx[1]],normals[idx[1]],materialUV));
-TempVer.Add(new Vertex(pos+vertices[idx[2]],normals[idx[2]],materialUV));
+TempVer.Add(new Vertex(verPos[0]=pos+vertices[idx[0]],normals[idx[0]],materialUV));if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
+TempVer.Add(new Vertex(verPos[1]=pos+vertices[idx[1]],normals[idx[1]],materialUV));if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
+TempVer.Add(new Vertex(verPos[2]=pos+vertices[idx[2]],normals[idx[2]],materialUV));if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
 
 //...
 
@@ -333,6 +335,15 @@ verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][3]=vertices[11]+Vector3.down;
 }
 #endregion
 }}}
+
+//...
+
+for(int i=0;i<TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
+                                
+//...
+
+}}
+
 bake=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada atualização deste pedaço do terreno:"+cCoord1+"..levou:"+watch.ElapsedMilliseconds+"ms");
 lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();
