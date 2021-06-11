@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Collections;
@@ -62,6 +63,7 @@ case(MaterialId.Dirt      ):{return _UVs[(int)MaterialId.Dirt   ];}
 case(MaterialId.Bedrock   ):{return _UVs[(int)MaterialId.Bedrock];}
 default                    :{return _UVs[(int)MaterialId.Air    ];}
 }}
+public static MaterialId GetMaterialId(Vector2 uv){return(MaterialId)Array.IndexOf(_UVs,uv);}
 }
 public struct Voxel{
        public Voxel(double d,Vector3 n,MaterialId m){
@@ -339,6 +341,7 @@ verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][3]=vertices[11]+Vector3.down;
 //...
 
 for(int i=0;i<TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
+var MaterialIdGroupingOrdered=UVByVertex[verPos[j]=TempVer[idx[j]].pos].ToArray().Select(uv=>{return AtlasHelper.GetMaterialId(uv);}).GroupBy(value=>value).OrderByDescending(group=>group.Key).ThenByDescending(group=>group.Count());
                                 
 //...
 
