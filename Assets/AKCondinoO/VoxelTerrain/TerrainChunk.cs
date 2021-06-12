@@ -256,7 +256,7 @@ if(-polygonCell[4].Density<IsoLevel)edgeIndex|= 16;
 if(-polygonCell[5].Density<IsoLevel)edgeIndex|= 32;
 if(-polygonCell[6].Density<IsoLevel)edgeIndex|= 64;
 if(-polygonCell[7].Density<IsoLevel)edgeIndex|=128;
-if(Tables.EdgeTable[edgeIndex]!=0){/*  Cube is not entirely in/out of the surface  */
+    if(Tables.EdgeTable[edgeIndex]!=0){/*  Cube is not entirely in/out of the surface  */
 //  Use buffered data if available
 vertices[ 0]=(vCoord1.z>0?verticesBuffer[0][0][0]:(vCoord1.y>0?verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][0]:Vector3.zero));
 vertices[ 1]=(vCoord1.z>0?verticesBuffer[0][0][1]:Vector3.zero);
@@ -305,9 +305,9 @@ for(int i=0;Tables.TriangleTable[edgeIndex][i]!=-1;i+=3){idx[0]=Tables.TriangleT
                                                          idx[2]=Tables.TriangleTable[edgeIndex][i+2];
                                                          Vector3 pos=vCoord1-TrianglePosAdj;pos.x+=posOffset.x;
                                                                                             pos.z+=posOffset.y;
-                                                 Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
-                                                                                                            (int)materials[idx[1]],
-                                                                                                            (int)materials[idx[2]]));
+                                                         Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
+                                                                                                                    (int)materials[idx[1]],
+                                                                                                                    (int)materials[idx[2]]));
 TempVer.Add(new Vertex(verPos[0]=pos+vertices[idx[0]],normals[idx[0]],materialUV));if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
 TempVer.Add(new Vertex(verPos[1]=pos+vertices[idx[1]],normals[idx[1]],materialUV));if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
 TempVer.Add(new Vertex(verPos[2]=pos+vertices[idx[2]],normals[idx[2]],materialUV));if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
@@ -328,7 +328,7 @@ verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][0]=vertices[ 2]+Vector3.down;
 verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][1]=vertices[ 6]+Vector3.down;
 verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][2]=vertices[10]+Vector3.down;
 verticesBuffer[2][vCoord1.z+vCoord1.x*Depth][3]=vertices[11]+Vector3.down;
-}
+    }
 #endregion
 }}}
 for(crdOffset.y=0,
@@ -376,16 +376,71 @@ void SetpolygonCellVoxel(){
        vCoord2.z<0||vCoord2.z>=Depth){ValidateCoord(ref cnkRgn2,ref vCoord2);cCoord2=cnkRgnTocCoord(cnkRgn2);}
            int vxlIdx2=GetvxlIdx(vCoord2.x,vCoord2.y,vCoord2.z);
                   int nbrIdx2=GetnbrIdx(cCoord2-cCoord1);
-    //...
-
+    if(nbrIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];
+    }else{
+    Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
+                               noiseInput.z+=cnkRgn2.y;
+    World.biome.result(vCoord2,noiseInput,ref noiseCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
     }
-
-    //...
-
+    }
 }
-
-    //...
-
+#region MarchingCubes[UVs Only]
+    int edgeIndex;
+    /*
+        Determine the index into the edge table which
+        tells us which vertices are inside of the surface
+    */
+                                        edgeIndex =  0;
+    if(-polygonCell[0].Density<IsoLevel)edgeIndex|=  1;
+    if(-polygonCell[1].Density<IsoLevel)edgeIndex|=  2;
+    if(-polygonCell[2].Density<IsoLevel)edgeIndex|=  4;
+    if(-polygonCell[3].Density<IsoLevel)edgeIndex|=  8;
+    if(-polygonCell[4].Density<IsoLevel)edgeIndex|= 16;
+    if(-polygonCell[5].Density<IsoLevel)edgeIndex|= 32;
+    if(-polygonCell[6].Density<IsoLevel)edgeIndex|= 64;
+    if(-polygonCell[7].Density<IsoLevel)edgeIndex|=128;
+        if(Tables.EdgeTable[edgeIndex]!=0){
+    if(0!=(Tables.EdgeTable[edgeIndex]&   1)){vertexInterp(0,1,ref vertices[ 0],ref materials[ 0]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&   2)){vertexInterp(1,2,ref vertices[ 1],ref materials[ 1]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&   4)){vertexInterp(2,3,ref vertices[ 2],ref materials[ 2]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&   8)){vertexInterp(3,0,ref vertices[ 3],ref materials[ 3]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&  16)){vertexInterp(4,5,ref vertices[ 4],ref materials[ 4]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&  32)){vertexInterp(5,6,ref vertices[ 5],ref materials[ 5]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&  64)){vertexInterp(6,7,ref vertices[ 6],ref materials[ 6]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]& 128)){vertexInterp(7,4,ref vertices[ 7],ref materials[ 7]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]& 256)){vertexInterp(0,4,ref vertices[ 8],ref materials[ 8]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]& 512)){vertexInterp(1,5,ref vertices[ 9],ref materials[ 9]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&1024)){vertexInterp(2,6,ref vertices[10],ref materials[10]);}
+    if(0!=(Tables.EdgeTable[edgeIndex]&2048)){vertexInterp(3,7,ref vertices[11],ref materials[11]);}
+void vertexInterp(int c0,int c1,ref Vector3 p,ref MaterialId m){
+    density[0]=-polygonCell[c0].Density;vertex[0]=Corners[c0];material[0]=polygonCell[c0].Material;
+    density[1]=-polygonCell[c1].Density;vertex[1]=Corners[c1];material[1]=polygonCell[c1].Material;
+    if(Math.Abs(IsoLevel-density[0])<double.Epsilon){p=vertex[0];goto _Material;}
+    if(Math.Abs(IsoLevel-density[1])<double.Epsilon){p=vertex[1];goto _Material;}
+    if(Math.Abs(density[0]-density[1])<double.Epsilon){p=vertex[0];goto _Material;}
+    double marchingUnit=(IsoLevel-density[0])/(density[1]-density[0]);
+    p.x=(float)(vertex[0].x+marchingUnit*(vertex[1].x-vertex[0].x));
+    p.y=(float)(vertex[0].y+marchingUnit*(vertex[1].y-vertex[0].y));
+    p.z=(float)(vertex[0].z+marchingUnit*(vertex[1].z-vertex[0].z));
+_Material:{
+    m=material[0];if(density[1]<density[0]){m=material[1];}else if(density[1]==density[0]&&(int)material[1]>(int)material[0]){m=material[1];}
+}
+}
+/*  Create the triangle  */
+    for(int i=0;Tables.TriangleTable[edgeIndex][i]!=-1;i+=3){idx[0]=Tables.TriangleTable[edgeIndex][i  ];
+                                                             idx[1]=Tables.TriangleTable[edgeIndex][i+1];
+                                                             idx[2]=Tables.TriangleTable[edgeIndex][i+2];
+                                                             Vector3 pos=vCoord1-TrianglePosAdj;pos.x+=posOffset.x;
+                                                                                                pos.z+=posOffset.y;
+                                                             Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
+                                                                                                                        (int)materials[idx[1]],
+                                                                                                                        (int)materials[idx[2]]));
+                           verPos[0]=pos+vertices[idx[0]]                             ;if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
+                           verPos[1]=pos+vertices[idx[1]]                             ;if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
+                           verPos[2]=pos+vertices[idx[2]]                             ;if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
+    }
+        }
+#endregion
 }
 for(int i=0;i<TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
 var MaterialIdGroupingOrdered=UVByVertex[verPos[j]=TempVer[idx[j]].pos].ToArray().Select(uv=>{return AtlasHelper.GetMaterialId(uv);}).GroupBy(value=>value).OrderByDescending(group=>group.Key).ThenByDescending(group=>group.Count());weights.Clear();int total=0;
