@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LOG: 1
   LOG_LEVEL: 1
-  GIZMOS_ENABLED: 2
+  GIZMOS_ENABLED: 1
 --- !u!23 &656939520501539933
 MeshRenderer:
   m_ObjectHideFlags: 0
