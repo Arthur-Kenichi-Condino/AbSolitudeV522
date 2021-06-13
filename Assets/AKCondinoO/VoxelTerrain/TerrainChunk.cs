@@ -103,6 +103,7 @@ texCoord3=new Vector2(-1f,-1f);
                                                 }
 }
 [NonSerialized]NativeList<ushort>TempTri;
+public LinkedListNode<TerrainChunk>ExpropriationNode=null;
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
