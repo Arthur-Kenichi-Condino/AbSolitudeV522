@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-namespace AKCondinoO.Voxels{public class World:MonoBehaviour{
+namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
 public const int Width=6250;
 public const int Depth=6250;
 public GameObject ChunkPrefab;
-[NonSerialized]public static readonly BiomeBase biome=new BiomeBase();
+Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);
+Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
+[NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 void Awake(){
 QualitySettings.vSyncCount=0;Application.targetFrameRate=targetFrameRate;
@@ -19,9 +21,14 @@ TerrainChunk.AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().s
             
 //...
 
-var gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,0));
-                                //gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,0));
-    gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,1));
+biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;       
+
+//...
+
+int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
+//var gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,0));
+//                                //gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,0));
+//    gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,1));
 //...
 
 }
@@ -48,7 +55,18 @@ UI_FPS.text="FPS:"+FPS;
 UI_FPS_RefreshTimer=0;
 }
 }
-public class BiomeBase{
+public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
+#region Initialize
+public int Seed{
+get{return Seed_v;}
+set{       Seed_v=value;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("Seed value.."+value);
+
+//...
+
+}
+}int Seed_v;
+#endregion 
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
 public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];
                                                       noiseInput+=_deround;
