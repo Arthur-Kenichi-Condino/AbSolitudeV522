@@ -109,12 +109,13 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public static readonly object tasksBusyCount_Syn=new object();[NonSerialized]public static int tasksBusyCount=0;[NonSerialized]public static readonly AutoResetEvent queue=new AutoResetEvent(true);
-[NonSerialized]public readonly object load_Syn=new object();
+[NonSerialized]public readonly object load_Syn=new object();[NonSerialized]static readonly List<object>load_Syn_All=new List<object>();//  para dar Monitor.Enter em todos os chunks envolvidos ao editar terreno
 [NonSerialized]Vector2Int cCoord1;
 [NonSerialized]Vector2Int cnkRgn1;
 [NonSerialized]readonly Voxel[]voxels=new Voxel[VoxelsPerChunk];
 [NonSerialized]Mesh mesh=null;[NonSerialized]MeshUpdateFlags meshFlags=MeshUpdateFlags.DontValidateIndices|MeshUpdateFlags.DontNotifyMeshUsers|MeshUpdateFlags.DontRecalculateBounds;[NonSerialized]public new MeshRenderer renderer=null;[NonSerialized]public new MeshCollider collider=null;
 void Awake(){
+load_Syn_All.Add(load_Syn);
 mesh=new Mesh(){bounds=new Bounds(Vector3.zero,new Vector3(Width,Height,Depth))};gameObject.GetComponent<MeshFilter>().sharedMesh=mesh;renderer=gameObject.GetComponent<MeshRenderer>();collider=gameObject.GetComponent<MeshCollider>();
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);

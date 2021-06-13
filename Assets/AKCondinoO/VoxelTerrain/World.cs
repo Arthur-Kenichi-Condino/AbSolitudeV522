@@ -11,6 +11,12 @@ namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=tru
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
 public const int Width=6250;
 public const int Depth=6250;
+public static Vector2Int vecPosTocCoord(Vector3 pos){
+                                                pos.x/=(float)TerrainChunk.Width;
+                                                pos.z/=(float)TerrainChunk.Depth;
+return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):Mathf.RoundToInt(pos.x)):(int)Math.Round(pos.x,MidpointRounding.AwayFromZero),
+                      (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
+}
 public GameObject ChunkPrefab;
 Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);[NonSerialized]readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();
 Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
@@ -42,17 +48,15 @@ biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;
 
 //...
 
-for(int i=maxChunks-1;i>=0;--i){
-GameObject obj=Instantiate(ChunkPrefab);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
-//...
+for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
 
-}
 //var gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,0));
 //                                //gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,0));
 //    gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,1));
 //...
 
 }
+[NonSerialized]bool firstLoop=true;
 public static float FPS{
         get{float tmp;lock(FPS_Syn)tmp=FPS_v;return tmp;}
 private set{          lock(FPS_Syn)    FPS_v=value;     }
@@ -62,6 +66,8 @@ public static float averageFramerate{
 private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;}           }
 }[NonSerialized]static readonly object averageFramerate_Syn=new object();[NonSerialized]static float averageFramerate_v=60;[NonSerialized]int frameCounter;[NonSerialized]float averageFramerateRefreshTimer;[NonSerialized]float averageFramerateRefreshTime=1.0f;
 [NonSerialized]float frameTimeVariation;[NonSerialized]float millisecondsPerFrame;
+[NonSerialized]Vector3    actPos;
+[NonSerialized]Vector2Int aCoord,aCoord_Pre;
 void Update(){
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
 frameTimeVariation+=(Time.deltaTime-frameTimeVariation);millisecondsPerFrame=frameTimeVariation*1000.0f;FPS=1.0f/frameTimeVariation;
@@ -75,7 +81,21 @@ if(UI_FPS_RefreshTimer>=UI_FPS_RefreshTime){
 UI_FPS.text="FPS:"+FPS;
 UI_FPS_RefreshTimer=0;
 }
+if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
+              actPos=(Camera.main.transform.position);
+if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+
+//...
+
+aCoord_Pre=aCoord;}
+
+//...
+
 }
+
+//...
+
+firstLoop=false;}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
 #region Initialize
 protected readonly System.Random[]Random=new System.Random[2];

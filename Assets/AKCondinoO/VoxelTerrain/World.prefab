@@ -45,6 +45,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0ab9454e61bf324ba0b0189a0feb507, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LOG: 1
+  LOG_LEVEL: 1
+  GIZMOS_ENABLED: 1
   UI_FPS: {fileID: 6392957710868812963}
   ChunkPrefab: {fileID: 691516936545703101, guid: 1bf1030aa1d826f41a3ecea1210331d0, type: 3}
   targetFrameRate: 60
