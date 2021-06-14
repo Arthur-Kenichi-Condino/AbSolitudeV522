@@ -42,6 +42,9 @@ Rock=3,
 Sand=4,
 }
 public static class AtlasHelper{
+public static readonly string[]_Shader_Input=new string[]{
+"_CameraPosition",
+};
 public static Material Material{get;private set;}
 public static void GetAtlasData(Material material){Material=material;
 float _U,_V;var texture=material.GetTexture("_MainTex");material.SetTexture("_MainTex1",texture);var w=texture.width;var h=texture.height;var tilesResolution=material.GetFloat("_TilesResolution"); 
@@ -540,8 +543,8 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 }
-[NonSerialized]bool init=true;public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord){
-if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
+[NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);this.cnkIdx=cnkIdx;
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }

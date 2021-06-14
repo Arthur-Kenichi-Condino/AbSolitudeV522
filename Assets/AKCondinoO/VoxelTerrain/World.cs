@@ -109,10 +109,26 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("no need to expropriate chunk at:.."+cCoord1);
 _skip:{}
 if(eCoord.x==0){break;}}}
 if(eCoord.y==0){break;}}}
-
-//...
-
+for(Vector2Int iCoord=new Vector2Int(),cCoord1=new Vector2Int();iCoord.y<=instantiationDistance.y;iCoord.y++){for(cCoord1.y=-iCoord.y+aCoord.y;cCoord1.y<=iCoord.y+aCoord.y;cCoord1.y+=iCoord.y*2){
+for(           iCoord.x=0                                      ;iCoord.x<=instantiationDistance.x;iCoord.x++){for(cCoord1.x=-iCoord.x+aCoord.x;cCoord1.x<=iCoord.x+aCoord.x;cCoord1.x+=iCoord.x*2){
+if(Math.Abs(cCoord1.x)>=Width||
+   Math.Abs(cCoord1.y)>=Depth){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to activate out of world chunk at coord:.."+cCoord1);
+goto _skip;
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("try to activate chunk:.."+cCoord1);
+int cnkIdx1=TerrainChunk.GetcnkIdx(cCoord1.x,cCoord1.y);if(!ActiveTerrain.ContainsKey(cnkIdx1)){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do activate chunk for:.."+cnkIdx1+";[current TerrainChunkPool.Count:.."+TerrainChunkPool.Count);
+TerrainChunk scr=TerrainChunkPool.First.Value;TerrainChunkPool.RemoveFirst();scr.ExpropriationNode=(null);if(scr.Initialized&&ActiveTerrain.ContainsKey(scr.cnkIdx))ActiveTerrain.Remove(scr.cnkIdx);ActiveTerrain.Add(cnkIdx1,scr);scr.OncCoordChanged(cCoord1,cnkIdx1);
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("but chunk is already active:.."+cnkIdx1);
+TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode!=null){TerrainChunkPool.Remove(scr.ExpropriationNode);scr.ExpropriationNode=(null);}
+}
+_skip:{}
+if(iCoord.x==0){break;}}}
+if(iCoord.y==0){break;}}}
 aCoord_Pre=aCoord;}
+TerrainChunk.AtlasHelper.Material.SetVector(TerrainChunk.AtlasHelper._Shader_Input[0],actPos);
 
 //...
 
