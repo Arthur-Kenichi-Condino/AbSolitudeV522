@@ -18,7 +18,7 @@ return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):
                       (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
 }
 public GameObject ChunkPrefab;
-Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);[NonSerialized]readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();
+Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);[NonSerialized]readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
 Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
@@ -84,6 +84,31 @@ UI_FPS_RefreshTimer=0;
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+for(Vector2Int eCoord=new Vector2Int(),cCoord1=new Vector2Int();eCoord.y<=expropriationDistance.y;eCoord.y++){for(cCoord1.y=-eCoord.y+aCoord_Pre.y;cCoord1.y<=eCoord.y+aCoord_Pre.y;cCoord1.y+=eCoord.y*2){
+for(           eCoord.x=0                                      ;eCoord.x<=expropriationDistance.x;eCoord.x++){for(cCoord1.x=-eCoord.x+aCoord_Pre.x;cCoord1.x<=eCoord.x+aCoord_Pre.x;cCoord1.x+=eCoord.x*2){
+if(Math.Abs(cCoord1.x)>=Width||
+   Math.Abs(cCoord1.y)>=Depth){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to expropriate out of world chunk at coord:.."+cCoord1);
+goto _skip;
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
+if(Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
+   Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y){
+int cnkIdx1=TerrainChunk.GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
+TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("but chunk is already expropriated:.."+cnkIdx1);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("no chunk to expropriate for index:.."+cnkIdx1);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("no need to expropriate chunk at:.."+cCoord1);
+}
+_skip:{}
+if(eCoord.x==0){break;}}}
+if(eCoord.y==0){break;}}}
 
 //...
 
