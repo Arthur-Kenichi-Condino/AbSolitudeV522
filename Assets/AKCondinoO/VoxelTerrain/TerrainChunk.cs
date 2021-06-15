@@ -154,7 +154,6 @@ if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terren
 Array.Clear(voxels,0,voxels.Length);
 TempVer.Clear();
 TempTri.Clear();
-UVByVertex.Clear();
 lock(load_Syn){
 
 //...
@@ -492,6 +491,7 @@ for(int i=0;i<voxelsBuffer2.Length;++i){if(voxelsBuffer2[i]!=null)Array.Clear(vo
 for(int i=0;i<verticesBuffer[0].Length;++i){Array.Clear(verticesBuffer[0][i],0,verticesBuffer[0][i].Length);}
 for(int i=0;i<verticesBuffer[1].Length;++i){Array.Clear(verticesBuffer[1][i],0,verticesBuffer[1][i].Length);}
 for(int i=0;i<verticesBuffer[2].Length;++i){Array.Clear(verticesBuffer[2][i],0,verticesBuffer[2][i].Length);}
+UVByVertex.Clear();
 }_Stop:{
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para pedaço de terreno graciosamente");
@@ -499,11 +499,21 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para pedaço
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
 }
 }
+public static void AwakeTerrainEditing(){
+
+//...
+
+}
 void OnDestroy(){
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 TempVer.Dispose();
 TempTri.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
+}
+public static void Edit(){
+
+//...
+
 }
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
 void Update(){

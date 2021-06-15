@@ -114,8 +114,6 @@ zAxis3=input.color.a*tex2D(_MainTex3,(frac(zUV)*offsetUVSize+offsetUV3));
 fixed4 c=(xAxis+xAxis1+xAxis2+xAxis3)*blendWeights.x+(yAxis+yAxis1+yAxis2+yAxis3)*blendWeights.y+(zAxis+zAxis1+zAxis2+zAxis3)*blendWeights.z;
 //  Albedo comes from a texture tinted by color
 o.Albedo=(c.rgb);float alpha=c.a;
-
-
 fixed3 quadrangularViewDistance=fixed3(abs(_CameraPosition.x-input.worldPos.x),
 								       abs(_CameraPosition.y-input.worldPos.y),
 								       abs(_CameraPosition.z-input.worldPos.z));
@@ -129,14 +127,15 @@ float transparencyFactor=quadrangularTransparencyFactor.x;
 	  transparencyFactor=quadrangularTransparencyFactor.z;}
  clip(transparencyFactor);
 				       alpha=alpha*saturate(transparencyFactor);
-
-
 o.Alpha=(alpha);
 //  Metallic and smoothness come from slider variables
 o.Metallic  =(_Metallic  );
 o.Smoothness=(_Glossiness);
 }
 void applyFixedFog(Input input,SurfaceOutputStandard o,inout fixed4 color){
+            
+//...
+
 }
 ENDCG
 }

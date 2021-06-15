@@ -49,11 +49,8 @@ biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;
 
 //...
 
-for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
+for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
 
-//var gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,0));
-//                                //gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(1,0));
-//    gO=Instantiate(ChunkPrefab);gO.GetComponent<TerrainChunk>().OncCoordChanged(new Vector2Int(0,1));
 //...
 
 }
@@ -69,6 +66,7 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]float frameTimeVariation;[NonSerialized]float millisecondsPerFrame;
 [NonSerialized]Vector3    actPos;
 [NonSerialized]Vector2Int aCoord,aCoord_Pre;
+[SerializeField]protected bool DEBUG_EDIT=false;
 void Update(){
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
 frameTimeVariation+=(Time.deltaTime-frameTimeVariation);millisecondsPerFrame=frameTimeVariation*1000.0f;FPS=1.0f/frameTimeVariation;
@@ -130,12 +128,16 @@ if(iCoord.x==0){break;}}}
 if(iCoord.y==0){break;}}}
 aCoord_Pre=aCoord;}
 TerrainChunk.AtlasHelper.Material.SetVector(TerrainChunk.AtlasHelper._Shader_Input[0],actPos);
-
-//...
-
 }
 
 //...
+if(DEBUG_EDIT){
+   DEBUG_EDIT=false;
+
+//...
+TerrainChunk.Edit();
+
+}
 
 firstLoop=false;}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
@@ -170,50 +172,31 @@ Modules.Add(new Const(128));
 if(LOG&&LOG_LEVEL<=1)Debug.Log("SetModules() at "+GetType()+" resulted in Count:"+Modules.Count);
 }
 #endregion 
-protected virtual double smoothDensity(double sharpValue,Vector3 noiseInput,double noiseValue1,float smoothingDelta=5f){double value=sharpValue;
-
-//...
+protected virtual double smoothDensity(double sharpValue,Vector3 noiseInput,double noiseValue1,float smoothingDelta=3f){double value=sharpValue;
 double delta=(noiseValue1-noiseInput.y);//  noiseInput.y sempre será menor ou igual a noiseValue1
 if(delta<=smoothingDelta){
 double smoothingValue=(smoothingDelta-delta)/smoothingDelta;
-//...
 value*=1d-smoothingValue;
 if(value<0)
    value=0;
 else if(value>100)
         value=100;
-//...
-
 }
-
-//...
-
 return value;}
 protected Select[]MaterialIdSelectors=new Select[1];
 protected(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[]MaterialIdPicking=new(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[1]{
 (TerrainChunk.MaterialId.Rock,TerrainChunk.MaterialId.Dirt),
 };
 protected virtual TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
-
-//...
 m=MaterialIdPicking[0].Item1;
-
 return m;}
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
 public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];
                                                       noiseInput+=_deround;
 double noiseValue1=noiseCache1[noiseCache1Index]!=0?noiseCache1[noiseCache1Index]:(noiseCache1[noiseCache1Index]=Modules[IdxForHgt].GetValue(noiseInput.z,noiseInput.x,0));
 if(noiseInput.y<=noiseValue1){double d;
-
-//...
 v=new TerrainChunk.Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput));return;
-
 }
-
-//...
-    //              if(vCoord2.y<=128){v=new TerrainChunk.Voxel(100,Vector3.zero,TerrainChunk.MaterialId.Dirt);return;}
-    //if(vCoord2.z>=1&&vCoord2.z<=4&&vCoord2.y<=132){v=new TerrainChunk.Voxel(100,Vector3.zero,TerrainChunk.MaterialId.Rock);return;}
-
 v=TerrainChunk.Voxel.Air;}
 }
 public class Plains:BiomeBase{
@@ -248,14 +231,9 @@ ModuleBase module4b=new Select(inputA:module2c,inputB:module3c,controller:module
 ModuleBase module4c=new Multiply(lhs:module4b,rhs:module1);
 #endregion
 Modules.Add(module4c);
-
-//...
 MaterialIdSelectors[0]=(Select)module4b;
-
 }
 protected override TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
-
-//...
 double min=MaterialIdSelectors[0].Minimum;
 double max=MaterialIdSelectors[0].Maximum;
 double fallOff=MaterialIdSelectors[0].FallOff*.5;
@@ -265,7 +243,6 @@ m=MaterialIdPicking[0].Item2;
 }else{
 m=MaterialIdPicking[0].Item1;
 }
-
 return m;}
 }
 }
