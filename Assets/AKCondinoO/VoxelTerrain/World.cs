@@ -189,6 +189,7 @@ else if(value>100)
 //...
 
 return value;}
+protected Select[]MaterialIdSelectors=new Select[1];
 protected(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[]MaterialIdPicking=new(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[1]{
 (TerrainChunk.MaterialId.Rock,TerrainChunk.MaterialId.Dirt),
 };
@@ -249,8 +250,23 @@ ModuleBase module4c=new Multiply(lhs:module4b,rhs:module1);
 Modules.Add(module4c);
 
 //...
+MaterialIdSelectors[0]=(Select)module4b;
 
 }
+protected override TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+
+//...
+double min=MaterialIdSelectors[0].Minimum;
+double max=MaterialIdSelectors[0].Maximum;
+double fallOff=MaterialIdSelectors[0].FallOff*.5;
+var selectValue=MaterialIdSelectors[0].Controller.GetValue(noiseInput.z,noiseInput.x,0);
+if(selectValue<=min-fallOff||selectValue>=max+fallOff){
+m=MaterialIdPicking[0].Item2;
+}else{
+m=MaterialIdPicking[0].Item1;
+}
+
+return m;}
 }
 }
 }
