@@ -178,6 +178,10 @@ if(delta<=smoothingDelta){
 double smoothingValue=(smoothingDelta-delta)/smoothingDelta;
 //...
 value*=1d-smoothingValue;
+if(value<0)
+   value=0;
+else if(value>100)
+        value=100;
 //...
 
 }
@@ -185,14 +189,23 @@ value*=1d-smoothingValue;
 //...
 
 return value;}
+protected(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[]MaterialIdPicking=new(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[1]{
+(TerrainChunk.MaterialId.Rock,TerrainChunk.MaterialId.Dirt),
+};
+protected virtual TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+
+//...
+m=MaterialIdPicking[0].Item1;
+
+return m;}
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
 public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];
                                                       noiseInput+=_deround;
 double noiseValue1=noiseCache1[noiseCache1Index]!=0?noiseCache1[noiseCache1Index]:(noiseCache1[noiseCache1Index]=Modules[IdxForHgt].GetValue(noiseInput.z,noiseInput.x,0));
-if(noiseInput.y<=noiseValue1){
+if(noiseInput.y<=noiseValue1){double d;
 
 //...
-v=new TerrainChunk.Voxel(smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,TerrainChunk.MaterialId.Dirt);return;
+v=new TerrainChunk.Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput));return;
 
 }
 
