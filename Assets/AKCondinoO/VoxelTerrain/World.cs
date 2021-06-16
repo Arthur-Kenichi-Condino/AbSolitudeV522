@@ -49,6 +49,7 @@ biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;
 
 //...
 
+TerrainChunk.AwakeTerrainEditing();
 for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
 
 //...
@@ -187,15 +188,15 @@ protected Select[]MaterialIdSelectors=new Select[1];
 protected(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[]MaterialIdPicking=new(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[1]{
 (TerrainChunk.MaterialId.Rock,TerrainChunk.MaterialId.Dirt),
 };
-protected virtual TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+protected virtual TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput,ref TerrainChunk.MaterialId[]materialCache1,int noiseCache1Index){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
 m=MaterialIdPicking[0].Item1;
 return m;}
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
-public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];
+public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,ref TerrainChunk.MaterialId[]materialCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];if(materialCache1==null)materialCache1=new TerrainChunk.MaterialId[TerrainChunk.FlattenOffset];
                                                       noiseInput+=_deround;
 double noiseValue1=noiseCache1[noiseCache1Index]!=0?noiseCache1[noiseCache1Index]:(noiseCache1[noiseCache1Index]=Modules[IdxForHgt].GetValue(noiseInput.z,noiseInput.x,0));
 if(noiseInput.y<=noiseValue1){double d;
-v=new TerrainChunk.Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput));return;
+v=new TerrainChunk.Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput,ref materialCache1,noiseCache1Index));return;
 }
 v=TerrainChunk.Voxel.Air;}
 }
@@ -233,7 +234,8 @@ ModuleBase module4c=new Multiply(lhs:module4b,rhs:module1);
 Modules.Add(module4c);
 MaterialIdSelectors[0]=(Select)module4b;
 }
-protected override TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+protected override TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput,ref TerrainChunk.MaterialId[]materialCache1,int noiseCache1Index){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+if(materialCache1[noiseCache1Index]!=0){return materialCache1[noiseCache1Index];}
 double min=MaterialIdSelectors[0].Minimum;
 double max=MaterialIdSelectors[0].Maximum;
 double fallOff=MaterialIdSelectors[0].FallOff*.5;
@@ -243,7 +245,7 @@ m=MaterialIdPicking[0].Item2;
 }else{
 m=MaterialIdPicking[0].Item1;
 }
-return m;}
+return materialCache1[noiseCache1Index]=m;}
 }
 }
 }
