@@ -49,10 +49,17 @@ biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;
 
 //...
 
-TerrainChunk.AwakeTerrainEditing();
+TerrainChunk.Editor.Awake(LOG,LOG_LEVEL);
 for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
 
 //...
+
+}
+void OnDestroy(){
+            
+//...
+TerrainChunk.Editor.OnDestroy(LOG,LOG_LEVEL);
+//...to do: biome dispose
 
 }
 [NonSerialized]bool firstLoop=true;
@@ -136,7 +143,7 @@ if(DEBUG_EDIT){
    DEBUG_EDIT=false;
 
 //...
-TerrainChunk.Edit();
+TerrainChunk.Editor.Edit();
 
 }
 

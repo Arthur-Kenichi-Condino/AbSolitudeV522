@@ -499,26 +499,11 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para pedaço
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
 }
 }
-public static void AwakeTerrainEditing(){
-
-//...
-void BG(object state){
-
-//...
-
-}
-
-}
 void OnDestroy(){
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 TempVer.Dispose();
 TempTri.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
-}
-public static void Edit(){
-
-//...
-
 }
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
 void Update(){
@@ -531,7 +516,7 @@ collider.sharedMesh=mesh;
 goto _repeat;
 }
 }else if(bake){bake=false;
-if(LOG&&LOG_LEVEL<=1)Debug.Log("hora de construir:TempVer.Length.."+TempVer.Length+"..TempTriangles.Length.."+TempTri.Length,this);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("hora de construir:TempVer.Length.."+TempVer.Length+"..TempTri.Length.."+TempTri.Length,this);
 baking=true;
 #region VertexBuffer
 bool resize;
@@ -572,6 +557,56 @@ new VertexAttributeDescriptor(VertexAttribute.TexCoord1,VertexAttributeFormat.Fl
 new VertexAttributeDescriptor(VertexAttribute.TexCoord2,VertexAttributeFormat.Float32,2),
 new VertexAttributeDescriptor(VertexAttribute.TexCoord3,VertexAttributeFormat.Float32,2),
 };
+public static class Editor{
+static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task=null;
+public static void Awake(bool LOG,int LOG_LEVEL){
+
+//...
+
+if(task!=null){return;}task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,},TaskCreationOptions.LongRunning);
+void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar sistema para edições no terreno");
+var watch=new System.Diagnostics.Stopwatch();
+
+//...
+
+while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova edição no terreno");watch.Restart();}
+
+foreach(var syn in load_Syn_All)Monitor.Enter(syn);try{
+//...
+}catch{throw;}finally{foreach(var syn in load_Syn_All)Monitor.Exit(syn);}
+
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada edição no terreno (dados salvos nos arquivos)..levou:"+watch.ElapsedMilliseconds+"ms");
+backgroundData1.Set();
+
+//...
+
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar sistema para edições no terreno graciosamente");
+}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}
+}
+public static void OnDestroy(bool LOG,int LOG_LEVEL){
+if(Stop==true){return;}Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa do sistema para edições no terreno");
+}
+public static void Edit(){
+
+if(backgroundData1.WaitOne(0)){
+//...
+backgroundData1.Reset();foregroundData1.Set();
+}
+
+}
+}
 #if UNITY_EDITOR
 void OnDrawGizmos(){
 if(backgroundData.WaitOne(0)){
