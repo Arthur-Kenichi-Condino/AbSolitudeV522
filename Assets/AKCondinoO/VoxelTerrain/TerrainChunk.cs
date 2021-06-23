@@ -10,6 +10,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
+using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public const ushort Height=(256);
 public const ushort Width=(16);
@@ -19,7 +20,7 @@ public const int VoxelsPerChunk=(FlattenOffset*Height);
 public static int GetvxlIdx(int vcx,int vcy,int vcz){return vcy*FlattenOffset+vcx*Depth+vcz;}
 public static Vector2Int cCoordTocnkRgn(Vector2Int cCoord){return new Vector2Int(cCoord.x*Width,cCoord.y*Depth);}
 public static Vector2Int cnkRgnTocCoord(Vector2Int cnkRgn){return new Vector2Int(cnkRgn.x/Width,cnkRgn.y/Depth);}
-public static int GetcnkIdx(int cx,int cy){return cy+cx*(World.Depth+1);}
+public static int GetcnkIdx(int cx,int cy){return cy+cx*(MaxcCoordy+1);}
 #region ValidateCoord
 public static void ValidateCoord(ref Vector2Int region,ref Vector3Int vxlCoord){int a,c;
 a=region.x;c=vxlCoord.x;ValidateCoordAxis(ref a,ref c,Width);region.x=a;vxlCoord.x=c;
@@ -163,7 +164,7 @@ ushort vertexCount=0;
 Vector2Int posOffset=Vector2Int.zero;
 Vector2Int crdOffset=Vector2Int.zero;
 Vector3Int vCoord1;
-for(vCoord1=new Vector3Int();vCoord1.y<Height;vCoord1.y++){if(World.averageFramerate<50||World.FPS<50){Thread.Yield();Thread.Sleep(1);}
+for(vCoord1=new Vector3Int();vCoord1.y<Height;vCoord1.y++){if(averageFramerate<50||FPS<50){Thread.Yield();Thread.Sleep(1);}
 for(vCoord1.x=0             ;vCoord1.x<Width ;vCoord1.x++){
 for(vCoord1.z=0             ;vCoord1.z<Depth ;vCoord1.z++){
 int corner=0;Vector3Int vCoord2=vCoord1;                        if(vCoord1.z>0)polygonCell[corner]=voxelsBuffer1[0][0][0];else if(vCoord1.x>0)polygonCell[corner]=voxelsBuffer1[1][vCoord1.z][0];else if(vCoord1.y>0)polygonCell[corner]=voxelsBuffer1[2][vCoord1.z+vCoord1.x*Depth][0];else SetpolygonCellVoxel();
@@ -200,7 +201,7 @@ if(nbrIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];//
 }else{//  pegar valor do bioma
 Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                            noiseInput.z+=cnkRgn2.y;
-World.biome.result(vCoord2,noiseInput,ref noiseCache1[nbrIdx2],ref materialCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
+biome.result(vCoord2,noiseInput,ref noiseCache1[nbrIdx2],ref materialCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
 }
 if(polygonCell[corner].Material!=MaterialId.Air&&polygonCell[corner].Normal==Vector3.zero){//  calcular normal
 int tmpIdx=0;Vector3Int vCoord3=vCoord2;vCoord3.x++;                                                                                                                                                                SetpolygonCellNormalSettmpVxl();
@@ -223,7 +224,7 @@ void SetpolygonCellNormalSettmpVxl(){
     }else{
     Vector3 noiseInput=vCoord3;noiseInput.x+=cnkRgn3.x;
                                noiseInput.z+=cnkRgn3.y;
-    World.biome.result(vCoord3,noiseInput,ref noiseCache1[nbrIdx3],ref materialCache1[nbrIdx2],vCoord3.z+vCoord3.x*Depth,ref tmpVxl[tmpIdx]);
+    biome.result(vCoord3,noiseInput,ref noiseCache1[nbrIdx3],ref materialCache1[nbrIdx2],vCoord3.z+vCoord3.x*Depth,ref tmpVxl[tmpIdx]);
     }
     if(nbrIdx3==0){voxels[vxlIdx3]=tmpVxl[tmpIdx];
     }
@@ -384,7 +385,7 @@ void SetpolygonCellVoxel(){
     }else{
     Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                                noiseInput.z+=cnkRgn2.y;
-    World.biome.result(vCoord2,noiseInput,ref noiseCache1[nbrIdx2],ref materialCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
+    biome.result(vCoord2,noiseInput,ref noiseCache1[nbrIdx2],ref materialCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
     }
     }
 }
@@ -505,6 +506,21 @@ TempVer.Dispose();
 TempTri.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
+public bool Built{
+          get{return Built_v;}
+protected set{       Built_v=value;
+
+//...
+if(value){
+renderer.enabled=true;
+collider.enabled=true;
+}else{
+renderer.enabled=false;
+collider.enabled=false;
+}
+
+}
+}[NonSerialized]protected bool Built_v;
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
 void Update(){
 if(backgroundData.WaitOne(0)){_repeat:{}
@@ -513,6 +529,7 @@ if(bakingHandle.IsCompleted){bakingHandle.Complete();baking=false;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("mesh baked",this);
 collider.sharedMesh=null;
 collider.sharedMesh=mesh;
+Built=true;
 goto _repeat;
 }
 }else if(bake){bake=false;
@@ -544,7 +561,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 [NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
-if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);this.cnkIdx=cnkIdx;
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);this.cnkIdx=cnkIdx;
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }

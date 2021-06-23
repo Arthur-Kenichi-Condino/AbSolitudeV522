@@ -8,18 +8,19 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
+using static AKCondinoO.Voxels.TerrainChunk;
 namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
-public const int Width=6250;
-public const int Depth=6250;
+public const int MaxcCoordx=6250;
+public const int MaxcCoordy=6250;
 public static Vector2Int vecPosTocCoord(Vector3 pos){
-                                                pos.x/=(float)TerrainChunk.Width;
-                                                pos.z/=(float)TerrainChunk.Depth;
+                                                pos.x/=(float)Width;
+                                                pos.z/=(float)Depth;
 return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):Mathf.RoundToInt(pos.x)):(int)Math.Round(pos.x,MidpointRounding.AwayFromZero),
                       (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
 }
 public GameObject ChunkPrefab;
-Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);[NonSerialized]readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
+Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
 Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
@@ -41,7 +42,7 @@ QualitySettings.vSyncCount=0;Application.targetFrameRate=targetFrameRate;
 
 //...
 
-TerrainChunk.AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial);
+AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial);
             
 //...
 
@@ -49,7 +50,7 @@ biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;
 
 //...
 
-TerrainChunk.Editor.Awake(LOG,LOG_LEVEL);
+Editor.Awake(LOG,LOG_LEVEL);
 for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
 
 //...
@@ -58,7 +59,7 @@ for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform
 void OnDestroy(){
             
 //...
-TerrainChunk.Editor.OnDestroy(LOG,LOG_LEVEL);
+Editor.OnDestroy(LOG,LOG_LEVEL);
 //...to do: biome dispose
 
 }
@@ -93,15 +94,15 @@ if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){D
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
 for(Vector2Int eCoord=new Vector2Int(),cCoord1=new Vector2Int();eCoord.y<=expropriationDistance.y;eCoord.y++){for(cCoord1.y=-eCoord.y+aCoord_Pre.y;cCoord1.y<=eCoord.y+aCoord_Pre.y;cCoord1.y+=eCoord.y*2){
 for(           eCoord.x=0                                      ;eCoord.x<=expropriationDistance.x;eCoord.x++){for(cCoord1.x=-eCoord.x+aCoord_Pre.x;cCoord1.x<=eCoord.x+aCoord_Pre.x;cCoord1.x+=eCoord.x*2){
-if(Math.Abs(cCoord1.x)>=Width||
-   Math.Abs(cCoord1.y)>=Depth){
+if(Math.Abs(cCoord1.x)>=MaxcCoordx||
+   Math.Abs(cCoord1.y)>=MaxcCoordy){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to expropriate out of world chunk at coord:.."+cCoord1);
 goto _skip;
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
 if(Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y){
-int cnkIdx1=TerrainChunk.GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
+int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
 TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
 }else{
@@ -118,13 +119,13 @@ if(eCoord.x==0){break;}}}
 if(eCoord.y==0){break;}}}
 for(Vector2Int iCoord=new Vector2Int(),cCoord1=new Vector2Int();iCoord.y<=instantiationDistance.y;iCoord.y++){for(cCoord1.y=-iCoord.y+aCoord.y;cCoord1.y<=iCoord.y+aCoord.y;cCoord1.y+=iCoord.y*2){
 for(           iCoord.x=0                                      ;iCoord.x<=instantiationDistance.x;iCoord.x++){for(cCoord1.x=-iCoord.x+aCoord.x;cCoord1.x<=iCoord.x+aCoord.x;cCoord1.x+=iCoord.x*2){
-if(Math.Abs(cCoord1.x)>=Width||
-   Math.Abs(cCoord1.y)>=Depth){
+if(Math.Abs(cCoord1.x)>=MaxcCoordx||
+   Math.Abs(cCoord1.y)>=MaxcCoordy){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to activate out of world chunk at coord:.."+cCoord1);
 goto _skip;
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("try to activate chunk:.."+cCoord1);
-int cnkIdx1=TerrainChunk.GetcnkIdx(cCoord1.x,cCoord1.y);if(!ActiveTerrain.ContainsKey(cnkIdx1)){
+int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(!ActiveTerrain.ContainsKey(cnkIdx1)){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do activate chunk for:.."+cnkIdx1+";[current TerrainChunkPool.Count:.."+TerrainChunkPool.Count);
 TerrainChunk scr=TerrainChunkPool.First.Value;TerrainChunkPool.RemoveFirst();scr.ExpropriationNode=(null);if(scr.Initialized&&ActiveTerrain.ContainsKey(scr.cnkIdx))ActiveTerrain.Remove(scr.cnkIdx);ActiveTerrain.Add(cnkIdx1,scr);scr.OncCoordChanged(cCoord1,cnkIdx1);
 }else{
@@ -135,7 +136,7 @@ _skip:{}
 if(iCoord.x==0){break;}}}
 if(iCoord.y==0){break;}}}
 aCoord_Pre=aCoord;}
-TerrainChunk.AtlasHelper.Material.SetVector(TerrainChunk.AtlasHelper._Shader_Input[0],actPos);
+AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[0],actPos);
 }
 
 //...
@@ -143,7 +144,7 @@ if(DEBUG_EDIT){
    DEBUG_EDIT=false;
 
 //...
-TerrainChunk.Editor.Edit();
+Editor.Edit();
 
 }
 
@@ -192,20 +193,20 @@ else if(value>100)
 }
 return value;}
 protected Select[]MaterialIdSelectors=new Select[1];
-protected(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[]MaterialIdPicking=new(TerrainChunk.MaterialId,TerrainChunk.MaterialId)[1]{
-(TerrainChunk.MaterialId.Rock,TerrainChunk.MaterialId.Dirt),
+protected(MaterialId,MaterialId)[]MaterialIdPicking=new(MaterialId,MaterialId)[1]{
+(MaterialId.Rock,MaterialId.Dirt),
 };
-protected virtual TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput,ref TerrainChunk.MaterialId[]materialCache1,int noiseCache1Index){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+protected virtual MaterialId selectMaterial(double density,Vector3 noiseInput,ref MaterialId[]materialCache1,int noiseCache1Index){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
 m=MaterialIdPicking[0].Item1;
 return m;}
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
-public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,ref TerrainChunk.MaterialId[]materialCache1,int noiseCache1Index,ref TerrainChunk.Voxel v){if(noiseCache1==null)noiseCache1=new double[TerrainChunk.FlattenOffset];if(materialCache1==null)materialCache1=new TerrainChunk.MaterialId[TerrainChunk.FlattenOffset];
+public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,ref MaterialId[]materialCache1,int noiseCache1Index,ref Voxel v){if(noiseCache1==null)noiseCache1=new double[FlattenOffset];if(materialCache1==null)materialCache1=new MaterialId[FlattenOffset];
                                                       noiseInput+=_deround;
 double noiseValue1=noiseCache1[noiseCache1Index]!=0?noiseCache1[noiseCache1Index]:(noiseCache1[noiseCache1Index]=Modules[IdxForHgt].GetValue(noiseInput.z,noiseInput.x,0));
 if(noiseInput.y<=noiseValue1){double d;
-v=new TerrainChunk.Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput,ref materialCache1,noiseCache1Index));return;
+v=new Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput,ref materialCache1,noiseCache1Index));return;
 }
-v=TerrainChunk.Voxel.Air;}
+v=Voxel.Air;}
 }
 public class Plains:BiomeBase{
 public override int IdxForRnd{get{return 1;}}
@@ -241,7 +242,7 @@ ModuleBase module4c=new Multiply(lhs:module4b,rhs:module1);
 Modules.Add(module4c);
 MaterialIdSelectors[0]=(Select)module4b;
 }
-protected override TerrainChunk.MaterialId selectMaterial(double density,Vector3 noiseInput,ref TerrainChunk.MaterialId[]materialCache1,int noiseCache1Index){if(-density>=TerrainChunk.IsoLevel){return TerrainChunk.MaterialId.Air;}TerrainChunk.MaterialId m;
+protected override MaterialId selectMaterial(double density,Vector3 noiseInput,ref MaterialId[]materialCache1,int noiseCache1Index){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
 if(materialCache1[noiseCache1Index]!=0){return materialCache1[noiseCache1Index];}
 double min=MaterialIdSelectors[0].Minimum;
 double max=MaterialIdSelectors[0].Maximum;

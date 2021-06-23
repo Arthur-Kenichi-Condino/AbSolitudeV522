@@ -352,7 +352,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6671277513262940684, guid: 98025bca49954464d83855c608405be7, type: 3}
       propertyPath: m_Name
-      value: SimActor (1)
+      value: Eleanor
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 98025bca49954464d83855c608405be7, type: 3}
