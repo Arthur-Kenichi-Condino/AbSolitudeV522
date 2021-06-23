@@ -529,7 +529,7 @@ if(bakingHandle.IsCompleted){bakingHandle.Complete();baking=false;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("mesh baked",this);
 collider.sharedMesh=null;
 collider.sharedMesh=mesh;
-Built=true;
+if(!rebuild){Built=true;}
 goto _repeat;
 }
 }else if(bake){bake=false;

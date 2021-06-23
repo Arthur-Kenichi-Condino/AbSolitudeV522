@@ -50,24 +50,18 @@ Actors. Enabled.Add(this);Actors.Disabled.Remove(this);
 [NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
 protected virtual void Update(){
 var gotcnk=false;void getcnk(){ActiveTerrain.TryGetValue(cnkIdx,out cnk);gotcnk=true;}            
-//...
 pos=transform.position;
 if(pos!=pos_Pre){//  sempre que eu mudar de posição...
 if(LOG&&LOG_LEVEL<=-110)Debug.Log("I changed from pos_Pre.."+pos_Pre+"..to pos.."+pos,this);
-//...
 cCoord=vecPosTocCoord(pos);if(cCoord!=cCoord_Pre){cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);//  ...calcule o cnkIdx se necessário...
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I changed from cCoord_Pre.."+cCoord_Pre+"..to cCoord.."+cCoord+"..so now my cnkIdx is.."+cnkIdx,this);
-//...
 if(!gotcnk){getcnk();}//  ...e verifique se a coordenada para onde eu me mudei tem ou não um chunk.
 cCoord_Pre=cCoord;}
 pos_Pre=pos;}
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);//  sempre que a câmera mudar de posição...
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
-
-//...
 if(!gotcnk){getcnk();}//  ...e a coordenada mudar (e houver recarregamento), cheque se o chunk em que estou existe.
-//...
 aCoord_Pre=aCoord;}
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
@@ -76,6 +70,7 @@ IsOutOfSight=true;
 }else{
 IsOutOfSight=(cnk==null||!cnk.Built);
 }
+
 //...
 
 firstLoop=false;}
