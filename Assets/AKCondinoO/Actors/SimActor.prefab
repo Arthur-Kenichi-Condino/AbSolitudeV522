@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3465825676715348088}
   - component: {fileID: 8067937047344560303}
+  - component: {fileID: 2504931625255729057}
+  - component: {fileID: 5029025489257026271}
   m_Layer: 0
   m_Name: SimActor
   m_TagString: Untagged
@@ -43,3 +45,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8728058ee38d105449f3cba0d62b76ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LOG: 1
+  LOG_LEVEL: 1
+  GIZMOS_ENABLED: 1
+--- !u!114 &2504931625255729057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6671277513262940684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 809536ddcbb4d2f4aa37fba8eb91022c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!143 &5029025489257026271
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6671277513262940684}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}

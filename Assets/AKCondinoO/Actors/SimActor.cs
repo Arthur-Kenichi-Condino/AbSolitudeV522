@@ -6,12 +6,13 @@ using UnityEngine;
 using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public Type type{get;protected set;}public int id{get;protected set;}
+[NonSerialized]protected new CharacterControllerPhys collider;
 protected virtual void Awake(){
       
 //...
 type=GetType();if(!Actors.Count.ContainsKey(type)){Actors.Count.Add(type,1);}else{id=Actors.Count[type]++;}Actors.Get.Add((type,id),this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am.."+type+"..and I got instantiated with id.."+id,this);
-
+collider=GetComponent<CharacterControllerPhys>();
 //...
 
 IsOutOfSight=true;pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
@@ -32,11 +33,13 @@ if(value){
 
 //...
 Actors.Disabled.Add(this);Actors. Enabled.Remove(this);
+collider.enabled=(false);collider.controller.enabled=(false);
 
 }else{
 
 //...
 Actors. Enabled.Add(this);Actors.Disabled.Remove(this);
+collider.enabled=( true);collider.controller.enabled=( true);
 
 }
 //...
