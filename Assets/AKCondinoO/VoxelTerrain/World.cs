@@ -4,6 +4,7 @@ using LibNoise.Operator;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
@@ -24,7 +25,10 @@ public GameObject ChunkPrefab;
 Vector2Int expropriationDistance{get;}=new Vector2Int(2,2);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
 Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static Bounds bounds;
-[NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
+[NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
+[NonSerialized]public static readonly Dictionary<TerrainChunk,NavMeshBuildSource>navMeshSources=new Dictionary<TerrainChunk,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
+[NonSerialized]public static readonly Dictionary<TerrainChunk,NavMeshBuildMarkup>navMeshMarkups=new Dictionary<TerrainChunk,NavMeshBuildMarkup>();[NonSerialized]public static readonly List<NavMeshBuildMarkup>markups=new List<NavMeshBuildMarkup>();
+[NonSerialized]public static AsyncOperation navMeshAsyncOperation;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
@@ -52,9 +56,33 @@ AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial
 biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;       
 
 //...
-bounds=new Bounds(Vector3.zero,new Vector3((instantiationDistance.x*2+1)*Width,
-                                           Height,
+bounds=new Bounds(Vector3.zero,new Vector3((instantiationDistance.x*2+1)*Width,Height,
                                            (instantiationDistance.y*2+1)*Depth));
+navMeshBuildSettings=new NavMeshBuildSettings{
+agentTypeID=0,//  Humanoid agent
+agentHeight=1.75f,
+agentRadius=0.28125f,
+agentClimb=0.75f,
+agentSlope=60f,
+overrideTileSize=true,
+        tileSize=Width*Depth,
+overrideVoxelSize=true,
+        voxelSize=0.1406f,
+minRegionArea=0.31640625f,
+debug=new NavMeshBuildDebugSettings{
+    flags=NavMeshBuildDebugFlags.None,
+},
+};
+var navMeshValidation=navMeshBuildSettings.ValidationReport(bounds);if(navMeshValidation.Length==0){
+if(LOG&&LOG_LEVEL<=1){Debug.Log("navMeshBuildSettings validated with no errors");}
+navMeshData=new NavMeshData(0){//  Humanoid agent
+hideFlags=HideFlags.None,
+};
+navMesh=NavMesh.AddNavMeshData(navMeshData);
+}else{
+foreach(var s in navMeshValidation){Debug.LogError(s);}
+}
+//...
 
 Editor.Awake(LOG,LOG_LEVEL);
 for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
@@ -81,7 +109,7 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]float frameTimeVariation;[NonSerialized]float millisecondsPerFrame;
 [NonSerialized]Vector3    actPos;
 [NonSerialized]Vector2Int aCoord,aCoord_Pre;
-[SerializeField]protected bool DEBUG_EDIT=false;
+[SerializeField]protected bool DEBUG_EDIT=false;[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
 void Update(){
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
 frameTimeVariation+=(Time.deltaTime-frameTimeVariation);millisecondsPerFrame=frameTimeVariation*1000.0f;FPS=1.0f/frameTimeVariation;
@@ -153,6 +181,15 @@ if(DEBUG_EDIT){
 Editor.Edit();
 
 }
+
+//...
+if(DEBUG_BAKE_NAV_MESH){
+sources.Clear();sources.AddRange(navMeshSources.Values);
+markups.Clear();markups.AddRange(navMeshMarkups.Values);
+NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
+navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
+}
+   DEBUG_BAKE_NAV_MESH=false;
 
 firstLoop=false;}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;

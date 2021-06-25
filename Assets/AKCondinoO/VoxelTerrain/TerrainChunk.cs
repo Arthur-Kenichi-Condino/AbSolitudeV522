@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Rendering;
 using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
@@ -121,6 +122,19 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 void Awake(){
 load_Syn_All.Add(load_Syn);
 mesh=new Mesh(){bounds=new Bounds(Vector3.zero,new Vector3(Width,Height,Depth))};gameObject.GetComponent<MeshFilter>().sharedMesh=mesh;renderer=gameObject.GetComponent<MeshRenderer>();collider=gameObject.GetComponent<MeshCollider>();
+navMeshSources[this]=new NavMeshBuildSource{
+transform=transform.localToWorldMatrix,
+shape=NavMeshBuildSourceShape.Mesh,
+sourceObject=mesh,
+component=GetComponent<MeshFilter>(),
+area=0,//  walkable
+};
+navMeshMarkups[this]=new NavMeshBuildMarkup{
+root=transform,
+area=0,//  walkable
+overrideArea=false,
+ignoreFromBuild=false,
+};
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);
 TempTri=new NativeList<ushort>(Allocator.Persistent);
@@ -561,7 +575,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 [NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
-if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;var bounds=mesh.bounds;bounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);mesh.bounds=bounds;this.cnkIdx=cnkIdx;
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;var bounds=mesh.bounds;bounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);mesh.bounds=bounds;var navMeshSource=navMeshSources[this];navMeshSource.transform=transform.localToWorldMatrix;navMeshSources[this]=navMeshSource;this.cnkIdx=cnkIdx;
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
