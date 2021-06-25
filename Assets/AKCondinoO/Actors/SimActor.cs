@@ -71,7 +71,9 @@ if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do
 if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
 IsOutOfSight=true;
 }else{
-IsOutOfSight=(cnk==null||!cnk.Built);
+IsOutOfSight=(cnk==null||!cnk.Built
+||!bounds.Contains(transform.position)
+);
 }
 
 //...

@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
 using static AKCondinoO.Voxels.TerrainChunk;
@@ -20,8 +21,10 @@ return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):
                       (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
 }
 public GameObject ChunkPrefab;
-Vector2Int expropriationDistance{get;}=new Vector2Int(1,1);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
+Vector2Int expropriationDistance{get;}=new Vector2Int(2,2);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
 Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
+[NonSerialized]public static Bounds bounds;
+[NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
@@ -49,6 +52,9 @@ AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial
 biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;       
 
 //...
+bounds=new Bounds(Vector3.zero,new Vector3((instantiationDistance.x*2+1)*Width,
+                                           Height,
+                                           (instantiationDistance.y*2+1)*Depth));
 
 Editor.Awake(LOG,LOG_LEVEL);
 for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
@@ -255,5 +261,37 @@ m=MaterialIdPicking[0].Item1;
 }
 return materialCache1[noiseCache1Index]=m;}
 }
+#if UNITY_EDITOR
+public static void DrawBounds(Bounds b,Color color,float duration=0){//[https://gist.github.com/unitycoder/58f4b5d80f423d29e35c814a9556f9d9]
+var p1=new Vector3(b.min.x,b.min.y,b.min.z);// bottom
+var p2=new Vector3(b.max.x,b.min.y,b.min.z);
+var p3=new Vector3(b.max.x,b.min.y,b.max.z);
+var p4=new Vector3(b.min.x,b.min.y,b.max.z);
+var p5=new Vector3(b.min.x,b.max.y,b.min.z);// top
+var p6=new Vector3(b.max.x,b.max.y,b.min.z);
+var p7=new Vector3(b.max.x,b.max.y,b.max.z);
+var p8=new Vector3(b.min.x,b.max.y,b.max.z);
+Debug.DrawLine(p1,p2,color,duration);
+Debug.DrawLine(p2,p3,color,duration);
+Debug.DrawLine(p3,p4,color,duration);
+Debug.DrawLine(p4,p1,color,duration);
+Debug.DrawLine(p5,p6,color,duration);
+Debug.DrawLine(p6,p7,color,duration);
+Debug.DrawLine(p7,p8,color,duration);
+Debug.DrawLine(p8,p5,color,duration);
+Debug.DrawLine(p1,p5,color,duration);// sides
+Debug.DrawLine(p2,p6,color,duration);
+Debug.DrawLine(p3,p7,color,duration);
+Debug.DrawLine(p4,p8,color,duration);
+}
+void OnDrawGizmos(){
+if(GIZMOS_ENABLED<=1){
+
+//...
+DrawBounds(bounds,Color.yellow);
+
+}
+}
+#endif
 }
 }

@@ -117,7 +117,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 [NonSerialized]Vector2Int cCoord1;
 [NonSerialized]Vector2Int cnkRgn1;
 [NonSerialized]readonly Voxel[]voxels=new Voxel[VoxelsPerChunk];
-[NonSerialized]Mesh mesh=null;[NonSerialized]MeshUpdateFlags meshFlags=MeshUpdateFlags.DontValidateIndices|MeshUpdateFlags.DontNotifyMeshUsers|MeshUpdateFlags.DontRecalculateBounds;[NonSerialized]public new MeshRenderer renderer=null;[NonSerialized]public new MeshCollider collider=null;
+[NonSerialized]public Mesh mesh=null;[NonSerialized]MeshUpdateFlags meshFlags=MeshUpdateFlags.DontValidateIndices|MeshUpdateFlags.DontNotifyMeshUsers|MeshUpdateFlags.DontRecalculateBounds;[NonSerialized]public new MeshRenderer renderer=null;[NonSerialized]public new MeshCollider collider=null;
 void Awake(){
 load_Syn_All.Add(load_Syn);
 mesh=new Mesh(){bounds=new Bounds(Vector3.zero,new Vector3(Width,Height,Depth))};gameObject.GetComponent<MeshFilter>().sharedMesh=mesh;renderer=gameObject.GetComponent<MeshRenderer>();collider=gameObject.GetComponent<MeshCollider>();
@@ -561,7 +561,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 [NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
-if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);this.cnkIdx=cnkIdx;
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;var bounds=mesh.bounds;bounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);mesh.bounds=bounds;this.cnkIdx=cnkIdx;
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
@@ -628,6 +628,12 @@ backgroundData1.Reset();foregroundData1.Set();
 void OnDrawGizmos(){
 if(backgroundData.WaitOne(0)){
 if(GIZMOS_ENABLED<=0){for(int i=0;i<TempVer.Length;i++){Debug.DrawRay(transform.position+TempVer[i].pos,TempVer[i].normal,Color.white);}}
+if(GIZMOS_ENABLED<=0){
+
+//...
+DrawBounds(mesh.bounds,Color.white);
+
+}
 }
 }
 #endif
