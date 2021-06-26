@@ -188,13 +188,16 @@ Editor.Edit();
 }
 
 //...
-if(DEBUG_BAKE_NAV_MESH){
+if(navMeshDirty||DEBUG_BAKE_NAV_MESH){
+
+//...
+navMeshDirty=false;DEBUG_BAKE_NAV_MESH=false;
+
 sources.Clear();sources.AddRange(navMeshSources.Values);
 markups.Clear();markups.AddRange(navMeshMarkups.Values);
 NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
-   DEBUG_BAKE_NAV_MESH=false;
 
 firstLoop=false;}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
