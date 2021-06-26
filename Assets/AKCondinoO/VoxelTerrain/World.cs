@@ -28,7 +28,7 @@ Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
 [NonSerialized]public static readonly Dictionary<TerrainChunk,NavMeshBuildSource>navMeshSources=new Dictionary<TerrainChunk,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
 [NonSerialized]public static readonly Dictionary<TerrainChunk,NavMeshBuildMarkup>navMeshMarkups=new Dictionary<TerrainChunk,NavMeshBuildMarkup>();[NonSerialized]public static readonly List<NavMeshBuildMarkup>markups=new List<NavMeshBuildMarkup>();
-[NonSerialized]public static AsyncOperation navMeshAsyncOperation;
+[NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]static bool navMeshDirty;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
@@ -109,6 +109,7 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]float frameTimeVariation;[NonSerialized]float millisecondsPerFrame;
 [NonSerialized]Vector3    actPos;
 [NonSerialized]Vector2Int aCoord,aCoord_Pre;
+[NonSerialized]Vector2Int actRgn;
 [SerializeField]protected bool DEBUG_EDIT=false;[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
 void Update(){
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
@@ -126,6 +127,10 @@ UI_FPS_RefreshTimer=0;
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+              actRgn=(cCoordTocnkRgn(aCoord));
+//...
+bounds.center=new Vector3(actRgn.x,0,actRgn.y);
+
 for(Vector2Int eCoord=new Vector2Int(),cCoord1=new Vector2Int();eCoord.y<=expropriationDistance.y;eCoord.y++){for(cCoord1.y=-eCoord.y+aCoord_Pre.y;cCoord1.y<=eCoord.y+aCoord_Pre.y;cCoord1.y+=eCoord.y*2){
 for(           eCoord.x=0                                      ;eCoord.x<=expropriationDistance.x;eCoord.x++){for(cCoord1.x=-eCoord.x+aCoord_Pre.x;cCoord1.x<=eCoord.x+aCoord_Pre.x;cCoord1.x+=eCoord.x*2){
 if(Math.Abs(cCoord1.x)>=MaxcCoordx||
