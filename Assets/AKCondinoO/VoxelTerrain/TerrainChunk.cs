@@ -122,14 +122,14 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 void Awake(){
 load_Syn_All.Add(load_Syn);
 mesh=new Mesh(){bounds=localBounds=new Bounds(Vector3.zero,new Vector3(Width,Height,Depth))};gameObject.GetComponent<MeshFilter>().sharedMesh=mesh;renderer=gameObject.GetComponent<MeshRenderer>();collider=gameObject.GetComponent<MeshCollider>();
-navMeshSources[this]=new NavMeshBuildSource{
+navMeshSources[gameObject]=new NavMeshBuildSource{
 transform=transform.localToWorldMatrix,
 shape=NavMeshBuildSourceShape.Mesh,
 sourceObject=mesh,
 component=GetComponent<MeshFilter>(),
 area=0,//  walkable
 };
-navMeshMarkups[this]=new NavMeshBuildMarkup{
+navMeshMarkups[gameObject]=new NavMeshBuildMarkup{
 root=transform,
 area=0,//  walkable
 overrideArea=false,
@@ -578,7 +578,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 [NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
-if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;localBounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);var navMeshSource=navMeshSources[this];navMeshSource.transform=transform.localToWorldMatrix;navMeshSources[this]=navMeshSource;this.cnkIdx=cnkIdx;
+if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;localBounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);var navMeshSource=navMeshSources[gameObject];navMeshSource.transform=transform.localToWorldMatrix;navMeshSources[gameObject]=navMeshSource;this.cnkIdx=cnkIdx;
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }

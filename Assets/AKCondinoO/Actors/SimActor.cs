@@ -7,7 +7,7 @@ using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]protected new CharacterControllerPhys collider;
-protected virtual void Awake(){
+protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
       
 //...
 type=GetType();if(!Actors.Count.ContainsKey(type)){Actors.Count.Add(type,1);}else{id=Actors.Count[type]++;}Actors.Get.Add((type,id),this);

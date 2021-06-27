@@ -26,8 +26,8 @@ Vector2Int expropriationDistance{get;}=new Vector2Int(2,2);[NonSerialized]public
 Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static Bounds bounds;
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
-[NonSerialized]public static readonly Dictionary<TerrainChunk,NavMeshBuildSource>navMeshSources=new Dictionary<TerrainChunk,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
-[NonSerialized]public static readonly Dictionary<TerrainChunk,NavMeshBuildMarkup>navMeshMarkups=new Dictionary<TerrainChunk,NavMeshBuildMarkup>();[NonSerialized]public static readonly List<NavMeshBuildMarkup>markups=new List<NavMeshBuildMarkup>();
+[NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
+[NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildMarkup>navMeshMarkups=new Dictionary<GameObject,NavMeshBuildMarkup>();[NonSerialized]public static readonly List<NavMeshBuildMarkup>markups=new List<NavMeshBuildMarkup>();
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]static bool navMeshDirty;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
