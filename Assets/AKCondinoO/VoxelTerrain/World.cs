@@ -4,6 +4,7 @@ using LibNoise.Operator;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
@@ -12,6 +13,7 @@ using UnityEngine.Scripting;
 using UnityEngine.UI;
 using static AKCondinoO.Voxels.TerrainChunk;
 namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+[NonSerialized]public static readonly string saveFolder=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).Replace("\\","/").ToString()+"/AbSolitudeV522/";
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
 public const int MaxcCoordx=6250;
 public const int MaxcCoordy=6250;
@@ -35,6 +37,7 @@ void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.
 GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
             
 //...
+Directory.CreateDirectory(saveFolder);
 
 if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"+Environment.ProcessorCount);
 ThreadPool.GetAvailableThreads(out int worker ,out int io         );if(LOG&&LOG_LEVEL<=100){Debug.Log("Thread pool threads available at startup: Worker threads: "+worker+" Asynchronous I/O threads: "+io);}
@@ -232,10 +235,10 @@ Modules.Add(new Const(128));
 if(LOG&&LOG_LEVEL<=1)Debug.Log("SetModules() at "+GetType()+" resulted in Count:"+Modules.Count);
 }
 #endregion 
-protected virtual double smoothDensity(double sharpValue,Vector3 noiseInput,double noiseValue1,float smoothingDelta=3f){double value=sharpValue;
-double delta=(noiseValue1-noiseInput.y);//  noiseInput.y sempre será menor ou igual a noiseValue1
-if(delta<=smoothingDelta){
-double smoothingValue=(smoothingDelta-delta)/smoothingDelta;
+protected virtual double density(double density,Vector3 input,double noise,float smoothing=3f){double value=density;
+double delta=(noise-input.y);//  input.y sempre será menor ou igual a noise
+if(delta<=smoothing){
+double smoothingValue=(smoothing-delta)/smoothing;
 value*=1d-smoothingValue;
 if(value<0)
    value=0;
@@ -247,15 +250,16 @@ protected Select[]MaterialIdSelectors=new Select[1];
 protected(MaterialId,MaterialId)[]MaterialIdPicking=new(MaterialId,MaterialId)[1]{
 (MaterialId.Rock,MaterialId.Dirt),
 };
-protected virtual MaterialId selectMaterial(double density,Vector3 noiseInput,ref MaterialId[]materialCache1,int noiseCache1Index){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
+protected virtual MaterialId material(double density,Vector3 input,MaterialId[][][]mCache,int nbrIdx,int inputIndex){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
 m=MaterialIdPicking[0].Item1;
 return m;}
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
-public virtual void result(Vector3Int vCoord2,Vector3 noiseInput,ref double[]noiseCache1,ref MaterialId[]materialCache1,int noiseCache1Index,ref Voxel v){if(noiseCache1==null)noiseCache1=new double[FlattenOffset];if(materialCache1==null)materialCache1=new MaterialId[FlattenOffset];
-                                                      noiseInput+=_deround;
-double noiseValue1=noiseCache1[noiseCache1Index]!=0?noiseCache1[noiseCache1Index]:(noiseCache1[noiseCache1Index]=Modules[IdxForHgt].GetValue(noiseInput.z,noiseInput.x,0));
-if(noiseInput.y<=noiseValue1){double d;
-v=new Voxel(d=smoothDensity(100,noiseInput,noiseValue1),Vector3.zero,selectMaterial(d,noiseInput,ref materialCache1,noiseCache1Index));return;
+public virtual int cacheCount{get{return 1;}}
+public virtual void result(Vector3Int vCoord,Vector3 input,double[][][]nCache,MaterialId[][][]mCache,int nbrIdx,int inputIndex,ref Voxel v){if(nCache[0][nbrIdx]==null)nCache[0][nbrIdx]=new double[FlattenOffset];if(mCache[0][nbrIdx]==null)mCache[0][nbrIdx]=new MaterialId[FlattenOffset];
+                                                     input+=_deround;
+double noiseValue1=nCache[0][nbrIdx][inputIndex]!=0?nCache[0][nbrIdx][inputIndex]:(nCache[0][nbrIdx][inputIndex]=Modules[IdxForHgt].GetValue(input.z,input.x,0));
+if(input.y<=noiseValue1){double d;
+v=new Voxel(d=density(100,input,noiseValue1),Vector3.zero,material(d,input,mCache,nbrIdx,inputIndex));return;
 }
 v=Voxel.Air;}
 }
@@ -293,18 +297,18 @@ ModuleBase module4c=new Multiply(lhs:module4b,rhs:module1);
 Modules.Add(module4c);
 MaterialIdSelectors[0]=(Select)module4b;
 }
-protected override MaterialId selectMaterial(double density,Vector3 noiseInput,ref MaterialId[]materialCache1,int noiseCache1Index){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
-if(materialCache1[noiseCache1Index]!=0){return materialCache1[noiseCache1Index];}
+protected override MaterialId material(double density,Vector3 input,MaterialId[][][]mCache,int nbrIdx,int inputIndex){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
+if(mCache[0][nbrIdx][inputIndex]!=0){return mCache[0][nbrIdx][inputIndex];}
 double min=MaterialIdSelectors[0].Minimum;
 double max=MaterialIdSelectors[0].Maximum;
 double fallOff=MaterialIdSelectors[0].FallOff*.5;
-var selectValue=MaterialIdSelectors[0].Controller.GetValue(noiseInput.z,noiseInput.x,0);
+var selectValue=MaterialIdSelectors[0].Controller.GetValue(input.z,input.x,0);
 if(selectValue<=min-fallOff||selectValue>=max+fallOff){
 m=MaterialIdPicking[0].Item2;
 }else{
 m=MaterialIdPicking[0].Item1;
 }
-return materialCache1[noiseCache1Index]=m;}
+return mCache[0][nbrIdx][inputIndex]=m;}
 }
 #if UNITY_EDITOR
 public static void DrawBounds(Bounds b,Color color,float duration=0){//[https://gist.github.com/unitycoder/58f4b5d80f423d29e35c814a9556f9d9]

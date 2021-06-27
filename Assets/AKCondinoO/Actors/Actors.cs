@@ -9,6 +9,11 @@ void Awake(){staticScript=this;
 //...to do: instanciar todos os actors
 
 }
+void Start(){
+            
+//...to do: 
+
+}
 [NonSerialized]public static readonly List<SimActor>Enabled=new List<SimActor>();[NonSerialized]public static readonly List<SimActor>Disabled=new List<SimActor>();
 }
 }

@@ -19,6 +19,11 @@ IsOutOfSight=true;pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoor
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am currently at.."+pos+"..and my cCoord is.."+cCoord+"..,so my cnkIdx is.."+cnkIdx,this);
 
 }
+protected virtual void Start(){
+
+//...
+
+}
 protected virtual void OnDestroy(){
             
 //...

@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using UnityEngine.AI;
 using UnityEngine.Rendering;
 using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+[NonSerialized]public string dataFolder;
 public const ushort Height=(256);
 public const ushort Width=(16);
 public const ushort Depth=(16);
@@ -97,7 +99,7 @@ public Vector2 texCoord0;
 public Vector2 texCoord1;
 public Vector2 texCoord2;
 public Vector2 texCoord3;
-                                                public Vertex(Vector3 p,Vector3 n,Vector2 uv0){
+                        public Vertex(Vector3 p,Vector3 n,Vector2 uv0){
 pos=p;
 normal=n;
 color=new Color(1f,0f,0f,0f);
@@ -105,7 +107,7 @@ texCoord0=uv0;
 texCoord1=new Vector2(-1f,-1f);
 texCoord2=new Vector2(-1f,-1f);
 texCoord3=new Vector2(-1f,-1f);
-                                                }
+                        }
 }
 [NonSerialized]NativeList<ushort>TempTri;
 public LinkedListNode<TerrainChunk>ExpropriationNode=null;
@@ -145,7 +147,10 @@ if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LO
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para pedaço de terreno");
 var watch=new System.Diagnostics.Stopwatch();
 Voxel[]polygonCell=new Voxel[8];Voxel[]tmpVxl=new Voxel[6];Vector3 polygonCellNormal;
-double[][]nCache1=new double[9][];MaterialId[][]mCache1=new MaterialId[9][];
+
+//...
+double[][][]nCache=new double[biome.cacheCount][][];MaterialId[][][]mCache=new MaterialId[biome.cacheCount][][];for(int i=0;i<biome.cacheCount;++i){nCache[i]=new double[9][];mCache[i]=new MaterialId[9][];}
+
 Voxel[][][]voxelsBuffer1=new Voxel[3][][]{new Voxel[1][]{new Voxel[4],},new Voxel[Depth][],new Voxel[FlattenOffset][],};for(int i=0;i<voxelsBuffer1[2].Length;++i){voxelsBuffer1[2][i]=new Voxel[4];if(i<voxelsBuffer1[1].Length){voxelsBuffer1[1][i]=new Voxel[4];}}Voxel[][]voxelsBuffer2=new Voxel[3][]{new Voxel[1],new Voxel[Depth],new Voxel[FlattenOffset],};
 Vector3[][][]verticesBuffer=new Vector3[3][][]{new Vector3[1][]{new Vector3[4],},new Vector3[Depth][],new Vector3[FlattenOffset][],};for(int i=0;i<verticesBuffer[2].Length;++i){verticesBuffer[2][i]=new Vector3[4];if(i<verticesBuffer[1].Length){verticesBuffer[1][i]=new Vector3[4];}}
 MaterialId[]materials=new MaterialId[12];
@@ -215,8 +220,7 @@ if(nbrIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];//
 }else{//  pegar valor do bioma
 Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                            noiseInput.z+=cnkRgn2.y;
-biome.result(vCoord2,noiseInput,ref nCache1[nbrIdx2],
-                                ref mCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
+biome.result(vCoord2,noiseInput,nCache,mCache,nbrIdx2,vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
 }
 if(polygonCell[corner].Material!=MaterialId.Air&&polygonCell[corner].Normal==Vector3.zero){//  calcular normal
 int tmpIdx=0;Vector3Int vCoord3=vCoord2;vCoord3.x++;                                                                                                                                                                SetpolygonCellNormalSettmpVxl();
@@ -239,8 +243,7 @@ void SetpolygonCellNormalSettmpVxl(){
     }else{
     Vector3 noiseInput=vCoord3;noiseInput.x+=cnkRgn3.x;
                                noiseInput.z+=cnkRgn3.y;
-    biome.result(vCoord3,noiseInput,ref nCache1[nbrIdx3],
-                                    ref mCache1[nbrIdx3],vCoord3.z+vCoord3.x*Depth,ref tmpVxl[tmpIdx]);
+    biome.result(vCoord3,noiseInput,nCache,mCache,nbrIdx3,vCoord3.z+vCoord3.x*Depth,ref tmpVxl[tmpIdx]);
     }
     if(nbrIdx3==0){voxels[vxlIdx3]=tmpVxl[tmpIdx];
     }
@@ -401,8 +404,7 @@ void SetpolygonCellVoxel(){
     }else{
     Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                                noiseInput.z+=cnkRgn2.y;
-    biome.result(vCoord2,noiseInput,ref nCache1[nbrIdx2],
-                                    ref mCache1[nbrIdx2],vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
+    biome.result(vCoord2,noiseInput,nCache,mCache,nbrIdx2,vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
     }
     }
 }
@@ -501,7 +503,13 @@ if(weights.ContainsKey(3)){col.a=(weights[3]/(float)total);}
 bake=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada atualização deste pedaço do terreno:"+cCoord1+"..levou:"+watch.ElapsedMilliseconds+"ms");
 lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();
-for(int i=0;i<nCache1.Length;++i){if(nCache1[i]!=null)Array.Clear(nCache1[i],0,nCache1[i].Length);}for(int i=0;i<mCache1.Length;++i){if(mCache1[i]!=null)Array.Clear(mCache1[i],0,mCache1[i].Length);}
+
+//...
+for(int i=0;i<biome.cacheCount;++i){
+for(int j=0;j<nCache[i].Length;++j){if(nCache[i][j]!=null)Array.Clear(nCache[i][j],0,nCache[i][j].Length);}
+for(int j=0;j<mCache[i].Length;++j){if(mCache[i][j]!=null)Array.Clear(mCache[i][j],0,mCache[i][j].Length);}
+}
+
 for(int i=0;i<voxelsBuffer1[0].Length;++i){Array.Clear(voxelsBuffer1[0][i],0,voxelsBuffer1[0][i].Length);}
 for(int i=0;i<voxelsBuffer1[1].Length;++i){Array.Clear(voxelsBuffer1[1][i],0,voxelsBuffer1[1][i].Length);}
 for(int i=0;i<voxelsBuffer1[2].Length;++i){Array.Clear(voxelsBuffer1[2][i],0,voxelsBuffer1[2][i].Length);}
@@ -579,6 +587,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 [NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
 if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;localBounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);var navMeshSource=navMeshSources[gameObject];navMeshSource.transform=transform.localToWorldMatrix;navMeshSources[gameObject]=navMeshSource;this.cnkIdx=cnkIdx;
+dataFolder=string.Format("{0}/{1}/",saveFolder,cnkIdx);Directory.CreateDirectory(dataFolder);
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
