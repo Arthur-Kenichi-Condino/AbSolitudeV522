@@ -20,6 +20,9 @@ if(!SimActorPool.ContainsKey(type))SimActorPool.Add(type,new LinkedList<SimActor
 return SimActorPool[type].AddLast(actor);
 
 }
+[SerializeField]protected Vector3 DEBUG_CREATE_SIM_ACTOR_ROTATION;
+[SerializeField]protected Vector3 DEBUG_CREATE_SIM_ACTOR_POSITION;
+[SerializeField]protected bool    DEBUG_CREATE_SIM_ACTOR=false;
 
 //...
 

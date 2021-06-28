@@ -12,25 +12,19 @@ type=GetType();
 collider=GetComponent<CharacterControllerPhys>();
 
 //...
-OutOfSight(true);
+IsOutOfSight=true;
 
 }
 [NonSerialized]public LinkedListNode<SimActor>Disabled=null;
-public void OutOfSight(bool value){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..OutOfSight:"+value,this);
+public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value,this);
 
 //...
 if(value){
-collider           .enabled=false;
 collider.controller.enabled=false;
+collider           .enabled=false;
 Disabled=Actors.Pool(type,this);
 }
-IsOutOfSight=value;
-
-}
-public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
-
-//...
 
 }}
 }[NonSerialized]protected bool IsOutOfSight_v;
