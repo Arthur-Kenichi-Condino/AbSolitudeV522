@@ -5,7 +5,79 @@ using System.Collections.Generic;
 using UnityEngine;
 using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
-public Type type{get;protected set;}public int id{get;protected set;}
+public Type type{get;protected set;}
+[NonSerialized]protected new CharacterControllerPhys collider;
+protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
+type=GetType();
+collider=GetComponent<CharacterControllerPhys>();
+
+//...
+OutOfSight(true);
+
+}
+[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
+public void OutOfSight(bool value){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..OutOfSight:"+value,this);
+
+//...
+if(value){
+collider           .enabled=false;
+collider.controller.enabled=false;
+Disabled=Actors.Pool(type,this);
+}
+IsOutOfSight=value;
+
+}
+public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
+
+//...
+
+}}
+}[NonSerialized]protected bool IsOutOfSight_v;
+
+//...
+
+//public Type type{get;protected set;}public int id{get;protected set;}
+//[NonSerialized]protected new CharacterControllerPhys collider;
+//public LinkedListNode<SimActor>Disabled=null;
+//protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
+
+////...
+//collider=GetComponent<CharacterControllerPhys>();
+//IsOutOfSight=true;
+
+//}
+
+////...
+
+//public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value,this);
+//if(value){
+
+////...
+//collider           .enabled=false;
+//collider.controller.enabled=false;
+
+//}else{
+
+////...
+//collider           .enabled=true;
+//collider.controller.enabled=true;
+
+//}
+////...
+
+//}}
+//}[NonSerialized]protected bool IsOutOfSight_v;
+
+/*public Type type{get;protected set;}public int id{get;protected set;}
+protected virtual void Awake(){
+
+//...
+var added=Actors.Add(this);type=added.type;id=added.id;
+
+}*/
+/*public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]protected new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
       
@@ -83,6 +155,6 @@ IsOutOfSight=(cnk==null||!cnk.Built
 
 //...
 
-firstLoop=false;}
+firstLoop=false;}*/
 }
 }

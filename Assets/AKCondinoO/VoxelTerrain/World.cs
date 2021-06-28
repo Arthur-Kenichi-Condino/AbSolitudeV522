@@ -13,7 +13,7 @@ using UnityEngine.Scripting;
 using UnityEngine.UI;
 using static AKCondinoO.Voxels.TerrainChunk;
 namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
-[NonSerialized]public static readonly string saveFolder=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).Replace("\\","/").ToString()+"/AbSolitudeV522/";
+[NonSerialized]public static string savePath;[NonSerialized]public static string saveName="world";[NonSerialized]public static readonly string saveFolder=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).Replace("\\","/").ToString()+"/AbSolitudeV522";
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
 public const int MaxcCoordx=6250;
 public const int MaxcCoordy=6250;
@@ -37,7 +37,7 @@ void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.
 GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
             
 //...
-Directory.CreateDirectory(saveFolder);
+Directory.CreateDirectory(savePath=string.Format("{0}/{1}/",saveFolder,saveName));
 
 if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"+Environment.ProcessorCount);
 ThreadPool.GetAvailableThreads(out int worker ,out int io         );if(LOG&&LOG_LEVEL<=100){Debug.Log("Thread pool threads available at startup: Worker threads: "+worker+" Asynchronous I/O threads: "+io);}
@@ -169,6 +169,10 @@ goto _skip;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("try to activate chunk:.."+cCoord1);
 int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(!ActiveTerrain.ContainsKey(cnkIdx1)){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do activate chunk for:.."+cnkIdx1+";[current TerrainChunkPool.Count:.."+TerrainChunkPool.Count);
+
+//...
+Directory.CreateDirectory(string.Format("{0}{1}/",savePath,cnkIdx1));
+
 TerrainChunk scr=TerrainChunkPool.First.Value;TerrainChunkPool.RemoveFirst();scr.ExpropriationNode=(null);if(scr.Initialized&&ActiveTerrain.ContainsKey(scr.cnkIdx))ActiveTerrain.Remove(scr.cnkIdx);ActiveTerrain.Add(cnkIdx1,scr);scr.OncCoordChanged(cCoord1,cnkIdx1);
 }else{
 if(LOG&&LOG_LEVEL<=1)Debug.Log("but chunk is already active:.."+cnkIdx1);

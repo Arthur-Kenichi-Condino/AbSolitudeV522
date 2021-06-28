@@ -14,7 +14,6 @@ using UnityEngine.AI;
 using UnityEngine.Rendering;
 using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
-[NonSerialized]public string dataFolder;
 public const ushort Height=(256);
 public const ushort Width=(16);
 public const ushort Depth=(16);
@@ -110,7 +109,7 @@ texCoord3=new Vector2(-1f,-1f);
                         }
 }
 [NonSerialized]NativeList<ushort>TempTri;
-public LinkedListNode<TerrainChunk>ExpropriationNode=null;
+[NonSerialized]public LinkedListNode<TerrainChunk>ExpropriationNode=null;
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
@@ -119,6 +118,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 [NonSerialized]public readonly object load_Syn=new object();[NonSerialized]static readonly List<object>load_Syn_All=new List<object>();//  para dar Monitor.Enter em todos os chunks envolvidos ao editar terreno
 [NonSerialized]Vector2Int cCoord1;
 [NonSerialized]Vector2Int cnkRgn1;
+[NonSerialized]int        cnkIdx1;
 [NonSerialized]readonly Voxel[]voxels=new Voxel[VoxelsPerChunk];
 [NonSerialized]public Mesh mesh=null;[NonSerialized]MeshUpdateFlags meshFlags=MeshUpdateFlags.DontValidateIndices|MeshUpdateFlags.DontNotifyMeshUsers|MeshUpdateFlags.DontRecalculateBounds;[NonSerialized]public new MeshRenderer renderer=null;[NonSerialized]public new MeshCollider collider=null;[NonSerialized]public Bounds localBounds;
 void Awake(){
@@ -140,10 +140,10 @@ ignoreFromBuild=false,
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);
 TempTri=new NativeList<ushort>(Allocator.Persistent);
-task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,},TaskCreationOptions.LongRunning);
+task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
-if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para pedaço de terreno");
 var watch=new System.Diagnostics.Stopwatch();
 Voxel[]polygonCell=new Voxel[8];Voxel[]tmpVxl=new Voxel[6];Vector3 polygonCellNormal;
@@ -174,6 +174,11 @@ if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terren
 Array.Clear(voxels,0,voxels.Length);
 TempVer.Clear();
 TempTri.Clear();
+
+//...
+string editsFolder=string.Format("{0}{1}",savePath,cnkIdx1);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
+if(LOG&&LOG_LEVEL<=1)Debug.Log("editsFolder.."+editsFolder+"..e editsFile.."+editsFile+"..para:.."+cCoord1);
+
 lock(load_Syn){
 
 //...
@@ -581,13 +586,13 @@ goto _repeat;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("hora de calcular reconstrução",this);
 cCoord1=cCoord;
 cnkRgn1=cnkRgn;
+cnkIdx1=cnkIdx;
 backgroundData.Reset();foregroundData.Set();
 }
 }
 }
 [NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
 if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;localBounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);var navMeshSource=navMeshSources[gameObject];navMeshSource.transform=transform.localToWorldMatrix;navMeshSources[gameObject]=navMeshSource;this.cnkIdx=cnkIdx;
-dataFolder=string.Format("{0}/{1}/",saveFolder,cnkIdx);Directory.CreateDirectory(dataFolder);
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
