@@ -5,29 +5,89 @@ using System.Collections.Generic;
 using UnityEngine;
 using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+
+
+
 public Type type{get;protected set;}
-[NonSerialized]protected new CharacterControllerPhys collider;
+[NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();
 collider=GetComponent<CharacterControllerPhys>();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
+Actors.Disable(this);
 
 //...
-IsOutOfSight=true;
 
 }
-[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
+public int id{get;set;}[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
+
+
+
+//public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
+//collider.controller.enabled=!value;
+//collider           .enabled=!value;
+//if(value){
+//Actors.Disable(this);
+//}else{
+//var loadInfo=Actors.GetNextId(this);
+
+////...
+
+//}
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..so my id is.."+id,this);
+//}}
+//}[NonSerialized]protected bool IsOutOfSight_v;
+
+//...
+
+/*
+protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
+type=GetType();
+collider=GetComponent<CharacterControllerPhys>();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
+
+//...
+IsOutOfSight=true;pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am currently at.."+pos+"..and my cCoord is.."+cCoord+"..,so my cnkIdx is.."+cnkIdx,this);
+
+}
+protected virtual void OnDestroy(){
+
+//...
+
+}
+public int id{get;set;}[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
 public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
-if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value,this);
 
 //...
+collider.controller.enabled=!value;
+collider           .enabled=!value;
 if(value){
-collider.controller.enabled=false;
-collider           .enabled=false;
-Disabled=Actors.Pool(type,this);
+Disabled=Actors.Pool(this);
+}else{
+//...
 }
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..so my id is.."+id,this);
 
 }}
 }[NonSerialized]protected bool IsOutOfSight_v;
+[NonSerialized]bool firstLoop=true;
+[NonSerialized]Vector3    actPos;
+[NonSerialized]Vector2Int aCoord,aCoord_Pre;
+[NonSerialized]protected Vector3 pos;
+[NonSerialized]protected Vector3 pos_Pre;
+[NonSerialized]protected Vector2Int cCoord;
+[NonSerialized]protected Vector2Int cCoord_Pre;
+[NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
+protected virtual void Update(){
+if(!IsOutOfSight){
+var gotcnk=false;void getcnk(){ActiveTerrain.TryGetValue(cnkIdx,out cnk);gotcnk=true;}     
+pos=transform.position;
+
+//...
+
+}
+}*/
 
 //...
 
