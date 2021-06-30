@@ -9,6 +9,70 @@ using UnityEngine;
 using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Actors{public class Actors:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;        
 [NonSerialized]public static Actors staticScript;
+static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();foregroundData2.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;
+[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
+[NonSerialized]static readonly AutoResetEvent foregroundData2=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData2=new ManualResetEvent(true);[NonSerialized]static Task task2=null;
+[NonSerialized]public static readonly object loading_Syn=new object();
+void Awake(){staticScript=this;
+
+//...
+actPos=Camera.main.transform.position;aCoord=aCoord_Pre=vecPosTocCoord(actPos);actRgn=cCoordTocnkRgn(aCoord);
+
+task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
+task2=Task.Factory.StartNew(BG2,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
+static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 1 para gerenciar atores");
+while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
+
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 1 para gerenciar atores graciosamente");
+}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}
+static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 2 para gerenciar atores");
+while(!Stop){foregroundData2.WaitOne();if(Stop)goto _Stop;
+
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 2 para gerenciar atores graciosamente");
+}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}
+}
+void OnDestroy(){
+Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
+          try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
+}
+[NonSerialized]bool firstLoop=true;
+[NonSerialized]Vector3    actPos;
+[NonSerialized]Vector2Int aCoord,aCoord_Pre;
+[NonSerialized]Vector2Int actRgn;
+void Update(){
+if(backgroundData2.WaitOne(0)){
+if(backgroundData1.WaitOne(0)){
+
+//...
+
+firstLoop=false;}}}
+
+
+
+
+
+        
+
+
+
+/*[NonSerialized]public static Actors staticScript;
 [NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();
 static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
@@ -110,7 +174,7 @@ backgroundData1.Reset();foregroundData1.Set();
 }
 
 }
-}
+}*/
 
 
 //[NonSerialized]public static Actors staticScript;
