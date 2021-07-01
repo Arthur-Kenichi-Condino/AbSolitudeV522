@@ -1,43 +1,94 @@
 using AKCondinoO.Voxels;
+using MessagePack;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
+using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
+[Serializable]public class SaveTransform{
+public string type{get;set;}public int id{get;set;}
+public SerializableQuaternion rotation{get;set;}
+public SerializableVector3    position{get;set;}
+}
+[Serializable]public class SaveStateData{
+public string type{get;set;}public int id{get;set;}
+}
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+[NonSerialized]readonly SaveTransform saveTransform=new SaveTransform();
+[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object saving_Syn=new object();
-public Type type{get;protected set;}
+public Type type{get;protected set;}public int id{get;protected set;}[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
+type=GetType();
 
+//...
 
-
-task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
+task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,actorsFolder,},TaskCreationOptions.LongRunning);
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
-if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string actorsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para ator");
+var watch=new System.Diagnostics.Stopwatch();
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo salvamento para este ator:"+id);watch.Restart();}
 
+lock(saving_Syn){
+
+//...
+if(!string.IsNullOrEmpty(transformFile)&&File.Exists(transformFile)){
+if(LOG&&LOG_LEVEL<=1){Debug.Log("já há um arquivo carregado registrado para ator:"+id);}
+File.Delete(transformFile);
+}
+Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
+transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).MessagePack",saveTransform.type,saveTransform.id));
+Directory.CreateDirectory(string.Format("{0}/",transformFolder));
+using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){var saveTransformJson=JsonUtility.ToJson(saveTransform);
+MessagePackSerializer.Serialize(file,saveTransformJson);
+}
+
+}
+
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado salvamento para este ator:"+id+"..levou:"+watch.ElapsedMilliseconds+"ms");
+backgroundData.Set();
 }_Stop:{
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para ator graciosamente");
 }
-}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
+backgroundData.Set();
+}
 }
 }
 protected virtual void OnDestroy(){
 
 //...
+#region exit save
+backgroundData.WaitOne();
+backgroundData.Reset();foregroundData.Set();
+backgroundData.WaitOne();
+#endregion
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 
 }
+protected virtual void Update(){
 
+if(backgroundData.WaitOne(0)){
+
+saveTransform.type=type.FullName;saveTransform.id=id;
+saveTransform.position=transform.position;
+saveTransform.rotation=transform.rotation;
+
+}
+
+}
 
 
 
