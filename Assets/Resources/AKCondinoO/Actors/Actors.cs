@@ -6,102 +6,114 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
-namespace AKCondinoO.Actors{public class Actors:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;        
+namespace AKCondinoO.Actors{public class Actors:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;   
 [NonSerialized]public static string actorsPath;[NonSerialized]public static string actorsFolder;
-[NonSerialized]public static Actors staticScript;
-static bool Stop{
-get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
-set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();foregroundData2.Set();}}
-}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;
-[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
-[NonSerialized]static readonly AutoResetEvent foregroundData2=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData2=new ManualResetEvent(true);[NonSerialized]static Task task2=null;
-[NonSerialized]public static readonly List<object>loading_Syn=new List<object>();
+[NonSerialized]public static Actors staticScript;     
 void Awake(){staticScript=this;
-
-//...
 actorsFolder=string.Format("{0}{1}",savePath,"actors");
 Directory.CreateDirectory(actorsPath=string.Format("{0}/",actorsFolder));
 
-task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
-task2=Task.Factory.StartNew(BG2,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
-backgroundData1.Reset();foregroundData1.Set();
-static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
-try{
-if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 1 para gerenciar atores");
-var watch=new System.Diagnostics.Stopwatch();
-foregroundData1.WaitOne();
-if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de ids");watch.Restart();}
-
-
-
-if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
-backgroundData1.Set();
-while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
-if(LOG&&LOG_LEVEL<=1){Debug.Log("começar salvamento de dados de ids");watch.Restart();}
-
-if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado salvamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
-backgroundData1.Set();
-}_Stop:{
-}
-if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 1 para gerenciar atores graciosamente");
-}
-}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-backgroundData1.Set();
-}
-}
-static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
-try{
-if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 2 para gerenciar atores");
-var watch=new System.Diagnostics.Stopwatch();
-while(!Stop){foregroundData2.WaitOne();if(Stop)goto _Stop;
-if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de atores");watch.Restart();}
-
-foreach(var syn in loading_Syn)Monitor.Enter(syn);try{
 //...
-}catch{throw;}finally{foreach(var syn in loading_Syn)Monitor.Exit(syn);}
-
-aCoord_Pre=aCoord;
-firstLoop=false;
-if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de atores..levou:"+watch.ElapsedMilliseconds+"ms");
-backgroundData2.Set();
-}_Stop:{
-}
-if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 2 para gerenciar atores graciosamente");
-}
-}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
-}
-}
-void OnDestroy(){
-#region exit save
-backgroundData1.WaitOne();
-backgroundData1.Reset();foregroundData1.Set();
-backgroundData1.WaitOne();
-#endregion
-Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
-          try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
-}
-[NonSerialized]static bool firstLoop=true;
-[NonSerialized]static Vector3    actPos;
-[NonSerialized]static Vector2Int aCoord,aCoord_Pre;
-[NonSerialized]static Vector2Int actRgn;
-void Update(){
-if(backgroundData2.WaitOne(0)){
-if(backgroundData1.WaitOne(0)){
-
-//...
-if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
-              actPos=(Camera.main.transform.position);
-if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
-              actRgn=(cCoordTocnkRgn(aCoord));
-
-backgroundData2.Reset();foregroundData2.Set();
 
 }
-}
 
-}}}
+
+
+//[NonSerialized]public static string actorsPath;[NonSerialized]public static string actorsFolder;
+//[NonSerialized]public static Actors staticScript;
+//static bool Stop{
+//get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+//set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();foregroundData2.Set();}}
+//}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;
+//[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
+//[NonSerialized]static readonly AutoResetEvent foregroundData2=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData2=new ManualResetEvent(true);[NonSerialized]static Task task2=null;
+//[NonSerialized]public static readonly List<object>loading_Syn=new List<object>();
+//void Awake(){staticScript=this;
+
+////...
+//actorsFolder=string.Format("{0}{1}",savePath,"actors");
+//Directory.CreateDirectory(actorsPath=string.Format("{0}/",actorsFolder));
+
+//task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
+//task2=Task.Factory.StartNew(BG2,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
+//backgroundData1.Reset();foregroundData1.Set();
+//static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+//try{
+//if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 1 para gerenciar atores");
+//var watch=new System.Diagnostics.Stopwatch();
+//foregroundData1.WaitOne();
+//if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de ids");watch.Restart();}
+
+
+
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
+//backgroundData1.Set();
+//while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
+//if(LOG&&LOG_LEVEL<=1){Debug.Log("começar salvamento de dados de ids");watch.Restart();}
+
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado salvamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
+//backgroundData1.Set();
+//}_Stop:{
+//}
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 1 para gerenciar atores graciosamente");
+//}
+//}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
+//backgroundData1.Set();
+//}
+//}
+//static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+//try{
+//if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 2 para gerenciar atores");
+//var watch=new System.Diagnostics.Stopwatch();
+//while(!Stop){foregroundData2.WaitOne();if(Stop)goto _Stop;
+//if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de atores");watch.Restart();}
+
+//foreach(var syn in loading_Syn)Monitor.Enter(syn);try{
+////...
+//}catch{throw;}finally{foreach(var syn in loading_Syn)Monitor.Exit(syn);}
+
+//aCoord_Pre=aCoord;
+//firstLoop=false;
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de atores..levou:"+watch.ElapsedMilliseconds+"ms");
+//backgroundData2.Set();
+//}_Stop:{
+//}
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 2 para gerenciar atores graciosamente");
+//}
+//}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+//}
+//}
+//void OnDestroy(){
+//#region exit save
+//backgroundData1.WaitOne();
+//backgroundData1.Reset();foregroundData1.Set();
+//backgroundData1.WaitOne();
+//#endregion
+//Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
+//          try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
+//}
+//[NonSerialized]static bool firstLoop=true;
+//[NonSerialized]static Vector3    actPos;
+//[NonSerialized]static Vector2Int aCoord,aCoord_Pre;
+//[NonSerialized]static Vector2Int actRgn;
+//void Update(){
+//if(backgroundData2.WaitOne(0)){
+//if(backgroundData1.WaitOne(0)){
+
+////...
+//if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
+//              actPos=(Camera.main.transform.position);
+//if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+//              actRgn=(cCoordTocnkRgn(aCoord));
+
+//backgroundData2.Reset();foregroundData2.Set();
+
+//}
+//}
+
+//}}}
 
 
 
