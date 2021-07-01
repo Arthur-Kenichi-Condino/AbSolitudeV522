@@ -14,9 +14,14 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
+public Type type{get;protected set;}public int id{get;protected set;}
+[NonSerialized]bool disabling;
+[NonSerialized]bool releaseId;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
-
+type=GetType();
+Disable();
 //...
+
 task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,actorsFolder,},TaskCreationOptions.LongRunning);
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
@@ -24,9 +29,16 @@ if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LO
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para ator");
 var watch=new System.Diagnostics.Stopwatch();
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
+
+//...
+if(releaseId){releaseId=false;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm releasing my id:"+id,this);}
+id=-1;
+}
 
 
-
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado processamento de dados de arquivo para este ator:"+id+"..levou:"+watch.ElapsedMilliseconds+"ms",this);
 backgroundData.Set();
 }_Stop:{
 }
@@ -47,6 +59,27 @@ backgroundData.WaitOne();
 #endregion
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 
+}
+void Disable(){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
+disabling=true;
+}
+protected virtual void Update(){
+if(backgroundData.WaitOne(0)){
+
+//...
+if(disabling){
+if(id!=-1){
+if(LOG&&LOG_LEVEL<=1){Debug.Log("mark my id:"+id+" to be released",this);}
+releaseId=true;
+backgroundData.Reset();foregroundData.Set();
+}else{disabling=false;
+//...
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
+}
+}
+
+}
 }
 
 
