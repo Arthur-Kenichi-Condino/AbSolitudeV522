@@ -9,16 +9,31 @@ using System.Threading.Tasks;
 using UnityEngine;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
+[Serializable]public class SaveTransform{
+public string type{get;set;}public int id{get;set;}
+public SerializableQuaternion rotation{get;set;}
+public SerializableVector3    position{get;set;}
+}[NonSerialized]readonly SaveTransform saveTransform=new SaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+[Serializable]public class SaveStateData{
+public string type{get;set;}public int id{get;set;}
+}[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
+[NonSerialized](Type type,int id,int cnkIdx)?load=null;
+[NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
-type=GetType();
+type=GetType();id=-1;
+saveTransform.type=type.FullName;
+saveStateData.type=type.FullName;
+collider=GetComponent<CharacterControllerPhys>();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
 Disable();
 //...
 
@@ -32,9 +47,36 @@ while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
 
 //...
+lock(load_Syn){
+#region safe
+
+//...
+if(id!=-1){
+if(!string.IsNullOrEmpty(transformFile)&&File.Exists(transformFile)){
+if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado registrado para ator:"+id+"..deletar antes de abrir um novo");}
+File.Delete(transformFile);
+}
+Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
+transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).MessagePack",saveTransform.type,saveTransform.id));
+Directory.CreateDirectory(string.Format("{0}/",transformFolder));
+if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,this);}
+using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){var saveTransformJson=JsonUtility.ToJson(saveTransform);
+MessagePackSerializer.Serialize(file,saveTransformJson);
+}
+}
+if(load!=null){
+
+//...
+
+}
+//...
+
+#endregion safe
+}
 if(releaseId){releaseId=false;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm releasing my id:"+id,this);}
 id=-1;
+transformFolder=null;transformFile=null;
 }
 
 
@@ -45,7 +87,7 @@ backgroundData.Set();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para ator graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-backgroundData.Set();
+while(!Stop){foregroundData.WaitOne();backgroundData.Set();}
 }
 }
 }
@@ -60,14 +102,15 @@ backgroundData.WaitOne();
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 
 }
-void Disable(){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
-disabling=true;
-}
 protected virtual void Update(){
 if(backgroundData.WaitOne(0)){
 
 //...
+if(id!=-1){
+saveTransform.id=id;
+saveTransform.position=transform.position;
+saveTransform.rotation=transform.rotation;
+}
 if(disabling){
 if(id!=-1){
 if(LOG&&LOG_LEVEL<=1){Debug.Log("mark my id:"+id+" to be released",this);}
@@ -75,12 +118,20 @@ releaseId=true;
 backgroundData.Reset();foregroundData.Set();
 }else{disabling=false;
 //...
+Disabled=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
 }
 }
 
 }
 }
+void Disable(){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
+collider.controller.enabled=false;
+collider           .enabled=false;
+disabling=true;
+}
+//...
 
 
 
