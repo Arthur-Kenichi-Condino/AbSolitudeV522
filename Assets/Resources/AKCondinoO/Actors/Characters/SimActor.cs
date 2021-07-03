@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -26,7 +27,7 @@ public string type{get;set;}public int id{get;set;}
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
-[NonSerialized]public(Type type,int id,int cnkIdx)?loadTuple=null;
+[NonSerialized]public(Type type,int id,int cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;
 [NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
@@ -34,7 +35,9 @@ saveTransform.type=type.FullName;
 saveStateData.type=type.FullName;
 collider=GetComponent<CharacterControllerPhys>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
-Disable();
+collider.controller.enabled=false;
+collider           .enabled=false;
+Disabled=SimActorPool[type].AddLast(this);
 //...
 
 task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,actorsFolder,},TaskCreationOptions.LongRunning);
@@ -43,6 +46,7 @@ try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string actorsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para ator");
 var watch=new System.Diagnostics.Stopwatch();
+DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SaveTransform));
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
 
@@ -57,11 +61,13 @@ if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado
 File.Delete(transformFile);
 }
 Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
-transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).MessagePack",saveTransform.type,saveTransform.id));
+transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",saveTransform.type,saveTransform.id));
 Directory.CreateDirectory(string.Format("{0}/",transformFolder));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,this);}
-using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){var saveTransformJson=JsonUtility.ToJson(saveTransform);
-MessagePackSerializer.Serialize(file,saveTransformJson);
+using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+
+saveTransformSerializer.WriteObject(file,saveTransform);
+
 }
 }
 if(id==-1){
@@ -69,6 +75,20 @@ if(loadTuple.HasValue){
 
 //...
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Value.id,this);}
+id=loadTuple.Value.id;
+int cnkIdx1=loadTuple.Value.cnkIdx;
+transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
+if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
+using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
+
+var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SaveTransform;
+
+saveTransform.id=id;
+saveTransform.position=saveTransformLoaded.position;
+saveTransform.rotation=saveTransformLoaded.rotation;
+}
+
+loaded=true;
 
 }
 }
@@ -90,7 +110,7 @@ backgroundData.Set();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para ator graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-while(!Stop){foregroundData.WaitOne();backgroundData.Set();}
+while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();}
 }
 }
 }
@@ -106,13 +126,23 @@ Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.
 
 }
 protected virtual void Update(){
+if(!disabling){
+//...
+}
 if(backgroundData.WaitOne(0)){
 
 //...
 if(id!=-1){
+if(loaded){loaded=false;
+transform.rotation=saveTransform.rotation;
+transform.position=saveTransform.position;
+collider.controller.enabled=true;
+collider           .enabled=true;
+}else{
 saveTransform.id=id;
-saveTransform.position=transform.position;
 saveTransform.rotation=transform.rotation;
+saveTransform.position=transform.position;
+}
 }
 if(disabling){
 if(id!=-1){

@@ -56,7 +56,7 @@ backgroundData1.Set();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 1 para gerenciar atores graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-while(!Stop){foregroundData1.WaitOne();backgroundData1.Set();}
+while(!Stop){if(!backgroundData1.WaitOne(0))backgroundData1.Set();}
 }
 }
 static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
@@ -145,10 +145,12 @@ goto _next;
 
 }
 SimActor actorToLoad;
-if(SimActorPool[type].Count>0){//  Get
+_getActor:{}
+if(SimActorPool[type].Count>0){//  get from pool
 actorToLoad=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actorToLoad.Disabled=null;
 }else{
-actorToLoad=Instantiate(Prefabs[type]).GetComponent<SimActor>();
+Instantiate(Prefabs[type]);
+goto _getActor;
 }
 actorToLoad.loadTuple=loadTuple;Loaded[type].Add(actorToLoad);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("actor set to be loaded:..type:"+type+"..id:"+loadTuple.id,actorToLoad);
