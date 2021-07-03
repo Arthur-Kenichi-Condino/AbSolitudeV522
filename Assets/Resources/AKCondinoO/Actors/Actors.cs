@@ -15,14 +15,14 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]static readonly AutoResetEvent foregroundData2=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData2=new ManualResetEvent(true);[NonSerialized]static Task task2=null;
 [NonSerialized]public static string actorsPath;[NonSerialized]public static string actorsFolder;
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
-[NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimActor>>SimActorPool=new Dictionary<Type,LinkedList<SimActor>>();[NonSerialized]public static readonly Dictionary<Type,List<SimActor>>Loaded=new Dictionary<Type,List<SimActor>>();[NonSerialized]static readonly Dictionary<Type,(Type type,int id,int cnkIdx)>Loading=new Dictionary<Type,(Type,int,int)>();
+[NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimActor>>SimActorPool=new Dictionary<Type,LinkedList<SimActor>>();[NonSerialized]public static readonly Dictionary<Type,List<SimActor>>Loaded=new Dictionary<Type,List<SimActor>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();
 [NonSerialized]public static Actors staticScript;     
 void Awake(){staticScript=this;
 actorsFolder=string.Format("{0}{1}",savePath,"actors");
 Directory.CreateDirectory(actorsPath=string.Format("{0}/",actorsFolder));
 var objects=Resources.LoadAll("AKCondinoO/Actors/Characters",typeof(GameObject));
 foreach(var o in objects){var p=o as GameObject;var t=p.GetComponent<SimActor>().GetType();
-Prefabs[t]=p;SimActorPool[t]=new LinkedList<SimActor>();
+Prefabs[t]=p;SimActorPool[t]=new LinkedList<SimActor>();Loaded[t]=new List<SimActor>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }
 //...
@@ -93,7 +93,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("actor at:.."+cCoord1+"..transformFileName:"+tran
 string typeAndId=transformFileName.Split('(',')')[1];string[]typeAndIdSplit=typeAndId.Split(',');string typeString=typeAndIdSplit[0];string idString=typeAndIdSplit[1];
 if(LOG&&LOG_LEVEL<=1)Debug.Log("actor at:.."+cCoord1+"..type:"+typeString+"..id:"+idString);
 Type type=Type.GetType(typeString);int id=int.Parse(idString);
-Loading.Add(type,(type,id,cnkIdx1));
+Loading[type].Add((type,id,cnkIdx1));
 
 }
 _skip:{}
@@ -133,10 +133,28 @@ void Update(){
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
 
-foreach(var loading in Loading){
+foreach(var loading in Loading){var type=loading.Key;foreach(var loadTuple in loading.Value){
 
-if(LOG&&LOG_LEVEL<=1)Debug.Log("loading:..type:"+loading.Value.type+"..id:"+loading.Value.id);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("loading:..type:"+type+"..id:"+loadTuple.id);
+foreach(var actorLoaded in Loaded[type]){
 
+if(actorLoaded.loadTuple.HasValue&&actorLoaded.loadTuple.Value.id==loadTuple.id){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("already loaded:..type:"+type+"..id:"+loadTuple.id,actorLoaded);
+goto _next;
+}
+
+}
+SimActor actorToLoad;
+if(SimActorPool[type].Count>0){//  Get
+actorToLoad=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actorToLoad.Disabled=null;
+}else{
+actorToLoad=Instantiate(Prefabs[type]).GetComponent<SimActor>();
+}
+actorToLoad.loadTuple=loadTuple;Loaded[type].Add(actorToLoad);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("actor set to be loaded:..type:"+type+"..id:"+loadTuple.id,actorToLoad);
+
+_next:{}
+}loading.Value.Clear();
 }
 
 //...

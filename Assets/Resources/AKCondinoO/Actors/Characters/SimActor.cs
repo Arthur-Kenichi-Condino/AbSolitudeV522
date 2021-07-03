@@ -26,7 +26,7 @@ public string type{get;set;}public int id{get;set;}
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
-[NonSerialized](Type type,int id,int cnkIdx)?load=null;
+[NonSerialized]public(Type type,int id,int cnkIdx)?loadTuple=null;
 [NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
@@ -64,10 +64,13 @@ using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAcc
 MessagePackSerializer.Serialize(file,saveTransformJson);
 }
 }
-if(load!=null){
+if(id==-1){
+if(loadTuple.HasValue){
 
 //...
+if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Value.id,this);}
 
+}
 }
 //...
 
@@ -118,8 +121,15 @@ releaseId=true;
 backgroundData.Reset();foregroundData.Set();
 }else{disabling=false;
 //...
-Disabled=SimActorPool[type].AddLast(this);
+loadTuple=null;Loaded[type].Remove(this);Disabled=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
+}
+}else{
+if(id==-1){
+if(loadTuple.HasValue){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I need to wake up..loadTuple:"+loadTuple,this);
+backgroundData.Reset();foregroundData.Set();
+}
 }
 }
 
