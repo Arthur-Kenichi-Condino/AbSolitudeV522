@@ -129,6 +129,7 @@ while(!Stop){if(!backgroundData2.WaitOne(0))backgroundData2.Set();}
 }
 }
 }
+[NonSerialized]static bool disposed;
 void OnDestroy(){
 #region exit save
 backgroundData1.WaitOne();
@@ -137,6 +138,7 @@ backgroundData1.WaitOne();
 #endregion
 Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
           try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
+disposed=true;
 }
 SimActor Create(Type type,Vector3 position,Vector3 rotation){
 _getActor:{}
@@ -219,10 +221,11 @@ backgroundData2.Reset();foregroundData2.Set();
 }
 }
 }
-public static void OnActorDestroyed(SimActor actor){
+public static void OnActorDestroyed(SimActor actor){//  actors should not be destroyed if the game is running, but added to the pool, by design
 
-//  actors should not be destroyed if the game is running, but added to the pool, by design
+if(!disposed){
 backgroundData2.WaitOne();
+backgroundData1.WaitOne();}
 load_Syn_All.Remove(actor.load_Syn);
 
 }
