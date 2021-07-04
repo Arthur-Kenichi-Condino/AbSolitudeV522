@@ -170,6 +170,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated so I can be deleted..my id:
 #endregion
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 if(Disabled!=null)SimActorPool[type].Remove(Disabled);Disabled=null;
+OnActorDestroyed(this);
 //  id==-1
 //  transformFile==null
 //  loadTuple==null

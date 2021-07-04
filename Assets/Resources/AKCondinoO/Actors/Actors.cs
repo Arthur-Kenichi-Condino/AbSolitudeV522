@@ -124,7 +124,9 @@ backgroundData2.Set();
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 2 para gerenciar atores graciosamente");
 }
-}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
+while(!Stop){if(!backgroundData2.WaitOne(0))backgroundData2.Set();}
+}
 }
 }
 void OnDestroy(){
@@ -139,7 +141,7 @@ Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?
 SimActor Create(Type type,Vector3 position,Vector3 rotation){
 _getActor:{}
 if(SimActorPool[type].Count>0){//  get from pool
-SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.Disabled=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;return actor;
+SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.Disabled=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;load_Syn_All.Add(actor.load_Syn);return actor;
 }else{
 Instantiate(Prefabs[type]);
 goto _getActor;
@@ -216,6 +218,13 @@ backgroundData2.Reset();foregroundData2.Set();
 
 }
 }
+}
+public static void OnActorDestroyed(SimActor actor){
+
+//  actors should not be destroyed if the game is running, but added to the pool, by design
+backgroundData2.WaitOne();
+load_Syn_All.Remove(actor.load_Syn);
+
 }
 
 
