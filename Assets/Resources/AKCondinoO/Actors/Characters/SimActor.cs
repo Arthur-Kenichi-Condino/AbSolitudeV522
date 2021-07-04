@@ -158,11 +158,23 @@ protected virtual void OnDestroy(){
 //...
 #region exit save
 backgroundData.WaitOne();
+#region save for the last time and release id...
+releaseId=true;
 backgroundData.Reset();foregroundData.Set();
+#endregion
 backgroundData.WaitOne();
+#region id released so set as not loaded... but don't add to pool because it's being destroyed!
+loadTuple=null;Loaded[type].Remove(this);
+#endregion
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated so I can be deleted..my id:"+id,this);
 #endregion
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 if(Disabled!=null)SimActorPool[type].Remove(Disabled);Disabled=null;
+//  id==-1
+//  transformFile==null
+//  loadTuple==null
+//  notLoaded
+//  notInSimActorPool
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 
 }
