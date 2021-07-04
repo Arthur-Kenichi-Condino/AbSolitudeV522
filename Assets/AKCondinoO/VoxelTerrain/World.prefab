@@ -241,6 +241,14 @@ PrefabInstance:
       propertyPath: LOG
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -5760275696122447180, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
+      propertyPath: DEBUG_CREATE_SIM_ACTOR_POSITION.y
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -5760275696122447180, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
+      propertyPath: DEBUG_CREATE_SIM_ACTOR_ROTATION.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3454996566297361125, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
       propertyPath: m_RootOrder
       value: 1

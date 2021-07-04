@@ -1,3 +1,4 @@
+using MessagePack;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]public static string actorsPath;[NonSerialized]public static string actorsFolder;
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
 [NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimActor>>SimActorPool=new Dictionary<Type,LinkedList<SimActor>>();[NonSerialized]public static readonly Dictionary<Type,List<SimActor>>Loaded=new Dictionary<Type,List<SimActor>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();
+[NonSerialized]static Dictionary<Type,int>Count;
 [NonSerialized]public static Actors staticScript;     
 void Awake(){staticScript=this;
 actorsFolder=string.Format("{0}{1}",savePath,"actors");
@@ -40,14 +42,23 @@ var watch=new System.Diagnostics.Stopwatch();
 foregroundData1.WaitOne();
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de ids");watch.Restart();}
 
-
+string idsFile=string.Format("{0}/{1}",actorsFolder,"actors.MessagePack");
+using(FileStream file=new FileStream(idsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+if(file.Length>0){
+Count=MessagePackSerializer.Deserialize(typeof(Dictionary<Type,int>),file)as Dictionary<Type,int>;
+}else{
+Count=new Dictionary<Type,int>();
+}
+}
 
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
 backgroundData1.Set();
 while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar salvamento de dados de ids");watch.Restart();}
 
-
+using(FileStream file=new FileStream(idsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+MessagePackSerializer.Serialize(file,Count);
+}
 
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado salvamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
 backgroundData1.Set();
@@ -125,10 +136,22 @@ backgroundData1.WaitOne();
 Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
           try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
 }
+SimActor Create(Type type,Vector3 position,Vector3 rotation){
+_getActor:{}
+if(SimActorPool[type].Count>0){//  get from pool
+SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.Disabled=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;return actor;
+}else{
+Instantiate(Prefabs[type]);
+goto _getActor;
+}
+}
 [NonSerialized]static bool firstLoop=true;
 [NonSerialized]static Vector3    actPos;
 [NonSerialized]static Vector2Int aCoord,aCoord_Pre;
 [NonSerialized]static Vector2Int actRgn;
+[SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_ROTATION;
+[SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_POSITION;
+[SerializeField]protected SimActor DEBUG_CREATE_SIM_ACTOR=null;
 void Update(){
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
@@ -144,19 +167,37 @@ goto _next;
 }
 
 }
-SimActor actorToLoad;
-_getActor:{}
-if(SimActorPool[type].Count>0){//  get from pool
-actorToLoad=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actorToLoad.Disabled=null;
-}else{
-Instantiate(Prefabs[type]);
-goto _getActor;
-}
+SimActor actorToLoad=Create(type,Vector3.zero,Vector3.zero);
 actorToLoad.loadTuple=loadTuple;Loaded[type].Add(actorToLoad);
+//  id==-1
+//  transformFile==null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 if(LOG&&LOG_LEVEL<=1)Debug.Log("actor set to be loaded:..type:"+type+"..id:"+loadTuple.id,actorToLoad);
 
 _next:{}
 }loading.Value.Clear();
+}
+
+if(DEBUG_CREATE_SIM_ACTOR){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_ACTOR of prefab:.."+DEBUG_CREATE_SIM_ACTOR);
+
+//...
+Type type=DEBUG_CREATE_SIM_ACTOR.GetComponent<SimActor>().GetType();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_ACTOR of type:.."+type);
+int id=0;if(!Count.ContainsKey(type)){Count.Add(type,1);}else{id=Count[type]++;}
+
+SimActor actorToLoad=Create(type,DEBUG_CREATE_SIM_ACTOR_POSITION,DEBUG_CREATE_SIM_ACTOR_ROTATION);
+actorToLoad.loadTuple=(type,id,null);Loaded[type].Add(actorToLoad);
+//  id==-1
+//  transformFile==null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
+
+DEBUG_CREATE_SIM_ACTOR=null;
+backgroundData1.Reset();foregroundData1.Set();
 }
 
 //...

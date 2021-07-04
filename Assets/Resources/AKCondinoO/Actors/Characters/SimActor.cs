@@ -27,7 +27,7 @@ public string type{get;set;}public int id{get;set;}
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
-[NonSerialized]public(Type type,int id,int cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;
+[NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;
 [NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
@@ -38,6 +38,11 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..n
 collider.controller.enabled=false;
 collider           .enabled=false;
 Disabled=SimActorPool[type].AddLast(this);
+//  id==-1
+//  transformFile==null
+//  loadTuple==null
+//  notLoaded
+//  isInSimActorPool
 //...
 
 task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,actorsFolder,},TaskCreationOptions.LongRunning);
@@ -57,9 +62,19 @@ lock(load_Syn){
 //...
 if(id!=-1){
 if(!string.IsNullOrEmpty(transformFile)&&File.Exists(transformFile)){
+//  id!=-1
+//  transformFile!=null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado registrado para ator:"+id+"..deletar antes de abrir um novo");}
 File.Delete(transformFile);
 }
+//  id!=-1
+//  transformFile may vary (null or not null)
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",saveTransform.type,saveTransform.id));
 Directory.CreateDirectory(string.Format("{0}/",transformFolder));
@@ -69,14 +84,25 @@ using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAcc
 saveTransformSerializer.WriteObject(file,saveTransform);
 
 }
+//  id!=-1
+//  transformFile!=null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 }
 if(id==-1){
 if(loadTuple.HasValue){
+//  id==-1
+//  transformFile==null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 
 //...
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Value.id,this);}
 id=loadTuple.Value.id;
-int cnkIdx1=loadTuple.Value.cnkIdx;
+if(loadTuple.Value.cnkIdx.HasValue){
+int cnkIdx1=loadTuple.Value.cnkIdx.Value;
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
@@ -91,6 +117,14 @@ saveTransform.rotation=saveTransformLoaded.rotation;
 loaded=true;
 
 }
+
+enable=true;
+//  id!=-1
+//  transformFile may vary (null or not null)
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
+}
 }
 //...
 
@@ -100,6 +134,11 @@ if(releaseId){releaseId=false;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm releasing my id:"+id,this);}
 id=-1;
 transformFolder=null;transformFile=null;
+//  id==-1
+//  transformFile==null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 }
 
 
@@ -123,7 +162,15 @@ backgroundData.Reset();foregroundData.Set();
 backgroundData.WaitOne();
 #endregion
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
+if(Disabled!=null)SimActorPool[type].Remove(Disabled);Disabled=null;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 
+}
+void Disable(){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
+collider.controller.enabled=false;
+collider           .enabled=false;
+disabling=true;
 }
 protected virtual void Update(){
 if(!disabling){
@@ -133,43 +180,71 @@ if(backgroundData.WaitOne(0)){
 
 //...
 if(id!=-1){
+//  id!=-1
+//  transformFile!=null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
+#region get data if loaded or set if saving...
 if(loaded){loaded=false;
 transform.rotation=saveTransform.rotation;
 transform.position=saveTransform.position;
-collider.controller.enabled=true;
-collider           .enabled=true;
 }else{
 saveTransform.id=id;
 saveTransform.rotation=transform.rotation;
 saveTransform.position=transform.position;
 }
+#endregion
+if(enable){enable=false;
+collider.controller.enabled=true;
+collider           .enabled=true;
+}
 }
 if(disabling){
+#region when disabling...
 if(id!=-1){
+//  id!=-1
+//  transformFile!=null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
+#region save for the last time and release id...
 if(LOG&&LOG_LEVEL<=1){Debug.Log("mark my id:"+id+" to be released",this);}
 releaseId=true;
 backgroundData.Reset();foregroundData.Set();
+#endregion
 }else{disabling=false;
-//...
+//  id==-1
+//  transformFile==null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
+#region id released so add to pool...
 loadTuple=null;Loaded[type].Remove(this);Disabled=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
+//  id==-1
+//  transformFile==null
+//  loadTuple==null
+//  notLoaded
+//  isInSimActorPool
+#endregion
 }
+#endregion
 }else{
 if(id==-1){
 if(loadTuple.HasValue){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I need to wake up..loadTuple:"+loadTuple,this);
+//  id==-1
+//  transformFile==null
+//  loadTuple!=null
+//  isLoaded
+//  notInSimActorPool
 backgroundData.Reset();foregroundData.Set();
 }
 }
 }
 
 }
-}
-void Disable(){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
-collider.controller.enabled=false;
-collider           .enabled=false;
-disabling=true;
 }
 //...
 
