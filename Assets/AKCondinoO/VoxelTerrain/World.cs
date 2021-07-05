@@ -37,6 +37,7 @@ void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.
 GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
             
 //...
+
 Directory.CreateDirectory(savePath=string.Format("{0}/{1}/",saveFolder,saveName));
 
 if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"+Environment.ProcessorCount);
@@ -59,6 +60,7 @@ AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial
 biome.LOG=LOG;biome.LOG_LEVEL=LOG_LEVEL;biome.Seed=0;       
 
 //...
+
 bounds=new Bounds(Vector3.zero,new Vector3((instantiationDistance.x*2+1)*Width,Height,
                                            (instantiationDistance.y*2+1)*Depth));
 navMeshBuildSettings=new NavMeshBuildSettings{
@@ -85,6 +87,7 @@ navMesh=NavMesh.AddNavMeshData(navMeshData);
 }else{
 foreach(var s in navMeshValidation){Debug.LogError(s);}
 }
+
 //...
 
 Editor.Awake(LOG,LOG_LEVEL);
@@ -96,7 +99,9 @@ for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform
 void OnDestroy(){
             
 //...
+
 Editor.OnDestroy(LOG,LOG_LEVEL);
+
 //...to do: biome dispose
 
 }
@@ -131,9 +136,10 @@ if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){D
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
               actRgn=(cCoordTocnkRgn(aCoord));
-//...
-bounds.center=new Vector3(actRgn.x,0,actRgn.y);
 
+//...
+
+bounds.center=new Vector3(actRgn.x,0,actRgn.y);
 for(Vector2Int eCoord=new Vector2Int(),cCoord1=new Vector2Int();eCoord.y<=expropriationDistance.y;eCoord.y++){for(cCoord1.y=-eCoord.y+aCoord_Pre.y;cCoord1.y<=eCoord.y+aCoord_Pre.y;cCoord1.y+=eCoord.y*2){
 for(           eCoord.x=0                                      ;eCoord.x<=expropriationDistance.x;eCoord.x++){for(cCoord1.x=-eCoord.x+aCoord_Pre.x;cCoord1.x<=eCoord.x+aCoord_Pre.x;cCoord1.x+=eCoord.x*2){
 if(Math.Abs(cCoord1.x)>=MaxcCoordx||
@@ -171,7 +177,6 @@ int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(!ActiveTerrain.ContainsKey(cnkIdx1
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do activate chunk for:.."+cnkIdx1+";[current TerrainChunkPool.Count:.."+TerrainChunkPool.Count);
 
 //...
-//Directory.CreateDirectory(string.Format("{0}{1}/",savePath,cnkIdx1));
 
 TerrainChunk scr=TerrainChunkPool.First.Value;TerrainChunkPool.RemoveFirst();scr.ExpropriationNode=(null);if(scr.Initialized&&ActiveTerrain.ContainsKey(scr.cnkIdx))ActiveTerrain.Remove(scr.cnkIdx);ActiveTerrain.Add(cnkIdx1,scr);scr.OncCoordChanged(cCoord1,cnkIdx1);
 }else{
@@ -186,18 +191,22 @@ AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[0],actPos);
 }
 
 //...
+
 if(DEBUG_EDIT){
    DEBUG_EDIT=false;
 
 //...
+
 Editor.Edit();
 
 }
 
 //...
+
 if(navMeshDirty||DEBUG_BAKE_NAV_MESH){
 
 //...
+
 navMeshDirty=false;DEBUG_BAKE_NAV_MESH=false;
 
 sources.Clear();sources.AddRange(navMeshSources.Values);
@@ -205,7 +214,6 @@ markups.Clear();markups.AddRange(navMeshMarkups.Values);
 NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
-
 firstLoop=false;}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
 #region Initialize
@@ -341,6 +349,7 @@ void OnDrawGizmos(){
 if(GIZMOS_ENABLED<=1){
 
 //...
+
 DrawBounds(bounds,Color.yellow);
 
 }

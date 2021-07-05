@@ -38,11 +38,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..n
 collider.controller.enabled=false;
 collider           .enabled=false;
 Disabled=SimActorPool[type].AddLast(this);
-//  id==-1
-//  transformFile==null
-//  loadTuple==null
-//  notLoaded
-//  isInSimActorPool
+
 //...
 
 task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,actorsFolder,},TaskCreationOptions.LongRunning);
@@ -54,51 +50,23 @@ var watch=new System.Diagnostics.Stopwatch();
 DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SaveTransform));
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
-
-//...
 lock(load_Syn){
 #region safe
-
-//...
 if(id!=-1){
 if(!string.IsNullOrEmpty(transformFile)&&File.Exists(transformFile)){
-//  id!=-1
-//  transformFile!=null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado registrado para ator:"+id+"..deletar antes de abrir um novo");}
 File.Delete(transformFile);
 }
-//  id!=-1
-//  transformFile may vary (null or not null)
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",saveTransform.type,saveTransform.id));
 Directory.CreateDirectory(string.Format("{0}/",transformFolder));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
-
 saveTransformSerializer.WriteObject(file,saveTransform);
-
 }
-//  id!=-1
-//  transformFile!=null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 }
 if(id==-1){
 if(loadTuple.HasValue){
-//  id==-1
-//  transformFile==null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
-
-//...
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Value.id,this);}
 id=loadTuple.Value.id;
 if(loadTuple.Value.cnkIdx.HasValue){
@@ -106,42 +74,23 @@ int cnkIdx1=loadTuple.Value.cnkIdx.Value;
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
-
 var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SaveTransform;
-
 saveTransform.id=id;
 saveTransform.position=saveTransformLoaded.position;
 saveTransform.rotation=saveTransformLoaded.rotation;
 }
-
 loaded=true;
-
 }
-
 enable=true;
-//  id!=-1
-//  transformFile may vary (null or not null)
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 }
 }
-//...
-
 #endregion safe
 }
 if(releaseId){releaseId=false;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm releasing my id:"+id,this);}
 id=-1;
 transformFolder=null;transformFile=null;
-//  id==-1
-//  transformFile==null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 }
-
-
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado processamento de dados de arquivo para este ator:"+id+"..levou:"+watch.ElapsedMilliseconds+"ms",this);
 backgroundData.Set();
 }_Stop:{
@@ -149,13 +98,11 @@ backgroundData.Set();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para ator graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();}
+while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();Thread.Sleep(1);}
 }
 }
 }
 protected virtual void OnDestroy(){
-
-//...
 #region exit save
 backgroundData.WaitOne();
 #region save for the last time and release id...
@@ -171,13 +118,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated so I can be deleted..my id:
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 if(Disabled!=null)SimActorPool[type].Remove(Disabled);Disabled=null;
 OnActorDestroyed(this);
-//  id==-1
-//  transformFile==null
-//  loadTuple==null
-//  notLoaded
-//  notInSimActorPool
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
-
 }
 void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
@@ -185,19 +126,37 @@ collider.controller.enabled=false;
 collider           .enabled=false;
 disabling=true;
 }
+[NonSerialized]bool firstLoop=true;
+[NonSerialized]Vector3    actPos;
+[NonSerialized]Vector2Int aCoord,aCoord_Pre;
+[NonSerialized]protected Vector3 pos;
+[NonSerialized]protected Vector3 pos_Pre;
+[NonSerialized]protected Vector2Int cCoord;
+[NonSerialized]protected Vector2Int cCoord_Pre;
+[NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
 protected virtual void Update(){
+var gotcnk=false;void getcnk(){ActiveTerrain.TryGetValue(cnkIdx,out cnk);gotcnk=true;}      
 if(!disabling){
-//...
+pos=transform.position;
+if(pos!=pos_Pre){//  sempre que eu mudar de posição...
+if(LOG&&LOG_LEVEL<=-110)Debug.Log("I changed from pos_Pre.."+pos_Pre+"..to pos.."+pos,this);
+cCoord=vecPosTocCoord(pos);if(cCoord!=cCoord_Pre){cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);//  ...calcule o cnkIdx se necessário...
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I changed from cCoord_Pre.."+cCoord_Pre+"..to cCoord.."+cCoord+"..so now my cnkIdx is.."+cnkIdx,this);
+if(!gotcnk){getcnk();}//  ...e verifique se a coordenada para onde eu me mudei tem ou não um chunk.
+cCoord_Pre=cCoord;}
+pos_Pre=pos;}
+if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
+              actPos=(Camera.main.transform.position);//  sempre que a câmera mudar de posição...
+if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+if(!gotcnk){getcnk();}//  ...e a coordenada mudar (e houver recarregamento), cheque se o chunk em que estou existe.
+aCoord_Pre=aCoord;}
 }
-if(backgroundData.WaitOne(0)){
 
 //...
+
+firstLoop=false;}
+if(backgroundData.WaitOne(0)){
 if(id!=-1){
-//  id!=-1
-//  transformFile!=null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 #region get data if loaded or set if saving...
 if(loaded){loaded=false;
 transform.rotation=saveTransform.rotation;
@@ -216,47 +175,28 @@ collider           .enabled=true;
 if(disabling){
 #region when disabling...
 if(id!=-1){
-//  id!=-1
-//  transformFile!=null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 #region save for the last time and release id...
 if(LOG&&LOG_LEVEL<=1){Debug.Log("mark my id:"+id+" to be released",this);}
 releaseId=true;
 backgroundData.Reset();foregroundData.Set();
 #endregion
 }else{disabling=false;
-//  id==-1
-//  transformFile==null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 #region id released so add to pool...
 loadTuple=null;Loaded[type].Remove(this);Disabled=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
-//  id==-1
-//  transformFile==null
-//  loadTuple==null
-//  notLoaded
-//  isInSimActorPool
 #endregion
 }
 #endregion
 }else{
+#region when enabling...
 if(id==-1){
 if(loadTuple.HasValue){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I need to wake up..loadTuple:"+loadTuple,this);
-//  id==-1
-//  transformFile==null
-//  loadTuple!=null
-//  isLoaded
-//  notInSimActorPool
 backgroundData.Reset();foregroundData.Set();
 }
 }
+#endregion 
 }
-
 }
 }
 //...

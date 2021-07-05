@@ -176,6 +176,7 @@ TempVer.Clear();
 TempTri.Clear();
 
 //...
+
 string editsFolder=string.Format("{0}{1}",savePath,cnkIdx1);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
 if(LOG&&LOG_LEVEL<=1)Debug.Log("editsFolder.."+editsFolder+"..e editsFile.."+editsFile+"..para:.."+cCoord1);
 
@@ -510,11 +511,11 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada atualização deste pedaço do terreno:"+
 lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();
 
 //...
+
 for(int i=0;i<biome.cacheCount;++i){
 for(int j=0;j<nCache[i].Length;++j){if(nCache[i][j]!=null)Array.Clear(nCache[i][j],0,nCache[i][j].Length);}
 for(int j=0;j<mCache[i].Length;++j){if(mCache[i][j]!=null)Array.Clear(mCache[i][j],0,mCache[i][j].Length);}
 }
-
 for(int i=0;i<voxelsBuffer1[0].Length;++i){Array.Clear(voxelsBuffer1[0][i],0,voxelsBuffer1[0][i].Length);}
 for(int i=0;i<voxelsBuffer1[1].Length;++i){Array.Clear(voxelsBuffer1[1][i],0,voxelsBuffer1[1][i].Length);}
 for(int i=0;i<voxelsBuffer1[2].Length;++i){Array.Clear(voxelsBuffer1[2][i],0,voxelsBuffer1[2][i].Length);}
@@ -541,6 +542,7 @@ public bool Built{
 protected set{       Built_v=value;
 
 //...
+
 if(value){
 renderer.enabled=true;
 collider.enabled=true;
@@ -548,7 +550,6 @@ collider.enabled=true;
 renderer.enabled=false;
 collider.enabled=false;
 }
-
 }
 }[NonSerialized]protected bool Built_v;
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
@@ -627,7 +628,9 @@ while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova edição no terreno");watch.Restart();}
 
 foreach(var syn in load_Syn_All)Monitor.Enter(syn);try{
-//...
+
+//... Directory.CreateDirectory(string.Format("{0}{1}/",savePath,cnkIdx1));
+
 }catch{throw;}finally{foreach(var syn in load_Syn_All)Monitor.Exit(syn);}
 
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada edição no terreno (dados salvos nos arquivos)..levou:"+watch.ElapsedMilliseconds+"ms");
@@ -649,7 +652,9 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa do sistema para edições no t
 public static void Edit(){
 
 if(backgroundData1.WaitOne(0)){
+
 //...
+
 backgroundData1.Reset();foregroundData1.Set();
 }
 
@@ -662,6 +667,7 @@ if(GIZMOS_ENABLED<=-100){for(int i=0;i<TempVer.Length;i++){Debug.DrawRay(transfo
 if(GIZMOS_ENABLED<=1){
 
 //...
+
 DrawBounds(localBounds,Color.white);
 
 }
