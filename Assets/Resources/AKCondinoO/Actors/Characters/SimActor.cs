@@ -151,6 +151,14 @@ if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Deb
 if(!gotcnk){getcnk();}//  ...e a coordenada mudar (e houver recarregamento), cheque se o chunk em que estou existe.
 aCoord_Pre=aCoord;}
 }
+if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
+if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
+Disable();
+}else if(cnk==null||!cnk.Built
+||!bounds.Contains(transform.position)
+){
+Disable();
+}
 
 //...
 
@@ -168,8 +176,10 @@ saveTransform.position=transform.position;
 }
 #endregion
 if(enable){enable=false;
+if(!disabling){
 collider.controller.enabled=true;
 collider           .enabled=true;
+}
 }
 }
 if(disabling){
