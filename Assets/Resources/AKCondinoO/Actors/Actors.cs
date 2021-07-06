@@ -18,6 +18,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
 [NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimActor>>SimActorPool=new Dictionary<Type,LinkedList<SimActor>>();[NonSerialized]public static readonly Dictionary<Type,List<SimActor>>Loaded=new Dictionary<Type,List<SimActor>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();
 [NonSerialized]static Dictionary<Type,int>Count;
+[NonSerialized]public static readonly List<SimActor>Enabled=new List<SimActor>();[NonSerialized]public static readonly List<SimActor>Disabled=new List<SimActor>();public static List<SimActor>GetActors{get{return Enabled;}}
 [NonSerialized]public static Actors staticScript;     
 void Awake(){staticScript=this;
 actorsFolder=string.Format("{0}{1}",savePath,"actors");
@@ -127,16 +128,18 @@ disposed=true;
 [NonSerialized]static Vector3    actPos;
 [NonSerialized]static Vector2Int aCoord,aCoord_Pre;
 [NonSerialized]static Vector2Int actRgn;
+[SerializeField]protected float reloadInterval=1f;[NonSerialized]protected float reloadTimer=0f;
 [SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_ROTATION;
 [SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_POSITION;
 [SerializeField]protected SimActor DEBUG_CREATE_SIM_ACTOR=null;
 void Update(){
+if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
 SimActor Create(Type type,Vector3 position,Vector3 rotation){
 _getActor:{}
 if(SimActorPool[type].Count>0){//  get from pool
-SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.Disabled=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;load_Syn_All.Add(actor.load_Syn);return actor;
+SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.DisabledNode=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;load_Syn_All.Add(actor.load_Syn);return actor;
 }else{
 Instantiate(Prefabs[type]);
 goto _getActor;
@@ -171,10 +174,11 @@ actorToLoad.loadTuple=(type,id,null);Loaded[type].Add(actorToLoad);
 DEBUG_CREATE_SIM_ACTOR=null;
 backgroundData1.Reset();foregroundData1.Set();
 }
-if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
-              actPos=(Camera.main.transform.position);
-if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
-              actRgn=(cCoordTocnkRgn(aCoord));
+if(firstLoop||reloadTimer<=0||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
+                              actPos=(Camera.main.transform.position);
+if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+                              actRgn=(cCoordTocnkRgn(aCoord));
+reloadTimer=reloadInterval;
 foreach(var l in SimActorPool){var list=l.Value;for(var node=list.First;node!=null;node=node.Next){load_Syn_All.Remove(node.Value.load_Syn);}}
 backgroundData2.Reset();foregroundData2.Set();
 }
@@ -191,49 +195,6 @@ load_Syn_All.Remove(actor.load_Syn);
 
 
 
-//[NonSerialized]public static string actorsPath;[NonSerialized]public static string actorsFolder;
-//[NonSerialized]public static Actors staticScript;
-//static bool Stop{
-//get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
-//set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();foregroundData2.Set();}}
-//}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;
-//[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
-//[NonSerialized]static readonly AutoResetEvent foregroundData2=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData2=new ManualResetEvent(true);[NonSerialized]static Task task2=null;
-//[NonSerialized]public static readonly List<object>loading_Syn=new List<object>();
-//void Awake(){staticScript=this;
-
-////...
-//actorsFolder=string.Format("{0}{1}",savePath,"actors");
-//Directory.CreateDirectory(actorsPath=string.Format("{0}/",actorsFolder));
-
-//task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
-//task2=Task.Factory.StartNew(BG2,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
-//backgroundData1.Reset();foregroundData1.Set();
-//static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
-//try{
-//if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
-//if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 1 para gerenciar atores");
-//var watch=new System.Diagnostics.Stopwatch();
-//foregroundData1.WaitOne();
-//if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de ids");watch.Restart();}
-
-
-
-//if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
-//backgroundData1.Set();
-//while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
-//if(LOG&&LOG_LEVEL<=1){Debug.Log("começar salvamento de dados de ids");watch.Restart();}
-
-//if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado salvamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
-//backgroundData1.Set();
-//}_Stop:{
-//}
-//if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 1 para gerenciar atores graciosamente");
-//}
-//}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-//backgroundData1.Set();
-//}
-//}
 //static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 //try{
 //if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){

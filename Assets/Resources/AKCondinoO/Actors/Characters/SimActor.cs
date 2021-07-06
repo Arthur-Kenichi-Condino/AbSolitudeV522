@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
-[NonSerialized]public LinkedListNode<SimActor>Disabled=null;
+[NonSerialized]public LinkedListNode<SimActor>DisabledNode=null;
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
@@ -37,7 +37,8 @@ collider=GetComponent<CharacterControllerPhys>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
 collider.controller.enabled=false;
 collider           .enabled=false;
-Disabled=SimActorPool[type].AddLast(this);
+Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;
+DisabledNode=SimActorPool[type].AddLast(this);
 
 //...
 
@@ -116,16 +117,17 @@ loadTuple=null;Loaded[type].Remove(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated so I can be deleted..my id:"+id,this);
 #endregion
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
-if(Disabled!=null)SimActorPool[type].Remove(Disabled);Disabled=null;
+if(DisabledNode!=null)SimActorPool[type].Remove(DisabledNode);DisabledNode=null;
 OnActorDestroyed(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-void Disable(){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
-collider.controller.enabled=false;
-collider           .enabled=false;
-disabling=true;
-}
+public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}protected set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
+
+//...
+
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id,this);
+}}
+}[NonSerialized]protected bool IsOutOfSight_v;
 [NonSerialized]bool firstLoop=true;
 [NonSerialized]Vector3    actPos;
 [NonSerialized]Vector2Int aCoord,aCoord_Pre;
@@ -134,9 +136,11 @@ disabling=true;
 [NonSerialized]protected Vector2Int cCoord;
 [NonSerialized]protected Vector2Int cCoord_Pre;
 [NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
+[SerializeField]protected float savingInterval=1f;[NonSerialized]protected float nextSaveTimer=0f;
 protected virtual void Update(){
+if(nextSaveTimer>0){nextSaveTimer-=Time.deltaTime;}
 var gotcnk=false;void getcnk(){ActiveTerrain.TryGetValue(cnkIdx,out cnk);gotcnk=true;}      
-if(!disabling){
+if(!disabling&&!IsOutOfSight_v){
 pos=transform.position;
 if(pos!=pos_Pre){//  sempre que eu mudar de posição...
 if(LOG&&LOG_LEVEL<=-110)Debug.Log("I changed from pos_Pre.."+pos_Pre+"..to pos.."+pos,this);
@@ -150,6 +154,13 @@ if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){D
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
 if(!gotcnk){getcnk();}//  ...e a coordenada mudar (e houver recarregamento), cheque se o chunk em que estou existe.
 aCoord_Pre=aCoord;}
+}
+void Disable(){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
+collider.controller.enabled=false;
+collider           .enabled=false;
+Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;
+disabling=true;
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
 if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
@@ -179,6 +190,7 @@ if(enable){enable=false;
 if(!disabling){
 collider.controller.enabled=true;
 collider           .enabled=true;
+Actors.Enabled.Add(this);Actors.Disabled.Remove(this);IsOutOfSight=false;
 }
 }
 }
@@ -192,20 +204,29 @@ backgroundData.Reset();foregroundData.Set();
 #endregion
 }else{disabling=false;
 #region id released so add to pool...
-loadTuple=null;Loaded[type].Remove(this);Disabled=SimActorPool[type].AddLast(this);
+loadTuple=null;Loaded[type].Remove(this);DisabledNode=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
 #endregion
 }
 #endregion
 }else{
-#region when enabling...
 if(id==-1){
+#region when enabling...
 if(loadTuple.HasValue){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I need to wake up..loadTuple:"+loadTuple,this);
+nextSaveTimer=savingInterval;
 backgroundData.Reset();foregroundData.Set();
 }
-}
 #endregion 
+}else if(nextSaveTimer<=0){
+#region when saving...
+
+//...
+
+nextSaveTimer=savingInterval;
+backgroundData.Reset();foregroundData.Set();
+#endregion 
+}
 }
 }
 }
