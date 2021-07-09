@@ -48,6 +48,7 @@ MonoBehaviour:
   LOG: 1
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
+  savingInterval: 1
 --- !u!114 &2504931625255729057
 MonoBehaviour:
   m_ObjectHideFlags: 0
