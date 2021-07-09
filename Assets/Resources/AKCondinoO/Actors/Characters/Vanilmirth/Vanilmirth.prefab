@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcfbdb10ec98d64408acc8bc8136ec8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 1
+  LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
+  savingInterval: 1
 --- !u!1001 &3592447655708755353
 PrefabInstance:
   m_ObjectHideFlags: 0

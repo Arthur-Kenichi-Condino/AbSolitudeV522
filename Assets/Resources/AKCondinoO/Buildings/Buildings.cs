@@ -34,9 +34,34 @@ backgroundData1.Reset();foregroundData1.Set();
 task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,buildingsFolder,},TaskCreationOptions.LongRunning);
 task2=Task.Factory.StartNew(BG2,new object[]{LOG,LOG_LEVEL,buildingsFolder,},TaskCreationOptions.LongRunning);
 static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+
+//...
+
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
+while(!Stop){if(!backgroundData1.WaitOne(0))backgroundData1.Set();Thread.Sleep(1);}
+}
 }
 static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+
+//...
+
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
+while(!Stop){if(!backgroundData2.WaitOne(0))backgroundData2.Set();Thread.Sleep(1);}
 }
+}
+}
+[NonSerialized]static bool disposed;
+void OnDestroy(){
+#region exit save
+backgroundData1.WaitOne();
+backgroundData1.Reset();foregroundData1.Set();
+backgroundData1.WaitOne();
+#endregion
+Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
+          try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
+disposed=true;
 }
 
 

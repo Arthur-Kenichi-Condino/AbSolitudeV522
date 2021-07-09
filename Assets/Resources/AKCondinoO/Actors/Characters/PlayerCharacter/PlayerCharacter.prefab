@@ -1,21 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &3912312603402593714
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5916665996595520331}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b60e209967882124d90f1ffa83a188c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  LOG: 1
-  LOG_LEVEL: 1
-  GIZMOS_ENABLED: 1
-  savingInterval: 1
 --- !u!1 &1754053805171867656
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,6 +417,22 @@ MonoBehaviour:
   characterHeight: 2
   characterRadius: 0.25
   characterMass: 50
+--- !u!114 &3912312603402593714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5916665996595520331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b60e209967882124d90f1ffa83a188c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LOG: 0
+  LOG_LEVEL: 1
+  GIZMOS_ENABLED: 1
+  savingInterval: 1
 --- !u!1001 &1047399093827248455
 PrefabInstance:
   m_ObjectHideFlags: 0
