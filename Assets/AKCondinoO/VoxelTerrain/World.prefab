@@ -240,7 +240,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -5760275696122447180, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
       propertyPath: LOG
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -5760275696122447180, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
       propertyPath: DEBUG_CREATE_SIM_ACTOR_POSITION.y

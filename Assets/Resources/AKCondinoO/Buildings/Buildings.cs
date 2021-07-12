@@ -1,3 +1,4 @@
+using MessagePack;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
 [NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimObject>>SimObjectPool=new Dictionary<Type,LinkedList<SimObject>>();[NonSerialized]public static readonly Dictionary<Type,List<SimObject>>Loaded=new Dictionary<Type,List<SimObject>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();
 [NonSerialized]static Dictionary<Type,int>Count;[NonSerialized]static Dictionary<Type,List<int>>Destroyed;
+[NonSerialized]public static readonly List<SimObject>Enabled=new List<SimObject>();[NonSerialized]public static readonly List<SimObject>Disabled=new List<SimObject>();
 [NonSerialized]public static Buildings staticScript;
 void Awake(){staticScript=this;
 buildingsFolder=string.Format("{0}{1}",savePath,"buildings");
@@ -35,18 +37,71 @@ task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,buildingsFolder,},Tas
 task2=Task.Factory.StartNew(BG2,new object[]{LOG,LOG_LEVEL,buildingsFolder,},TaskCreationOptions.LongRunning);
 static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
-
-//...
-
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string buildingsFolder){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 1 para gerenciar construções");
+var watch=new System.Diagnostics.Stopwatch();
+foregroundData1.WaitOne();
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de ids");watch.Restart();}
+string idsFile=string.Format("{0}/{1}",buildingsFolder,"buildings.MessagePack");
+using(FileStream file=new FileStream(idsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+if(file.Length>0){
+Count=MessagePackSerializer.Deserialize(typeof(Dictionary<Type,int>),file)as Dictionary<Type,int>;
+}else{
+Count=new Dictionary<Type,int>();
+}
+if(LOG&&LOG_LEVEL<=1){foreach(var c in Count){Debug.Log("type.."+c.Key+"..has.."+c.Value+"..sim object(s) in world");}}
+}
+string unplacedIdsFile=string.Format("{0}/{1}",buildingsFolder,"unplaced.MessagePack");
+using(FileStream file=new FileStream(unplacedIdsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+if(file.Length>0){
+Destroyed=MessagePackSerializer.Deserialize(typeof(Dictionary<Type,List<int>>),file)as Dictionary<Type,List<int>>;
+}else{
+Destroyed=new Dictionary<Type,List<int>>();
+}
+if(LOG&&LOG_LEVEL<=1){foreach(var d in Destroyed){Debug.Log("type.."+d.Key+"..has.."+d.Value.Count+"..unplaced sim object(s) in world");}}
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
+backgroundData1.Set();
+while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar salvamento de dados de ids");watch.Restart();}
+using(FileStream file=new FileStream(idsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+MessagePackSerializer.Serialize(file,Count);
+}
+using(FileStream file=new FileStream(unplacedIdsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
+MessagePackSerializer.Serialize(file,Destroyed);
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado salvamento de dados de ids..levou:"+watch.ElapsedMilliseconds+"ms");
+backgroundData1.Set();
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 1 para gerenciar construções graciosamente");
+}
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
 while(!Stop){if(!backgroundData1.WaitOne(0))backgroundData1.Set();Thread.Sleep(1);}
 }
 }
 static void BG2(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string buildingsFolder){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo 2 para gerenciar construções");
+var watch=new System.Diagnostics.Stopwatch();
+while(!Stop){foregroundData2.WaitOne();if(Stop)goto _Stop;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar carregamento de dados de construções");watch.Restart();}
+foreach(var syn in load_Syn_All)Monitor.Enter(syn);try{
+#region safe
 
 //...
 
+#endregion safe
+}catch{throw;}finally{foreach(var syn in load_Syn_All)Monitor.Exit(syn);}
+aCoord_Pre=aCoord;
+firstLoop=false;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado carregamento de dados de construções..levou:"+watch.ElapsedMilliseconds+"ms");
+backgroundData2.Set();
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 2 para gerenciar construções graciosamente");
+}
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
 while(!Stop){if(!backgroundData2.WaitOne(0))backgroundData2.Set();Thread.Sleep(1);}
 }
@@ -63,8 +118,35 @@ Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?
           try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
 disposed=true;
 }
+[NonSerialized]static bool firstLoop=true;
+[NonSerialized]static Vector3    actPos;
+[NonSerialized]static Vector2Int aCoord,aCoord_Pre;
+[NonSerialized]static Vector2Int actRgn;
+[SerializeField]protected float reloadInterval=1f;[NonSerialized]protected float reloadTimer=0f;
 
+//...
 
+void Update(){
+if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
+if(backgroundData2.WaitOne(0)){
+if(backgroundData1.WaitOne(0)){
+
+//...
+
+if(firstLoop||reloadTimer<=0||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
+                              actPos=(Camera.main.transform.position);
+if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+                              actRgn=(cCoordTocnkRgn(aCoord));
+reloadTimer=reloadInterval;
+foreach(var l in SimObjectPool){var list=l.Value;for(var node=list.First;node!=null;node=node.Next){load_Syn_All.Remove(node.Value.load_Syn);}}
+backgroundData2.Reset();foregroundData2.Set();
+}
+}
+}
+}
+}
+
+//...
 
 }
 }
