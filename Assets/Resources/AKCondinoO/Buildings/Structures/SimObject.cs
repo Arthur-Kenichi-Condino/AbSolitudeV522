@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -12,13 +13,13 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
-[Serializable]public class SaveTransform{
-public string type{get;set;}public int id{get;set;}
-public SerializableQuaternion rotation{get;set;}
-public SerializableVector3    position{get;set;}
+[DataContract]public class SaveTransform{
+[DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
+[DataMember]public SerializableQuaternion rotation{get;set;}
+[DataMember]public SerializableVector3    position{get;set;}
 }[NonSerialized]readonly SaveTransform saveTransform=new SaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
-[Serializable]public class SaveStateData{
-public string type{get;set;}public int id{get;set;}
+[DataContract]public class SaveStateData{
+[DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 }[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
@@ -55,9 +56,11 @@ var watch=new System.Diagnostics.Stopwatch();
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este objeto sim:"+id,this);watch.Restart();}
 lock(load_Syn){
+#region safe
 
 //...
 
+#endregion safe
 }
 
 //...

@@ -16,13 +16,13 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
-[Serializable]public class SaveTransform{
-public string type{get;set;}public int id{get;set;}
-public SerializableQuaternion rotation{get;set;}
-public SerializableVector3    position{get;set;}
+[DataContract]public class SaveTransform{
+[DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
+[DataMember]public SerializableQuaternion rotation{get;set;}
+[DataMember]public SerializableVector3    position{get;set;}
 }[NonSerialized]readonly SaveTransform saveTransform=new SaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
-[Serializable]public class SaveStateData{
-public string type{get;set;}public int id{get;set;}
+[DataContract]public class SaveStateData{
+[DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 }[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
@@ -146,6 +146,7 @@ if(!IsOutOfSight_v){
 pos=transform.position;
 if(pos!=pos_Pre||enabling){//  sempre que eu mudar de posição...
 if(LOG&&LOG_LEVEL<=-110)Debug.Log("I changed from pos_Pre.."+pos_Pre+"..to pos.."+pos,this);
+if(pos.y<-128&&pos_Pre.y<-128){transform.position=pos=pos_Pre;}
 cCoord=vecPosTocCoord(pos);if(cCoord!=cCoord_Pre||enabling){cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);//  ...calcule o cnkIdx se necessário...
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I changed from cCoord_Pre.."+cCoord_Pre+"..to cCoord.."+cCoord+"..so now my cnkIdx is.."+cnkIdx,this);
 if(!gotcnk){getcnk();}//  ...e verifique se a coordenada para onde eu me mudei tem ou não um chunk.
