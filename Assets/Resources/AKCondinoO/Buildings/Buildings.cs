@@ -15,14 +15,17 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
 [NonSerialized]static readonly AutoResetEvent foregroundData2=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData2=new ManualResetEvent(true);[NonSerialized]static Task task2=null;
 [NonSerialized]public static string buildingsPath;[NonSerialized]public static string buildingsFolder;
+[NonSerialized]public static string unplacedsPath;[NonSerialized]public static string unplacedsFolder;
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
 [NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimObject>>SimObjectPool=new Dictionary<Type,LinkedList<SimObject>>();[NonSerialized]public static readonly Dictionary<Type,List<SimObject>>Loaded=new Dictionary<Type,List<SimObject>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();
-[NonSerialized]static Dictionary<Type,int>Count;[NonSerialized]static Dictionary<Type,List<int>>Unplaced;
+[NonSerialized]static Dictionary<Type,int>Count;[NonSerialized]public static Dictionary<Type,List<int>>Unplaced;
 [NonSerialized]public static readonly List<SimObject>Enabled=new List<SimObject>();[NonSerialized]public static readonly List<SimObject>Disabled=new List<SimObject>();
 [NonSerialized]public static Buildings staticScript;
 void Awake(){staticScript=this;
 buildingsFolder=string.Format("{0}{1}",savePath,"buildings");
 Directory.CreateDirectory(buildingsPath=string.Format("{0}/",buildingsFolder));
+unplacedsFolder=string.Format("{0}{1}",buildingsPath,"unplaced");
+Directory.CreateDirectory(unplacedsPath=string.Format("{0}/",unplacedsFolder));
 var objects=Resources.LoadAll("AKCondinoO/Buildings/Structures",typeof(GameObject));
 foreach(var o in objects){var p=o as GameObject;var t=p.GetComponent<SimObject>().GetType();
 Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<SimObject>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
@@ -141,9 +144,9 @@ disposed=true;
 [NonSerialized]static Vector2Int aCoord,aCoord_Pre;
 [NonSerialized]static Vector2Int actRgn;
 [SerializeField]protected float reloadInterval=1f;[NonSerialized]protected float reloadTimer=0f;
-
-//...
-
+[SerializeField]protected Vector3   DEBUG_CREATE_SIM_OBJECT_ROTATION;
+[SerializeField]protected Vector3   DEBUG_CREATE_SIM_OBJECT_POSITION;
+[SerializeField]protected SimObject DEBUG_CREATE_SIM_OBJECT=null;
 void Update(){
 if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
 if(backgroundData2.WaitOne(0)){
@@ -173,9 +176,29 @@ _next:{}
 }loading.Value.Clear();
 }
 #endregion   
+if(DEBUG_CREATE_SIM_OBJECT){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_OBJECT of prefab:.."+DEBUG_CREATE_SIM_OBJECT);
 
 //...
 
+Type type=DEBUG_CREATE_SIM_OBJECT.GetComponent<SimObject>().GetType();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_OBJECT of type:.."+type);
+int id=0;if(!Count.ContainsKey(type)){Count.Add(type,1);}else{
+                    
+//...                            
+
+if(Unplaced.ContainsKey(type)&&Unplaced[type].Count>0){var unplacedIds=Unplaced[type];
+id=unplacedIds[unplacedIds.Count-1];unplacedIds.RemoveAt(unplacedIds.Count-1);
+}else{
+id=Count[type]++;
+}
+                            
+}
+SimObject simObjectToLoad=Create(type,DEBUG_CREATE_SIM_OBJECT_POSITION,DEBUG_CREATE_SIM_OBJECT_ROTATION);
+simObjectToLoad.loadTuple=(type,id,null);Loaded[type].Add(simObjectToLoad);
+DEBUG_CREATE_SIM_OBJECT=null;
+backgroundData1.Reset();foregroundData1.Set();
+}
 if(firstLoop||reloadTimer<=0||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
                               actPos=(Camera.main.transform.position);
 if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}

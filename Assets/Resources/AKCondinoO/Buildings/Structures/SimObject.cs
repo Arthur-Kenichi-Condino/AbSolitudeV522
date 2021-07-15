@@ -24,7 +24,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 }[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
-[NonSerialized]bool disabling;
+[NonSerialized]bool disabling;[NonSerialized]bool unplace;[NonSerialized]bool unplacing;[NonSerialized]int unplacedId;
 [NonSerialized]bool releaseId;
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
 [NonSerialized]public new Collider[]collider;
@@ -58,12 +58,17 @@ if(!string.IsNullOrEmpty(transformFile)&&File.Exists(transformFile)){
 if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado registrado para ator:"+id+"..deletar antes de abrir um novo");}
 File.Delete(transformFile);
 }
+if(!unplacing){
 Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
 transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",saveTransform.type,saveTransform.id));
 Directory.CreateDirectory(string.Format("{0}/",transformFolder));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
 saveTransformSerializer.WriteObject(file,saveTransform);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1){Debug.Log("I am now unplaced; my id:"+id,this);}
+unplacedId=id;
 }
 }
 if(id==-1){
@@ -171,6 +176,14 @@ Disable();
 ||!bounds.Contains(transform.position)
 ){
 Disable();
+}else if(DEBUG_UNPLACE){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_UNPLACE");
+Disable();
+unplace=true;
+
+//...
+
+DEBUG_UNPLACE=false;
 }else if(enabling){
 foreach(var col in collider){col.enabled=true;}
 }
@@ -194,6 +207,10 @@ Buildings.Enabled.Add(this);Buildings.Disabled.Remove(this);IsOutOfSight=false;e
 }
 }
 if(disabling){
+if(unplace){unplace=false;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("unplace:I need to remove my saved transform data");
+unplacing=true;
+}
 #region when disabling...
 if(id!=-1){
 #region save for the last time and release id...
@@ -204,6 +221,12 @@ backgroundData.Reset();foregroundData.Set();
 }else{disabling=false;
 #region id released so add to pool...
 loadTuple=null;Loaded[type].Remove(this);DisabledNode=SimObjectPool[type].AddLast(this);
+if(unplacing){unplacing=false;
+if(!Unplaced.ContainsKey(type)){Unplaced.Add(type,new List<int>());}Unplaced[type].Add(unplacedId);unplacedId=-1;
+                            
+//...
+
+}
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
 #endregion
 }
