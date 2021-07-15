@@ -191,8 +191,7 @@ if(Unplaced.ContainsKey(type)&&Unplaced[type].Count>0){var unplacedIds=Unplaced[
 id=unplacedIds[unplacedIds.Count-1];unplacedIds.RemoveAt(unplacedIds.Count-1);
 }else{
 id=Count[type]++;
-}
-                            
+}                            
 }
 SimObject simObjectToLoad=Create(type,DEBUG_CREATE_SIM_OBJECT_POSITION,DEBUG_CREATE_SIM_OBJECT_ROTATION);
 simObjectToLoad.loadTuple=(type,id,null);Loaded[type].Add(simObjectToLoad);
