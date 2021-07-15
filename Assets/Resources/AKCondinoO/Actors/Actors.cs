@@ -28,9 +28,8 @@ foreach(var o in objects){var p=o as GameObject;var t=p.GetComponent<SimActor>()
 Prefabs[t]=p;SimActorPool[t]=new LinkedList<SimActor>();Loaded[t]=new List<SimActor>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }
+
 //...
-
-
 
 backgroundData1.Reset();foregroundData1.Set();
 task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,actorsFolder,},TaskCreationOptions.LongRunning);

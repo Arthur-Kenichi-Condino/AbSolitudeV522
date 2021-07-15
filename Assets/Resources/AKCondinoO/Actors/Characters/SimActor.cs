@@ -37,7 +37,7 @@ collider=GetComponent<CharacterControllerPhys>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
 collider.controller.enabled=false;
 collider           .enabled=false;
-Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;
+Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 DisabledNode=SimActorPool[type].AddLast(this);
 pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am awaking at.."+pos+"..and my cCoord is.."+cCoord+"..,so my cnkIdx is.."+cnkIdx,this);
@@ -106,6 +106,7 @@ while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();Thread.Sleep(1);
 }
 }
 protected virtual void OnDestroy(){
+Actors.Disabled.Remove(this);Actors.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 #region exit save
 backgroundData.WaitOne();
 #region save for the last time and release id...
@@ -142,7 +143,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id
 protected virtual void Update(){
 if(nextSaveTimer>0){nextSaveTimer-=Time.deltaTime;}
 var gotcnk=false;void getcnk(){ActiveTerrain.TryGetValue(cnkIdx,out cnk);gotcnk=true;}      
-if(!IsOutOfSight_v){
+if(!IsOutOfSight_v){//  Previne duplicata em Actors.Disabled
 pos=transform.position;
 if(pos!=pos_Pre||enabling){//  sempre que eu mudar de posição...
 if(LOG&&LOG_LEVEL<=-110)Debug.Log("I changed from pos_Pre.."+pos_Pre+"..to pos.."+pos,this);
@@ -150,7 +151,7 @@ if(pos.y<-128&&pos_Pre.y<-128){transform.position=pos=pos_Pre;}
 cCoord=vecPosTocCoord(pos);if(cCoord!=cCoord_Pre||enabling){cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);//  ...calcule o cnkIdx se necessário...
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I changed from cCoord_Pre.."+cCoord_Pre+"..to cCoord.."+cCoord+"..so now my cnkIdx is.."+cnkIdx,this);
 if(!gotcnk){getcnk();}//  ...e verifique se a coordenada para onde eu me mudei tem ou não um chunk.
-cCoord_Pre=cCoord;enabling=false;}
+cCoord_Pre=cCoord;}
 pos_Pre=pos;}
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);//  sempre que a câmera mudar de posição...
@@ -162,7 +163,7 @@ void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
 collider.controller.enabled=false;
 collider           .enabled=false;
-Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;
+Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 disabling=true;
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
@@ -172,11 +173,11 @@ Disable();
 ||!bounds.Contains(transform.position)
 ){
 Disable();
+}else if(enabling){
+collider.controller.enabled=true;
+collider           .enabled=true;
 }
-
-//...
-
-firstLoop=false;}
+firstLoop=false;enabling=false;}
 if(backgroundData.WaitOne(0)){
 if(id!=-1){
 #region get data if loaded or set if saving...
@@ -190,10 +191,8 @@ saveTransform.position=transform.position;
 }
 #endregion
 if(enable){enable=false;
-if(!disabling){
-collider.controller.enabled=true;
-collider           .enabled=true;
-Actors.Enabled.Add(this);Actors.Disabled.Remove(this);IsOutOfSight=false;enabling=true;
+if(IsOutOfSight_v){//  Previne duplicata em Actors.Enabled
+Actors.Enabled.Add(this);Actors.Disabled.Remove(this);IsOutOfSight=false;enabling=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 }
 }
 }
