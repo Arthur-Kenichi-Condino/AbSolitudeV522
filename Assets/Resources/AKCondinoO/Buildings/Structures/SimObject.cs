@@ -15,12 +15,12 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
-[DataContract]public class SimObjectSaveTransform{
+[DataContract(Namespace="")]public class SimObjectSaveTransform{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 [DataMember]public SerializableQuaternion rotation{get;set;}
 [DataMember]public SerializableVector3    position{get;set;}
 }[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
-[DataContract]public class SimObjectSaveStateData{
+[DataContract(Namespace="")]public class SimObjectSaveStateData{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 }[NonSerialized]readonly SimObjectSaveStateData saveStateData=new SimObjectSaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}

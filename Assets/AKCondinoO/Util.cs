@@ -10,7 +10,7 @@ namespace AKCondinoO{public static class Util{
  /// need to create our own version. This one will automatically convert
  /// between Vector3 and SerializableVector3
  /// </summary>
- [System.Serializable][DataContract]public struct SerializableVector3{
+ [System.Serializable][DataContract(Namespace="")]public struct SerializableVector3{
 /// <summary>
 /// x component
 /// </summary>
@@ -63,7 +63,7 @@ return new SerializableVector3(rValue.x, rValue.y, rValue.z);
  /// need to create our own version. This one will automatically convert
  /// between Quaternion and SerializableQuaternion
  /// </summary>
-[System.Serializable][DataContract]public struct SerializableQuaternion{
+[System.Serializable][DataContract(Namespace="")]public struct SerializableQuaternion{
 /// <summary>
 /// x component
 /// </summary>

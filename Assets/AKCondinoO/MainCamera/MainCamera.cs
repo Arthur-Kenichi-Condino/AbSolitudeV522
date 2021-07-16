@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class MainCamera:MonoBehaviour{
+namespace AKCondinoO{public class MainCamera:MonoBehaviour{
+}
 }
