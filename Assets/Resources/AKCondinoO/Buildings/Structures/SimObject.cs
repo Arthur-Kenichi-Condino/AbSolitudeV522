@@ -15,26 +15,26 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
-[DataContract]public class SaveTransform{
+[DataContract]public class SimObjectSaveTransform{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 [DataMember]public SerializableQuaternion rotation{get;set;}
 [DataMember]public SerializableVector3    position{get;set;}
-}[NonSerialized]readonly SaveTransform saveTransform=new SaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
-[DataContract]public class SaveStateData{
+}[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+[DataContract]public class SimObjectSaveStateData{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
-}[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
+}[NonSerialized]readonly SimObjectSaveStateData saveStateData=new SimObjectSaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;[NonSerialized]bool unplace;[NonSerialized]bool unplacing;[NonSerialized]int unplacedId;
 [NonSerialized]bool releaseId;
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
-[NonSerialized]public new Collider[]collider;
+[NonSerialized]public new Collider[]collider;[NonSerialized]public new Rigidbody rigidbody;
 protected virtual void Awake(){if(transform.parent!=Buildings.staticScript.transform){transform.parent=Buildings.staticScript.transform;}
 type=GetType();id=-1;
 saveTransform.type=type.FullName;
 saveStateData.type=type.FullName;
-collider=GetComponents<Collider>();
+collider=GetComponents<Collider>();rigidbody=GetComponent<Rigidbody>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to sim objects pool",this);
-foreach(var col in collider){col.enabled=false;}
+foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
 Buildings.Disabled.Add(this);Buildings.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
 DisabledNode=SimObjectPool[type].AddLast(this);
 pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
@@ -48,7 +48,7 @@ try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string buildingsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para objeto sim");
 var watch=new System.Diagnostics.Stopwatch();
-DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SaveTransform));
+DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimObjectSaveTransform));
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este objeto sim:"+id,this);watch.Restart();}
 lock(load_Syn){
@@ -80,7 +80,7 @@ int cnkIdx1=loadTuple.Value.cnkIdx.Value;
 transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
-var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SaveTransform;
+var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SimObjectSaveTransform;
 saveTransform.id=id;
 saveTransform.position=saveTransformLoaded.position;
 saveTransform.rotation=saveTransformLoaded.rotation;
@@ -165,7 +165,7 @@ aCoord_Pre=aCoord;}
 }
 void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
-foreach(var col in collider){col.enabled=false;}
+foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
 Buildings.Disabled.Add(this);Buildings.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
 disabling=true;
 }
@@ -185,7 +185,7 @@ unplace=true;
 
 DEBUG_UNPLACE=false;
 }else if(enabling){
-foreach(var col in collider){col.enabled=true;}
+foreach(var col in collider){col.enabled=true;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.None;}
 }
 firstLoop=false;enabling=false;}
 if(backgroundData.WaitOne(0)){

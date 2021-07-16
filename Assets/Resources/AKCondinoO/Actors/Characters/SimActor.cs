@@ -16,14 +16,14 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
 [NonSerialized]public readonly object load_Syn=new object();
-[DataContract]public class SaveTransform{
+[DataContract]public class SimActorSaveTransform{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 [DataMember]public SerializableQuaternion rotation{get;set;}
 [DataMember]public SerializableVector3    position{get;set;}
-}[NonSerialized]readonly SaveTransform saveTransform=new SaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
-[DataContract]public class SaveStateData{
+}[NonSerialized]readonly SimActorSaveTransform saveTransform=new SimActorSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+[DataContract]public class SimActorSaveStateData{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
-}[NonSerialized]readonly SaveStateData saveStateData=new SaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
+}[NonSerialized]readonly SimActorSaveStateData saveStateData=new SimActorSaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
@@ -50,7 +50,7 @@ try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string actorsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para ator");
 var watch=new System.Diagnostics.Stopwatch();
-DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SaveTransform));
+DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimActorSaveTransform));
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
 lock(load_Syn){
@@ -77,7 +77,7 @@ int cnkIdx1=loadTuple.Value.cnkIdx.Value;
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
-var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SaveTransform;
+var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SimActorSaveTransform;
 saveTransform.id=id;
 saveTransform.position=saveTransformLoaded.position;
 saveTransform.rotation=saveTransformLoaded.rotation;

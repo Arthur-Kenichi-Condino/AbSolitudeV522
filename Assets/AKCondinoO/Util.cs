@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using UnityEngine;
 namespace AKCondinoO{public static class Util{
 #region[https://answers.unity.com/questions/956047/serialize-quaternion-or-vector3.html]
@@ -9,19 +10,19 @@ namespace AKCondinoO{public static class Util{
  /// need to create our own version. This one will automatically convert
  /// between Vector3 and SerializableVector3
  /// </summary>
- [System.Serializable]public struct SerializableVector3{
+ [System.Serializable][DataContract]public struct SerializableVector3{
 /// <summary>
 /// x component
 /// </summary>
-public float x;
+[DataMember]public float x;
 /// <summary>
 /// y component
 /// </summary>
-public float y;
+[DataMember]public float y;
 /// <summary>
 /// z component
 /// </summary>
-public float z;
+[DataMember]public float z;
 /// <summary>
 /// Constructor
 /// </summary>
@@ -62,23 +63,23 @@ return new SerializableVector3(rValue.x, rValue.y, rValue.z);
  /// need to create our own version. This one will automatically convert
  /// between Quaternion and SerializableQuaternion
  /// </summary>
-[System.Serializable]public struct SerializableQuaternion{
+[System.Serializable][DataContract]public struct SerializableQuaternion{
 /// <summary>
 /// x component
 /// </summary>
-public float x;     
+[DataMember]public float x;     
 /// <summary>
 /// y component
 /// </summary>
-public float y;     
+[DataMember]public float y;     
 /// <summary>
 /// z component
 /// </summary>
-public float z;     
+[DataMember]public float z;     
 /// <summary>
 /// w component
 /// </summary>
-public float w;     
+[DataMember]public float w;     
 /// <summary>
 /// Constructor
 /// </summary>
