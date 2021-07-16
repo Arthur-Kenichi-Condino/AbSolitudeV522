@@ -27,7 +27,7 @@ Directory.CreateDirectory(buildingsPath=string.Format("{0}/",buildingsFolder));
 unplacedsFolder=string.Format("{0}{1}",buildingsPath,"unplaced");
 Directory.CreateDirectory(unplacedsPath=string.Format("{0}/",unplacedsFolder));
 var objects=Resources.LoadAll("AKCondinoO/Buildings/Structures",typeof(GameObject));
-foreach(var o in objects){var p=o as GameObject;var t=p.GetComponent<SimObject>().GetType();
+foreach(var o in objects){var p=o as GameObject;var sO=p.GetComponent<SimObject>();if(sO==null)continue;var t=sO.GetType();
 Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<SimObject>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }

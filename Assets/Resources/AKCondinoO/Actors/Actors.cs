@@ -24,7 +24,7 @@ void Awake(){staticScript=this;
 actorsFolder=string.Format("{0}{1}",savePath,"actors");
 Directory.CreateDirectory(actorsPath=string.Format("{0}/",actorsFolder));
 var objects=Resources.LoadAll("AKCondinoO/Actors/Characters",typeof(GameObject));
-foreach(var o in objects){var p=o as GameObject;var t=p.GetComponent<SimActor>().GetType();
+foreach(var o in objects){var p=o as GameObject;var sA=p.GetComponent<SimActor>();if(sA==null)continue;var t=sA.GetType();
 Prefabs[t]=p;SimActorPool[t]=new LinkedList<SimActor>();Loaded[t]=new List<SimActor>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }

@@ -55,7 +55,7 @@ lock(load_Syn){
 #region safe
 if(id!=-1){
 if(!string.IsNullOrEmpty(transformFile)&&File.Exists(transformFile)){
-if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado registrado para ator:"+id+"..deletar antes de abrir um novo");}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("não gerar duplicata: já há um arquivo carregado registrado para objeto:"+id+"..deletar antes de abrir um novo");}
 File.Delete(transformFile);
 }
 if(!unplacing){
