@@ -80,10 +80,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16388575968b18b4ba6511476ac02e2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 1
+  LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
-  savingInterval: 1
+  savingInterval: 120
   DEBUG_UNPLACE: 0
 --- !u!1001 &7641284459781456465
 PrefabInstance:

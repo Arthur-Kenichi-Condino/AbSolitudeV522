@@ -432,7 +432,7 @@ MonoBehaviour:
   LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
-  savingInterval: 1
+  savingInterval: 120
 --- !u!1001 &1047399093827248455
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -46,5 +46,5 @@ MonoBehaviour:
   LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
-  savingInterval: 1
+  savingInterval: 120
   DEBUG_UNPLACE: 0

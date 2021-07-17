@@ -1,7 +1,35 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
-namespace AKCondinoO{public class InputHandler:MonoBehaviour{
+namespace AKCondinoO{public class InputHandler:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+public static Dictionary<string,object[]>AllCommands=new Dictionary<string,object[]>();public static Dictionary<string,object[]>AllStates=new Dictionary<string,object[]>();
+void Awake(){
+foreach(FieldInfo field in typeof(Commands).GetFields(BindingFlags.Public|BindingFlags.Static)){
+if(field.GetValue(null)is object[]command){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("add command input to handle:"+field.Name);
+AllCommands.Add(field.Name,command);
+}
+}
+foreach(FieldInfo field in typeof(Enabled).GetFields(BindingFlags.Public|BindingFlags.Static)){
+if(field.GetValue(null)is object[]state){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("add command input state status field:"+field.Name);
+AllStates.Add(field.Name,state);
+}
+}
+}
+[NonSerialized]public bool Focus=true;
+void Update(){
+foreach(var command in AllCommands){string name=command.Key;string mode=command.Value[1]as string;
+
+//...
+
+}
+
+//...
+
+}
 }
 public static class Enabled{
 public static readonly object[]PAUSE={true,true};

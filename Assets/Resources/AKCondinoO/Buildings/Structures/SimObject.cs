@@ -142,7 +142,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id
 [NonSerialized]protected Vector2Int cCoord;
 [NonSerialized]protected Vector2Int cCoord_Pre;
 [NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
-[SerializeField]protected float savingInterval=1f;[NonSerialized]protected float nextSaveTimer=0f;
+[SerializeField]protected float savingInterval=120f;[NonSerialized]protected float nextSaveTimer=0f;
 [SerializeField]protected bool DEBUG_UNPLACE=false;
 protected virtual void Update(){
 if(nextSaveTimer>0){nextSaveTimer-=Time.deltaTime;}

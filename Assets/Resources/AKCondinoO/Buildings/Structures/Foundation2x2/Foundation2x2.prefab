@@ -109,7 +109,7 @@ MonoBehaviour:
   LOG: 1
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
-  savingInterval: 1
+  savingInterval: 120
   DEBUG_UNPLACE: 0
 --- !u!1001 &5636488512737011997
 PrefabInstance:
