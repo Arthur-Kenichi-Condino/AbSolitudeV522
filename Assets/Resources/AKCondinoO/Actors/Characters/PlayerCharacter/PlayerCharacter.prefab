@@ -440,6 +440,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -883762970461749100, guid: 98025bca49954464d83855c608405be7, type: 3}
+      propertyPath: PrefabHash
+      value: 6075374942793011955
+      objectReference: {fileID: 0}
+    - target: {fileID: -883762970461749100, guid: 98025bca49954464d83855c608405be7, type: 3}
+      propertyPath: PrefabHashGenerator
+      value: PlayerCharacter
+      objectReference: {fileID: 0}
     - target: {fileID: 3465825676715348088, guid: 98025bca49954464d83855c608405be7, type: 3}
       propertyPath: m_RootOrder
       value: 0

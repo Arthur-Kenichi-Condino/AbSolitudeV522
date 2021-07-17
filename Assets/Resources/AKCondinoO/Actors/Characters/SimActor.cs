@@ -20,7 +20,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 [DataMember]public SerializableQuaternion rotation{get;set;}
 [DataMember]public SerializableVector3    position{get;set;}
-}[NonSerialized]readonly SimActorSaveTransform saveTransform=new SimActorSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+}[NonSerialized]readonly SimActorSaveTransform saveTransform=new SimActorSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;[NonSerialized]static readonly DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimActorSaveTransform));
 [DataContract(Namespace="")]public class SimActorSaveStateData{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 }[NonSerialized]readonly SimActorSaveStateData saveStateData=new SimActorSaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
@@ -50,7 +50,6 @@ try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string actorsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para ator");
 var watch=new System.Diagnostics.Stopwatch();
-DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimActorSaveTransform));
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
 lock(load_Syn){

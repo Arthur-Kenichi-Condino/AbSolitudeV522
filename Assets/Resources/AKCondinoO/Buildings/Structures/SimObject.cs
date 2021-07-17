@@ -19,7 +19,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 [DataMember]public SerializableQuaternion rotation{get;set;}
 [DataMember]public SerializableVector3    position{get;set;}
-}[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+}[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;static readonly DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimObjectSaveTransform));
 [DataContract(Namespace="")]public class SimObjectSaveStateData{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
 }[NonSerialized]readonly SimObjectSaveStateData saveStateData=new SimObjectSaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
@@ -48,7 +48,6 @@ try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string buildingsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para objeto sim");
 var watch=new System.Diagnostics.Stopwatch();
-DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimObjectSaveTransform));
 while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este objeto sim:"+id,this);watch.Restart();}
 lock(load_Syn){
