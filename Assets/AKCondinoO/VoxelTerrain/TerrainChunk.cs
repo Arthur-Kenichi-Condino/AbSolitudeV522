@@ -13,7 +13,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering;
 using static AKCondinoO.Voxels.World;
-namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+namespace AKCondinoO.Voxels{public class TerrainChunk:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;public bool DEBUG_MODE=true;
 public const ushort Height=(256);
 public const ushort Width=(16);
 public const ushort Depth=(16);
@@ -123,7 +123,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 [NonSerialized]public Mesh mesh=null;[NonSerialized]MeshUpdateFlags meshFlags=MeshUpdateFlags.DontValidateIndices|MeshUpdateFlags.DontNotifyMeshUsers|MeshUpdateFlags.DontRecalculateBounds;[NonSerialized]public new MeshRenderer renderer=null;[NonSerialized]public new MeshCollider collider=null;[NonSerialized]public Bounds localBounds;
 void Awake(){
 load_Syn_All.Add(load_Syn);
-mesh=new Mesh(){bounds=localBounds=new Bounds(Vector3.zero,new Vector3(Width,Height,Depth))};gameObject.GetComponent<MeshFilter>().sharedMesh=mesh;renderer=gameObject.GetComponent<MeshRenderer>();collider=gameObject.GetComponent<MeshCollider>();
+mesh=new Mesh(){bounds=localBounds=new Bounds(Vector3.zero,new Vector3(Width,Height,Depth))};gameObject.GetComponent<MeshFilter>().mesh=mesh;renderer=gameObject.GetComponent<MeshRenderer>();collider=gameObject.GetComponent<MeshCollider>();
 navMeshSources[gameObject]=new NavMeshBuildSource{
 transform=transform.localToWorldMatrix,
 shape=NavMeshBuildSourceShape.Mesh,
@@ -546,6 +546,9 @@ protected set{       Built_v=value;
 if(value){
 renderer.enabled=true;
 collider.enabled=true;
+collider.sharedMesh=null;
+collider.sharedMesh=mesh;
+if(DEBUG_MODE)Debug.Assert(collider.sharedMesh!=null);
 }else{
 renderer.enabled=false;
 collider.enabled=false;
@@ -558,8 +561,6 @@ if(backgroundData.WaitOne(0)){_repeat:{}
 if(baking){
 if(bakingHandle.IsCompleted){bakingHandle.Complete();baking=false;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("mesh baked",this);
-collider.sharedMesh=null;
-collider.sharedMesh=mesh;
 if(!rebuild){Built=true;}
 goto _repeat;
 }
@@ -592,7 +593,7 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 }
-[NonSerialized]bool init=true;public bool Initialized{get{return !init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
+[NonSerialized]bool init=true;public bool Initialized{get{return!init;}}public Vector2Int cCoord{private set;get;}public Vector2Int cnkRgn{private set;get;}public int cnkIdx{private set;get;}public void OncCoordChanged(Vector2Int cCoord,int cnkIdx){
 if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoordTocnkRgn(cCoord);Built=false;localBounds.center=transform.position=new Vector3(cnkRgn.x,0,cnkRgn.y);var navMeshSource=navMeshSources[gameObject];navMeshSource.transform=transform.localToWorldMatrix;navMeshSources[gameObject]=navMeshSource;this.cnkIdx=cnkIdx;
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
