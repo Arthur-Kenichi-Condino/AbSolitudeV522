@@ -1,5 +1,6 @@
 using AKCondinoO.Voxels;
 using MLAPI;
+using MLAPI.NetworkVariable;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using UnityEngine;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
-namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+namespace AKCondinoO.Actors{public class SimActor:NetworkBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 [NonSerialized]public LinkedListNode<SimActor>DisabledNode=null;
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
@@ -30,6 +31,7 @@ public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool releaseId;
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
 [NonSerialized]public NetworkObject network;[NonSerialized]bool atServer;
+[NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
@@ -243,6 +245,15 @@ backgroundData.Reset();foregroundData.Set();
 }
 }
 }
+}
+NetworkUpdate();
+}
+protected virtual void NetworkUpdate(){
+if(NetworkManager.Singleton.IsServer){
+networkPosition.Value=transform.position;
+}
+if(NetworkManager.Singleton.IsClient){
+transform.position=networkPosition.Value;
 }
 }
 }
