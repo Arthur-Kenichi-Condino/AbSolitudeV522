@@ -1,5 +1,5 @@
 using AKCondinoO.Voxels;
-using MessagePack;
+using MLAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,10 +7,9 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using UnityEngine;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
-using System.Xml;
-
 namespace AKCondinoO.Actors{public class SimActor:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 [NonSerialized]public LinkedListNode<SimActor>DisabledNode=null;
 bool Stop{
@@ -30,11 +29,13 @@ public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
+[NonSerialized]public NetworkObject network;[NonSerialized]bool atServer;
 [NonSerialized]public new CharacterControllerPhys collider;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
 saveTransform.type=type.FullName;
 saveStateData.type=type.FullName;
+network=GetComponent<NetworkObject>();
 collider=GetComponent<CharacterControllerPhys>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
 collider.controller.enabled=false;
@@ -111,12 +112,14 @@ while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();Thread.Sleep(1);
 protected virtual void OnDestroy(){
 Actors.Disabled.Remove(this);Actors.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 #region exit save
+if(atServer){
 backgroundData.WaitOne();
 #region save for the last time and release id...
 releaseId=true;
 backgroundData.Reset();foregroundData.Set();
 #endregion
 backgroundData.WaitOne();
+}
 #region id released so set as not loaded... but don't add to pool because it's being destroyed!
 loadTuple=null;Loaded[type].Remove(this);
 #endregion
@@ -144,6 +147,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id
 [NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
 [SerializeField]protected float savingInterval=120f;[NonSerialized]protected float nextSaveTimer=0f;
 protected virtual void Update(){
+if(NetworkManager.Singleton.IsServer||atServer){atServer=true;
 if(nextSaveTimer>0){nextSaveTimer-=Time.deltaTime;}
 var gotcnk=false;void getcnk(){ActiveTerrain.TryGetValue(cnkIdx,out cnk);gotcnk=true;}      
 if(!IsOutOfSight_v){//  Previne duplicata em Actors.Disabled
@@ -171,6 +175,9 @@ disabling=true;
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
 if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
+Disable();
+}else if(atServer&&!NetworkManager.Singleton.IsServer){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("deactivate myself because the server shutdown",this);
 Disable();
 }else if(cnk==null||!cnk.Built
 ||!bounds.Contains(transform.position)
@@ -209,6 +216,7 @@ backgroundData.Reset();foregroundData.Set();
 #endregion
 }else{disabling=false;
 #region id released so add to pool...
+atServer=false;
 loadTuple=null;Loaded[type].Remove(this);DisabledNode=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
 #endregion
@@ -231,6 +239,7 @@ backgroundData.Reset();foregroundData.Set();
 nextSaveTimer=savingInterval;
 backgroundData.Reset();foregroundData.Set();
 #endregion 
+}
 }
 }
 }

@@ -118,6 +118,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -2603352691583775980, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
+      propertyPath: PrefabHash
+      value: 9162469767394960162
+      objectReference: {fileID: 0}
+    - target: {fileID: -2603352691583775980, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
+      propertyPath: PrefabHashGenerator
+      value: Foundation2x2
+      objectReference: {fileID: 0}
     - target: {fileID: 1676442081997379617, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
       propertyPath: m_RootOrder
       value: 0

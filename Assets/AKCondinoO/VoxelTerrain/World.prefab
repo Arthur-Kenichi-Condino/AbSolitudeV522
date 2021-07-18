@@ -99,6 +99,18 @@ MonoBehaviour:
     NetworkPrefabs:
     - Prefab: {fileID: 2721794647798712771, guid: 25f8717ce7de3f84ca3fff6562f42663, type: 3}
       PlayerPrefab: 1
+    - Prefab: {fileID: 6671277513262940684, guid: 98025bca49954464d83855c608405be7, type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 5916665996595520331, guid: 438e1eaf735535b47ba133cb2ca6070b, type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 7876746916919396245, guid: a6fab6e19e2d552408a5b0f902d6f70d, type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 2960643002684480966, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 4910938398884149468, guid: cf9f1890896240a449ab1804f2042205, type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 7435026749567759579, guid: a3e066e3c50070c41afdc6a90f976dac, type: 3}
+      PlayerPrefab: 0
     PlayerPrefabHash:
       id: 0
     CreatePlayerPrefab: 1
