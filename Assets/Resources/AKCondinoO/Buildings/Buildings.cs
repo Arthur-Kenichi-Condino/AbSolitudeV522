@@ -149,10 +149,10 @@ disposed=true;
 [SerializeField]protected Vector3   DEBUG_CREATE_SIM_OBJECT_POSITION;
 [SerializeField]protected SimObject DEBUG_CREATE_SIM_OBJECT=null;
 void Update(){
+if(NetworkManager.Singleton.IsServer){
 if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
-if(NetworkManager.Singleton.IsServer){
 SimObject Create(Type type,Vector3 position,Vector3 rotation){
 _getSimObject:{}
 if(SimObjectPool[type].Count>0){//  get from pool

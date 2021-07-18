@@ -134,10 +134,10 @@ disposed=true;
 [SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_POSITION;
 [SerializeField]protected SimActor DEBUG_CREATE_SIM_ACTOR=null;
 void Update(){
+if(NetworkManager.Singleton.IsServer){
 if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
-if(NetworkManager.Singleton.IsServer){
 SimActor Create(Type type,Vector3 position,Vector3 rotation){
 _getActor:{}
 if(SimActorPool[type].Count>0){//  get from pool
