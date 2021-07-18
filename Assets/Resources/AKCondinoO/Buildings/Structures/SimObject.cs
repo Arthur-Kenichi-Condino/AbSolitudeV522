@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Buildings.Buildings;
+using System.Xml;
+
 namespace AKCondinoO.Buildings{public class SimObject:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 [NonSerialized]public LinkedListNode<SimObject>DisabledNode=null;
 bool Stop{
@@ -79,10 +81,12 @@ int cnkIdx1=loadTuple.Value.cnkIdx.Value;
 transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
-var saveTransformLoaded=saveTransformSerializer.ReadObject(file)as SimObjectSaveTransform;
+using(XmlDictionaryReader reader=XmlDictionaryReader.CreateTextReader(file,new XmlDictionaryReaderQuotas())){
+var saveTransformLoaded=saveTransformSerializer.ReadObject(reader,true,null)as SimObjectSaveTransform;
 saveTransform.id=id;
 saveTransform.position=saveTransformLoaded.position;
 saveTransform.rotation=saveTransformLoaded.rotation;
+}
 }
 loaded=true;
 }

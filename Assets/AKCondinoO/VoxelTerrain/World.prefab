@@ -96,7 +96,9 @@ MonoBehaviour:
     RegisteredScenes:
     - VoxelTerrain
     AllowRuntimeSceneChanges: 0
-    NetworkPrefabs: []
+    NetworkPrefabs:
+    - Prefab: {fileID: 2721794647798712771, guid: 25f8717ce7de3f84ca3fff6562f42663, type: 3}
+      PlayerPrefab: 1
     PlayerPrefabHash:
       id: 0
     CreatePlayerPrefab: 1
@@ -124,7 +126,9 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: , ns: , asm: }
+      type: {class: NullableBoolSerializable, ns: MLAPI.Configuration, asm: Unity.Multiplayer.MLAPI.Runtime}
+      data:
+        Value: 6736745570914632784
 --- !u!114 &5920524141564126650
 MonoBehaviour:
   m_ObjectHideFlags: 0

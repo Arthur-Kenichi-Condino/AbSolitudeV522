@@ -1,4 +1,5 @@
 using MessagePack;
+using MLAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -136,6 +137,7 @@ void Update(){
 if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
+if(NetworkManager.Singleton.IsServer){
 SimActor Create(Type type,Vector3 position,Vector3 rotation){
 _getActor:{}
 if(SimActorPool[type].Count>0){//  get from pool
@@ -181,6 +183,7 @@ if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&L
 reloadTimer=reloadInterval;
 foreach(var l in SimActorPool){var list=l.Value;for(var node=list.First;node!=null;node=node.Next){load_Syn_All.Remove(node.Value.load_Syn);}}
 backgroundData2.Reset();foregroundData2.Set();
+}
 }
 }
 }

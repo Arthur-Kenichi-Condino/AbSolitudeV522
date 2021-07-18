@@ -96,4 +96,4 @@ MonoBehaviour:
   PrefabHash: 615742360762951213
   PrefabHashGenerator: SimActor
   AlwaysReplicateAsRoot: 0
-  DontDestroyWithOwner: 0
+  DontDestroyWithOwner: 1
