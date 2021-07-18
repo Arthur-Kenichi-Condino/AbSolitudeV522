@@ -171,6 +171,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until 
 collider.controller.enabled=false;
 collider           .enabled=false;
 Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
+network.Despawn();
 disabling=true;
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
@@ -215,8 +216,8 @@ releaseId=true;
 backgroundData.Reset();foregroundData.Set();
 #endregion
 }else{disabling=false;
-#region id released so add to pool...
 atServer=false;
+#region id released so add to pool...
 loadTuple=null;Loaded[type].Remove(this);DisabledNode=SimActorPool[type].AddLast(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated and sleeping until I'm needed..my id:"+id,this);
 #endregion

@@ -156,7 +156,7 @@ if(backgroundData1.WaitOne(0)){
 SimObject Create(Type type,Vector3 position,Vector3 rotation){
 _getSimObject:{}
 if(SimObjectPool[type].Count>0){//  get from pool
-SimObject simObject=SimObjectPool[type].First.Value;SimObjectPool[type].RemoveFirst();simObject.DisabledNode=null;simObject.transform.rotation=Quaternion.Euler(rotation);simObject.transform.position=position;load_Syn_All.Add(simObject.load_Syn);return simObject;
+SimObject simObject=SimObjectPool[type].First.Value;SimObjectPool[type].RemoveFirst();simObject.DisabledNode=null;simObject.transform.rotation=Quaternion.Euler(rotation);simObject.transform.position=position;load_Syn_All.Add(simObject.load_Syn);simObject.network.Spawn();return simObject;
 }else{
 Instantiate(Prefabs[type]);
 goto _getSimObject;

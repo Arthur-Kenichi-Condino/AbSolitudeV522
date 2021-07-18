@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8895561451520817239}
   - component: {fileID: 4583657686625646198}
   - component: {fileID: 1818680293}
+  - component: {fileID: 4816931177634341524}
   - component: {fileID: 2616274494070854273}
   - component: {fileID: 5920524141564126650}
   m_Layer: 0
@@ -75,6 +76,19 @@ MonoBehaviour:
   LOG: 1
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
+--- !u!114 &4816931177634341524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2359498180420736610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1db33ec0f59746a429901bc51eb918f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MenuPanel: {fileID: 8814611826977321590}
 --- !u!114 &2616274494070854273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -173,10 +187,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8895561451520817239}
     m_Modifications:
+    - target: {fileID: 729019747, guid: 34e75755c979ef947a749342532c7658, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 4816931177634341524}
+    - target: {fileID: 1970769064, guid: 34e75755c979ef947a749342532c7658, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 4816931177634341524}
     - target: {fileID: 4064626108901401134, guid: 34e75755c979ef947a749342532c7658, type: 3}
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 7553934592956654236, guid: 34e75755c979ef947a749342532c7658, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 4816931177634341524}
     - target: {fileID: 9114640434329435133, guid: 34e75755c979ef947a749342532c7658, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -279,6 +305,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &8814611826977321590 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8118712614092064060, guid: 34e75755c979ef947a749342532c7658, type: 3}
+  m_PrefabInstance: {fileID: 790589382036846410}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1400133542689798196
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -175,6 +175,7 @@ void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
 foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
 Buildings.Disabled.Add(this);Buildings.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
+network.Despawn();
 disabling=true;
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
@@ -230,8 +231,8 @@ releaseId=true;
 backgroundData.Reset();foregroundData.Set();
 #endregion
 }else{disabling=false;
-#region id released so add to pool...
 atServer=false;
+#region id released so add to pool...
 loadTuple=null;Loaded[type].Remove(this);DisabledNode=SimObjectPool[type].AddLast(this);
 if(unplacing){unplacing=false;
 if(!Unplaced.ContainsKey(type)){Unplaced.Add(type,new List<int>());}Unplaced[type].Add(unplacedId);unplacedId=-1;
