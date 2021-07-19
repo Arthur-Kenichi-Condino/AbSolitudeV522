@@ -27,7 +27,7 @@ return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):
 }
 public GameObject ChunkPrefab;
 public static Vector2Int expropriationDistance{get;}=new Vector2Int(2,2);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();
-public static Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
+public static Vector2Int instantiationDistance{get;}=new Vector2Int(2,2);
 [NonSerialized]public static Bounds bounds;
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
@@ -35,8 +35,8 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]static bool navMeshDirty;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
-[NonSerialized]public const int maxPlayers=24;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,Vector3>players=new Dictionary<UNetDefaultPrefab,Vector3>(maxPlayers);
-void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
+[NonSerialized]public const int maxPlayers=2;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>players=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
+void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1)+(maxPlayers-1)*(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
 GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
             
 //...
@@ -139,14 +139,6 @@ if(NetworkManager.Singleton.IsServer){
 
 //...
 
-foreach(var player in players){if(LOG&&LOG_LEVEL<=-120)Debug.Log("net player .."+player.Key.network.OwnerClientId+".. at "+player.Value);
-
-//...
-
-}
-
-//...
-
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
@@ -163,8 +155,9 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to expropriate out of world chunk at 
 goto _skip;
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
-if(Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
-   Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y){
+if((Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
+    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(v=>{return(v.Key.IsLocalPlayer||(Mathf.Abs(cCoord1.x-v.Key.cCoord.x)>instantiationDistance.x||
+                                                                                                         Mathf.Abs(cCoord1.y-v.Key.cCoord.y)>instantiationDistance.y));})){
 int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
 TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
@@ -207,6 +200,44 @@ AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[0],actPos);
 
 //...
 
+foreach(var player in players){if(!player.Value.HasValue||player.Key.IsLocalPlayer){continue;}if(LOG&&LOG_LEVEL<=-100)Debug.Log("net player .."+player.Key.network.OwnerClientId+".. changed coord: .."+player.Value);
+var pCoord_Pre=player.Value.Value.cCoord_Pre;
+
+//...
+
+for(Vector2Int eCoord=new Vector2Int(),cCoord1=new Vector2Int();eCoord.y<=expropriationDistance.y;eCoord.y++){for(cCoord1.y=-eCoord.y+pCoord_Pre.y;cCoord1.y<=eCoord.y+pCoord_Pre.y;cCoord1.y+=eCoord.y*2){
+for(           eCoord.x=0                                      ;eCoord.x<=expropriationDistance.x;eCoord.x++){for(cCoord1.x=-eCoord.x+pCoord_Pre.x;cCoord1.x<=eCoord.x+pCoord_Pre.x;cCoord1.x+=eCoord.x*2){
+if(Math.Abs(cCoord1.x)>=MaxcCoordx||
+   Math.Abs(cCoord1.y)>=MaxcCoordy){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to expropriate out of world chunk at coord:.."+cCoord1);
+goto _skip;
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
+if((Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
+    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(v=>{return(Mathf.Abs(cCoord1.x-v.Key.cCoord.x)>instantiationDistance.x||
+                                                                                   Mathf.Abs(cCoord1.y-v.Key.cCoord.y)>instantiationDistance.y);})){
+int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
+TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("but chunk is already expropriated:.."+cnkIdx1);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("no chunk to expropriate for index:.."+cnkIdx1);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("no need to expropriate chunk at:.."+cCoord1);
+}
+_skip:{}
+if(eCoord.x==0){break;}}}
+if(eCoord.y==0){break;}}}
+
+//...
+
+}
+
+//...
+
 if(DEBUG_EDIT){
    DEBUG_EDIT=false;
 
@@ -229,6 +260,10 @@ markups.Clear();markups.AddRange(navMeshMarkups.Values);
 NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
+
+//...
+
+var keys=players.Keys.ToList();for(int i=0;i<keys.Count;++i){players[keys[i]]=null;}
 firstLoop=false;
 }
 }

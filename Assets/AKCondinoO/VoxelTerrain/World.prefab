@@ -53,7 +53,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0ab9454e61bf324ba0b0189a0feb507, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 0
+  LOG: 1
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
   UI_FPS: {fileID: 6392957710868812963}
@@ -73,7 +73,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6940eb832927ba4ea057e82d7382e9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 1
+  LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
 --- !u!114 &4816931177634341524
