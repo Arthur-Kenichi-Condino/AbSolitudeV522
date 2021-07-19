@@ -1,6 +1,7 @@
 using LibNoise;
 using LibNoise.Generator;
 using LibNoise.Operator;
+using MLAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -33,6 +34,7 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]static bool navMeshDirty;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
+[NonSerialized]public const int maxPlayers=24;
 void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
 GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
             
@@ -132,6 +134,7 @@ if(UI_FPS_RefreshTimer>=UI_FPS_RefreshTime){
 UI_FPS.text="FPS:"+FPS;
 UI_FPS_RefreshTimer=0;
 }
+if(NetworkManager.Singleton.IsServer){
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
@@ -214,7 +217,9 @@ markups.Clear();markups.AddRange(navMeshMarkups.Values);
 NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
-firstLoop=false;}
+firstLoop=false;
+}
+}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
 #region Initialize
 protected readonly System.Random[]Random=new System.Random[2];

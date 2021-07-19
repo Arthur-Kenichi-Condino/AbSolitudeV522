@@ -1,3 +1,4 @@
+using MLAPI;
 using paulbourke.MarchingCubes;
 using System;
 using System.Collections;
@@ -557,6 +558,7 @@ collider.enabled=false;
 }[NonSerialized]protected bool Built_v;
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
 void Update(){
+if(NetworkManager.Singleton.IsServer){
 if(backgroundData.WaitOne(0)){_repeat:{}
 if(baking){
 if(bakingHandle.IsCompleted){bakingHandle.Complete();baking=false;
@@ -590,6 +592,7 @@ cCoord1=cCoord;
 cnkRgn1=cnkRgn;
 cnkIdx1=cnkIdx;
 backgroundData.Reset();foregroundData.Set();
+}
 }
 }
 }
