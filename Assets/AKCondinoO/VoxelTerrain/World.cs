@@ -1,3 +1,4 @@
+using AKCondinoO.Networking;
 using LibNoise;
 using LibNoise.Generator;
 using LibNoise.Operator;
@@ -34,7 +35,7 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(1,1);
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]static bool navMeshDirty;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
-[NonSerialized]public const int maxPlayers=24;
+[NonSerialized]public const int maxPlayers=24;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,Vector3>players=new Dictionary<UNetDefaultPrefab,Vector3>(maxPlayers);
 void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
 GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
             
@@ -135,6 +136,17 @@ UI_FPS.text="FPS:"+FPS;
 UI_FPS_RefreshTimer=0;
 }
 if(NetworkManager.Singleton.IsServer){
+
+//...
+
+foreach(var player in players){if(LOG&&LOG_LEVEL<=-120)Debug.Log("net player .."+player.Key.network.OwnerClientId+".. at "+player.Value);
+
+//...
+
+}
+
+//...
+
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
