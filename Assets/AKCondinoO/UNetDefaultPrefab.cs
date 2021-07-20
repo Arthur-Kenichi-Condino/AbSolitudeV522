@@ -9,8 +9,15 @@ using static AKCondinoO.Voxels.World;
 namespace AKCondinoO.Networking{public class UNetDefaultPrefab:NetworkBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 [NonSerialized]public NetworkObject network;[NonSerialized]public readonly NetworkVariableInt networkSeed=new NetworkVariableInt(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.OwnerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
+[NonSerialized]public Bounds bounds;
 void Awake(){
 network=GetComponent<NetworkObject>();networkSeed.OnValueChanged+=OnSeedChanged;
+}
+public override void NetworkStart(){
+                base.NetworkStart();
+if(!IsLocalPlayer){
+bounds=new Bounds(Vector3.zero,World.bounds.size);
+}
 }
 void OnDestroy(){
 players.Remove(this);
@@ -59,5 +66,20 @@ if(LOG&&LOG_LEVEL<=1){Debug.Log("Seed changed from .."+old+".. to .."+value);}
 //...
 
 }
+
+//...
+
+#if UNITY_EDITOR
+void OnDrawGizmos(){
+if(GIZMOS_ENABLED<=1){
+
+//...
+
+if(!IsLocalPlayer){
+DrawBounds(bounds,Color.yellow);
+}
+}
+}
+#endif
 }
 }
