@@ -43,6 +43,7 @@ pos=transform.position;
 if(firstLoop||pos!=pos_Pre){//  sempre que eu mudar de posição...
 cCoord=vecPosTocCoord(pos);if(firstLoop||cCoord!=cCoord_Pre){
 players[this]=(cCoord,cCoord_Pre);
+if(!IsLocalPlayer){Buildings.Buildings.playersChangedCoord[this]=(cCoord,cCoord_Pre);Actors.Actors.playersChangedCoord[this]=(cCoord,cCoord_Pre);}
 
 //...
 

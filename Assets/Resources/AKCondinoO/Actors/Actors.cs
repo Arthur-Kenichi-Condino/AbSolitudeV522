@@ -1,3 +1,4 @@
+using AKCondinoO.Networking;
 using MessagePack;
 using MLAPI;
 using System;
@@ -129,6 +130,7 @@ disposed=true;
 [NonSerialized]static Vector3    actPos;
 [NonSerialized]static Vector2Int aCoord,aCoord_Pre;
 [NonSerialized]static Vector2Int actRgn;
+[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>playersChangedCoord=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
 [SerializeField]protected float reloadInterval=1f;[NonSerialized]protected float reloadTimer=0f;
 [SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_ROTATION;
 [SerializeField]protected Vector3  DEBUG_CREATE_SIM_ACTOR_POSITION;
