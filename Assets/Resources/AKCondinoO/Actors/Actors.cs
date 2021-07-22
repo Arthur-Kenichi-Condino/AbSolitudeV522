@@ -190,6 +190,9 @@ foreach(var l in SimActorPool){var list=l.Value;for(var node=list.First;node!=nu
 backgroundData2.Reset();foregroundData2.Set();
 }
 }
+
+//...
+
 }
 }
 }

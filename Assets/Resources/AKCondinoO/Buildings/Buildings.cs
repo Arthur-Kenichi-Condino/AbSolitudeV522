@@ -214,6 +214,9 @@ foreach(var l in SimObjectPool){var list=l.Value;for(var node=list.First;node!=n
 backgroundData2.Reset();foregroundData2.Set();
 }
 }
+
+//...
+
 }
 }
 }
