@@ -532,6 +532,11 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para pedaço
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
 }
 }
+public class TerrainChunkTask{
+
+//...
+
+}
 void OnDestroy(){
 Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
 TempVer.Dispose();

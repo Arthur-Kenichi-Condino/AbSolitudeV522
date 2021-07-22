@@ -116,6 +116,11 @@ while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();Thread.Sleep(1);
 }
 }
 }
+public class SimObjectTask{
+
+//...
+
+}
 protected virtual void OnDestroy(){
 Buildings.Disabled.Remove(this);Buildings.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
 #region exit save
