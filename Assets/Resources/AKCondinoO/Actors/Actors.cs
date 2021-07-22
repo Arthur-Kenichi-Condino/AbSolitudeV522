@@ -178,6 +178,9 @@ actorToLoad.loadTuple=(type,id,null);Loaded[type].Add(actorToLoad);
 DEBUG_CREATE_SIM_ACTOR=null;
 backgroundData1.Reset();foregroundData1.Set();
 }
+
+//...
+
 if(firstLoop||reloadTimer<=0||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
                               actPos=(Camera.main.transform.position);
 if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
