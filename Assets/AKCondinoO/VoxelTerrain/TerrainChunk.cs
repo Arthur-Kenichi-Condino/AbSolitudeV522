@@ -2,6 +2,7 @@ using MLAPI;
 using paulbourke.MarchingCubes;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -80,7 +81,7 @@ public double Density;public Vector3 Normal;public MaterialId Material;public bo
 public static Voxel Air    {get;}=new Voxel(  0.0,Vector3.zero,MaterialId.Air    );
 public static Voxel Bedrock{get;}=new Voxel(101.0,Vector3.zero,MaterialId.Bedrock);
 }
-[NonSerialized]public const double IsoLevel=-50.0d;public static Vector3 TrianglePosAdj{get;}=new Vector3((Width/2.0f)-0.5f,(Height/2.0f)-0.5f,(Depth/2.0f)-0.5f);/*  Ajuste para que o mesh do chunk fique centralizado, com pivot em 0,0,0  */Vector2 EmptyUV{get;}=new Vector2(-1,-1);
+[NonSerialized]public const double IsoLevel=-50.0d;public static Vector3 TrianglePosAdj{get;}=new Vector3((Width/2.0f)-0.5f,(Height/2.0f)-0.5f,(Depth/2.0f)-0.5f);/*  Ajuste para que o mesh do chunk fique centralizado, com pivot em 0,0,0  */static Vector2 EmptyUV{get;}=new Vector2(-1,-1);
 public static readonly ReadOnlyCollection<Vector3>Corners=new ReadOnlyCollection<Vector3>(new Vector3[8]{
 new Vector3(-.5f,-.5f,-.5f),
 new Vector3( .5f,-.5f,-.5f),
@@ -114,7 +115,7 @@ texCoord3=new Vector2(-1f,-1f);
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
-}[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
+}[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]public static readonly object tasksBusyCount_Syn=new object();[NonSerialized]public static int tasksBusyCount=0;[NonSerialized]public static readonly AutoResetEvent queue=new AutoResetEvent(true);
 [NonSerialized]public readonly object load_Syn=new object();[NonSerialized]static readonly List<object>load_Syn_All=new List<object>();//  para dar Monitor.Enter em todos os chunks envolvidos ao editar terreno
 [NonSerialized]Vector2Int cCoord1;
@@ -141,6 +142,53 @@ ignoreFromBuild=false,
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);
 TempTri=new NativeList<ushort>(Allocator.Persistent);
+}
+public class TerrainChunkTask{
+[NonSerialized]static readonly ConcurrentQueue<TerrainChunk>queued=new ConcurrentQueue<TerrainChunk>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
+public static void StartNew(TerrainChunk state){queued.Enqueue(state);enqueued.Set();}
+
+//...
+
+#region current terrain processing data
+TerrainChunk current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+object load_Syn{get;set;}
+
+//...
+
+Vector2Int cCoord1{get;set;}
+Vector2Int cnkRgn1{get;set;}
+int        cnkIdx1{get;set;}
+Voxel[]voxels{get;set;}
+void RenewData(TerrainChunk next){
+current=next;
+foregroundData=next.foregroundData;backgroundData=next.backgroundData;
+load_Syn=next.load_Syn;
+
+//...
+
+cCoord1=next.cCoord1;
+cnkRgn1=next.cnkRgn1;
+cnkIdx1=next.cnkIdx1;
+voxels=next.voxels;
+}
+void ReleaseData(){
+foregroundData=null;backgroundData=null;
+load_Syn=null;
+
+//...
+
+voxels=null;
+current=null;
+}
+#endregion current terrain processing data
+
+//...
+
+public static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){enqueued.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]readonly Task task;public void Wait(){try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}}
+public TerrainChunkTask(bool LOG,int LOG_LEVEL){
 task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
@@ -150,8 +198,8 @@ var watch=new System.Diagnostics.Stopwatch();
 Voxel[]polygonCell=new Voxel[8];Voxel[]tmpVxl=new Voxel[6];Vector3 polygonCellNormal;
 
 //...
-double[][][]nCache=new double[biome.cacheCount][][];MaterialId[][][]mCache=new MaterialId[biome.cacheCount][][];for(int i=0;i<biome.cacheCount;++i){nCache[i]=new double[9][];mCache[i]=new MaterialId[9][];}
 
+double[][][]nCache=new double[biome.cacheCount][][];MaterialId[][][]mCache=new MaterialId[biome.cacheCount][][];for(int i=0;i<biome.cacheCount;++i){nCache[i]=new double[9][];mCache[i]=new MaterialId[9][];}
 Voxel[][][]voxelsBuffer1=new Voxel[3][][]{new Voxel[1][]{new Voxel[4],},new Voxel[Depth][],new Voxel[FlattenOffset][],};for(int i=0;i<voxelsBuffer1[2].Length;++i){voxelsBuffer1[2][i]=new Voxel[4];if(i<voxelsBuffer1[1].Length){voxelsBuffer1[1][i]=new Voxel[4];}}Voxel[][]voxelsBuffer2=new Voxel[3][]{new Voxel[1],new Voxel[Depth],new Voxel[FlattenOffset],};
 Vector3[][][]verticesBuffer=new Vector3[3][][]{new Vector3[1][]{new Vector3[4],},new Vector3[Depth][],new Vector3[FlattenOffset][],};for(int i=0;i<verticesBuffer[2].Length;++i){verticesBuffer[2][i]=new Vector3[4];if(i<verticesBuffer[1].Length){verticesBuffer[1][i]=new Vector3[4];}}
 MaterialId[]materials=new MaterialId[12];
@@ -170,11 +218,11 @@ if(offset.x== 0&&offset.y== 1)return 6;
 if(offset.x==-1&&offset.y== 1)return 7;
 if(offset.x== 1&&offset.y== 1)return 8;
 return -1;}
-while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;lock(tasksBusyCount_Syn){tasksBusyCount++;}queue.WaitOne(tasksBusyCount*5000);
+while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out TerrainChunk dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();lock(tasksBusyCount_Syn){tasksBusyCount++;}queue.WaitOne(tasksBusyCount*5000);
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terreno:"+cCoord1);watch.Restart();}
 Array.Clear(voxels,0,voxels.Length);
-TempVer.Clear();
-TempTri.Clear();
+current.TempVer.Clear();
+current.TempTri.Clear();
 
 //...
 
@@ -336,15 +384,15 @@ for(int i=0;Tables.TriangleTable[edgeIndex][i]!=-1;i+=3){idx[0]=Tables.TriangleT
                                                          idx[2]=Tables.TriangleTable[edgeIndex][i+2];
                                                          Vector3 pos=vCoord1-TrianglePosAdj;pos.x+=posOffset.x;
                                                                                             pos.z+=posOffset.y;
-                                                         Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
-                                                                                                                    (int)materials[idx[1]],
-                                                                                                                    (int)materials[idx[2]]));
-TempVer.Add(new Vertex(verPos[0]=pos+vertices[idx[0]],normals[idx[0]],materialUV));if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
-TempVer.Add(new Vertex(verPos[1]=pos+vertices[idx[1]],normals[idx[1]],materialUV));if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
-TempVer.Add(new Vertex(verPos[2]=pos+vertices[idx[2]],normals[idx[2]],materialUV));if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
-TempTri.Add((ushort)(vertexCount+2));
-TempTri.Add((ushort)(vertexCount+1));
-TempTri.Add(         vertexCount   );
+                                                                      Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
+                                                                                                                                 (int)materials[idx[1]],
+                                                                                                                                 (int)materials[idx[2]]));
+current.TempVer.Add(new Vertex(verPos[0]=pos+vertices[idx[0]],normals[idx[0]],materialUV));if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
+current.TempVer.Add(new Vertex(verPos[1]=pos+vertices[idx[1]],normals[idx[1]],materialUV));if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
+current.TempVer.Add(new Vertex(verPos[2]=pos+vertices[idx[2]],normals[idx[2]],materialUV));if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
+current.TempTri.Add((ushort)(vertexCount+2));
+current.TempTri.Add((ushort)(vertexCount+1));
+current.TempTri.Add(         vertexCount   );
 vertexCount+=3;}
 //  Buffer the data
 verticesBuffer[0][0][0]=vertices[ 4]+Vector3.back;//  Adiciona um valor "negativo" porque o voxelCoord próximo vai usar esse valor mas precisa obter "uma posição anterior"
@@ -473,43 +521,43 @@ _Material:{
         }
 #endregion
 }
-for(int i=0;i<TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
-var MaterialIdGroupingOrdered=UVByVertex[verPos[j]=TempVer[idx[j]].pos].ToArray().Select(uv=>{return AtlasHelper.GetMaterialId(uv);}).GroupBy(value=>value).OrderByDescending(group=>group.Key).ThenByDescending(group=>group.Count());weights.Clear();int total=0;
-Vector2 uv0=TempVer[idx[j]].texCoord0;foreach(var MaterialIdGroup in MaterialIdGroupingOrdered){bool add;                           
+for(int i=0;i<current.TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
+var MaterialIdGroupingOrdered=UVByVertex[verPos[j]=current.TempVer[idx[j]].pos].ToArray().Select(uv=>{return AtlasHelper.GetMaterialId(uv);}).GroupBy(value=>value).OrderByDescending(group=>group.Key).ThenByDescending(group=>group.Count());weights.Clear();int total=0;
+Vector2 uv0=current.TempVer[idx[j]].texCoord0;foreach(var MaterialIdGroup in MaterialIdGroupingOrdered){bool add;                           
 Vector2 uv=AtlasHelper.GetUV(MaterialIdGroup.First());
 if(uv0==uv){
 total+=weights[0]=MaterialIdGroup.Count();
-}else if(((add=TempVer[idx[j]].texCoord1==EmptyUV)&&TempVer[idx[j]].texCoord2!=uv&&TempVer[idx[j]].texCoord3!=uv)||TempVer[idx[j]].texCoord1==uv){
-if(add){var v1=TempVer[idx[0]];v1.texCoord1=uv;TempVer[idx[0]]=v1;
-            v1=TempVer[idx[1]];v1.texCoord1=uv;TempVer[idx[1]]=v1;
-            v1=TempVer[idx[2]];v1.texCoord1=uv;TempVer[idx[2]]=v1;
+}else if(((add=current.TempVer[idx[j]].texCoord1==EmptyUV)&&current.TempVer[idx[j]].texCoord2!=uv&&current.TempVer[idx[j]].texCoord3!=uv)||current.TempVer[idx[j]].texCoord1==uv){
+if(add){var v1=current.TempVer[idx[0]];v1.texCoord1=uv;current.TempVer[idx[0]]=v1;
+            v1=current.TempVer[idx[1]];v1.texCoord1=uv;current.TempVer[idx[1]]=v1;
+            v1=current.TempVer[idx[2]];v1.texCoord1=uv;current.TempVer[idx[2]]=v1;
 }
 total+=weights[1]=MaterialIdGroup.Count();
-}else if(((add=TempVer[idx[j]].texCoord2==EmptyUV)&&TempVer[idx[j]].texCoord3!=uv                               )||TempVer[idx[j]].texCoord2==uv){
-if(add){var v1=TempVer[idx[0]];v1.texCoord2=uv;TempVer[idx[0]]=v1;
-            v1=TempVer[idx[1]];v1.texCoord2=uv;TempVer[idx[1]]=v1;
-            v1=TempVer[idx[2]];v1.texCoord2=uv;TempVer[idx[2]]=v1;
+}else if(((add=current.TempVer[idx[j]].texCoord2==EmptyUV)&&current.TempVer[idx[j]].texCoord3!=uv                                       )||current.TempVer[idx[j]].texCoord2==uv){
+if(add){var v1=current.TempVer[idx[0]];v1.texCoord2=uv;current.TempVer[idx[0]]=v1;
+            v1=current.TempVer[idx[1]];v1.texCoord2=uv;current.TempVer[idx[1]]=v1;
+            v1=current.TempVer[idx[2]];v1.texCoord2=uv;current.TempVer[idx[2]]=v1;
 }
 total+=weights[2]=MaterialIdGroup.Count();
-}else if(((add=TempVer[idx[j]].texCoord3==EmptyUV)                                                              )||TempVer[idx[j]].texCoord3==uv){
-if(add){var v1=TempVer[idx[0]];v1.texCoord3=uv;TempVer[idx[0]]=v1;
-            v1=TempVer[idx[1]];v1.texCoord3=uv;TempVer[idx[1]]=v1;
-            v1=TempVer[idx[2]];v1.texCoord3=uv;TempVer[idx[2]]=v1;
+}else if(((add=current.TempVer[idx[j]].texCoord3==EmptyUV)                                                                              )||current.TempVer[idx[j]].texCoord3==uv){
+if(add){var v1=current.TempVer[idx[0]];v1.texCoord3=uv;current.TempVer[idx[0]]=v1;
+            v1=current.TempVer[idx[1]];v1.texCoord3=uv;current.TempVer[idx[1]]=v1;
+            v1=current.TempVer[idx[2]];v1.texCoord3=uv;current.TempVer[idx[2]]=v1;
 }
 total+=weights[3]=MaterialIdGroup.Count();
 }
 }
-if(weights.Count>1){var v2=TempVer[idx[j]];
+if(weights.Count>1){var v2=current.TempVer[idx[j]];
         Color col=v2.color;col.r=(weights[0]/(float)total);
 if(weights.ContainsKey(1)){col.g=(weights[1]/(float)total);}
 if(weights.ContainsKey(2)){col.b=(weights[2]/(float)total);}
 if(weights.ContainsKey(3)){col.a=(weights[3]/(float)total);}
-                  v2.color=col;TempVer[idx[j]]=v2;
+                  v2.color=col;current.TempVer[idx[j]]=v2;
 }
 }}
-bake=true;
+current.bake=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada atualização deste pedaço do terreno:"+cCoord1+"..levou:"+watch.ElapsedMilliseconds+"ms");
-lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();
+lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();ReleaseData();
 
 //...
 
@@ -532,13 +580,12 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para pedaço
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
 }
 }
-public class TerrainChunkTask{
 
 //...
 
 }
 void OnDestroy(){
-Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
+Stop=true;foregroundData.Dispose();backgroundData.Dispose();
 TempVer.Dispose();
 TempTri.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
@@ -596,7 +643,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("hora de calcular reconstrução",this);
 cCoord1=cCoord;
 cnkRgn1=cnkRgn;
 cnkIdx1=cnkIdx;
-backgroundData.Reset();foregroundData.Set();
+backgroundData.Reset();foregroundData.Set();TerrainChunkTask.StartNew(this);
 }
 }
 }
