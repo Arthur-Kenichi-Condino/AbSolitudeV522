@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;
+using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Buildings.SimObject;
 namespace AKCondinoO.Buildings{public class Buildings:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;
 static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
@@ -19,7 +19,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]public static string buildingsPath;[NonSerialized]public static string buildingsFolder;
 [NonSerialized]public static string unplacedsPath;[NonSerialized]public static string unplacedsFolder;
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
-[NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimObject>>SimObjectPool=new Dictionary<Type,LinkedList<SimObject>>();[NonSerialized]public static readonly Dictionary<Type,List<SimObject>>Loaded=new Dictionary<Type,List<SimObject>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();
+[NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimObject>>SimObjectPool=new Dictionary<Type,LinkedList<SimObject>>();[NonSerialized]public static readonly Dictionary<Type,List<SimObject>>Loaded=new Dictionary<Type,List<SimObject>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();[NonSerialized]static readonly SimObjectTask[]tasks=new SimObjectTask[tasksCount];public const int tasksCount=1000;
 [NonSerialized]static Dictionary<Type,int>Count;[NonSerialized]public static Dictionary<Type,List<int>>Unplaced;
 [NonSerialized]public static readonly List<SimObject>Enabled=new List<SimObject>();[NonSerialized]public static readonly List<SimObject>Disabled=new List<SimObject>();
 [NonSerialized]public static Buildings staticScript;
@@ -33,6 +33,10 @@ foreach(var o in objects){var p=o as GameObject;var sO=p.GetComponent<SimObject>
 Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<SimObject>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }
+
+//...
+
+for(int i=0;i<tasks.Length;++i){tasks[i]=new SimObjectTask(LOG,LOG_LEVEL);}
 
 //...            
 
@@ -140,6 +144,23 @@ backgroundData1.WaitOne();
 Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
           try{task2.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData2.Dispose();backgroundData2.Dispose();
 disposed=true;
+
+//...
+
+var simObjects=FindObjectsOfType<SimObject>(true);foreach(var simObject in simObjects){simObject.OnExitSave();
+
+//...
+
+}
+SimObjectTask.Stop=true;for(int i=0;i<tasks.Length;++i){
+                
+//...
+                
+tasks[i].Wait();
+     
+//...                
+                
+}
 }
 [NonSerialized]static bool firstLoop=true;
 [NonSerialized]static Vector3    actPos;

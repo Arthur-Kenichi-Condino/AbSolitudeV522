@@ -150,6 +150,8 @@ public static void StartNew(TerrainChunk state){queued.Enqueue(state);enqueued.S
 //...
 
 #region current terrain processing data
+[NonSerialized]NativeList<Vertex>TempVer;
+[NonSerialized]NativeList<ushort>TempTri;
 TerrainChunk current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 object load_Syn{get;set;}
 
@@ -159,8 +161,11 @@ Vector2Int cCoord1{get;set;}
 Vector2Int cnkRgn1{get;set;}
 int        cnkIdx1{get;set;}
 Voxel[]voxels{get;set;}
+bool bake{get{return current.bake;}set{current.bake=value;}}
 void RenewData(TerrainChunk next){
 current=next;
+TempVer=current.TempVer;
+TempTri=current.TempTri;
 foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 load_Syn=next.load_Syn;
 
@@ -221,8 +226,8 @@ return -1;}
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out TerrainChunk dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();lock(tasksBusyCount_Syn){tasksBusyCount++;}queue.WaitOne(tasksBusyCount*5000);
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terreno:"+cCoord1);watch.Restart();}
 Array.Clear(voxels,0,voxels.Length);
-current.TempVer.Clear();
-current.TempTri.Clear();
+TempVer.Clear();
+TempTri.Clear();
 
 //...
 
@@ -238,7 +243,7 @@ ushort vertexCount=0;
 Vector2Int posOffset=Vector2Int.zero;
 Vector2Int crdOffset=Vector2Int.zero;
 Vector3Int vCoord1;
-for(vCoord1=new Vector3Int();vCoord1.y<Height;vCoord1.y++){if(averageFramerate<50||FPS<50){Thread.Yield();Thread.Sleep(1);}
+for(vCoord1=new Vector3Int();vCoord1.y<Height;vCoord1.y++){
 for(vCoord1.x=0             ;vCoord1.x<Width ;vCoord1.x++){
 for(vCoord1.z=0             ;vCoord1.z<Depth ;vCoord1.z++){
 int corner=0;Vector3Int vCoord2=vCoord1;                        if(vCoord1.z>0)polygonCell[corner]=voxelsBuffer1[0][0][0];else if(vCoord1.x>0)polygonCell[corner]=voxelsBuffer1[1][vCoord1.z][0];else if(vCoord1.y>0)polygonCell[corner]=voxelsBuffer1[2][vCoord1.z+vCoord1.x*Depth][0];else SetpolygonCellVoxel();
@@ -384,15 +389,15 @@ for(int i=0;Tables.TriangleTable[edgeIndex][i]!=-1;i+=3){idx[0]=Tables.TriangleT
                                                          idx[2]=Tables.TriangleTable[edgeIndex][i+2];
                                                          Vector3 pos=vCoord1-TrianglePosAdj;pos.x+=posOffset.x;
                                                                                             pos.z+=posOffset.y;
-                                                                      Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
-                                                                                                                                 (int)materials[idx[1]],
-                                                                                                                                 (int)materials[idx[2]]));
-current.TempVer.Add(new Vertex(verPos[0]=pos+vertices[idx[0]],normals[idx[0]],materialUV));if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
-current.TempVer.Add(new Vertex(verPos[1]=pos+vertices[idx[1]],normals[idx[1]],materialUV));if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
-current.TempVer.Add(new Vertex(verPos[2]=pos+vertices[idx[2]],normals[idx[2]],materialUV));if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
-current.TempTri.Add((ushort)(vertexCount+2));
-current.TempTri.Add((ushort)(vertexCount+1));
-current.TempTri.Add(         vertexCount   );
+                                                              Vector2 materialUV=AtlasHelper.GetUV((MaterialId)Mathf.Max((int)materials[idx[0]],
+                                                                                                                         (int)materials[idx[1]],
+                                                                                                                         (int)materials[idx[2]]));
+TempVer.Add(new Vertex(verPos[0]=pos+vertices[idx[0]],normals[idx[0]],materialUV));if(!UVByVertex.ContainsKey(verPos[0])){UVByVertex.Add(verPos[0],new List<Vector2>());}UVByVertex[verPos[0]].Add(materialUV);
+TempVer.Add(new Vertex(verPos[1]=pos+vertices[idx[1]],normals[idx[1]],materialUV));if(!UVByVertex.ContainsKey(verPos[1])){UVByVertex.Add(verPos[1],new List<Vector2>());}UVByVertex[verPos[1]].Add(materialUV);
+TempVer.Add(new Vertex(verPos[2]=pos+vertices[idx[2]],normals[idx[2]],materialUV));if(!UVByVertex.ContainsKey(verPos[2])){UVByVertex.Add(verPos[2],new List<Vector2>());}UVByVertex[verPos[2]].Add(materialUV);
+TempTri.Add((ushort)(vertexCount+2));
+TempTri.Add((ushort)(vertexCount+1));
+TempTri.Add(         vertexCount   );
 vertexCount+=3;}
 //  Buffer the data
 verticesBuffer[0][0][0]=vertices[ 4]+Vector3.back;//  Adiciona um valor "negativo" porque o voxelCoord próximo vai usar esse valor mas precisa obter "uma posição anterior"
@@ -521,41 +526,41 @@ _Material:{
         }
 #endregion
 }
-for(int i=0;i<current.TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
-var MaterialIdGroupingOrdered=UVByVertex[verPos[j]=current.TempVer[idx[j]].pos].ToArray().Select(uv=>{return AtlasHelper.GetMaterialId(uv);}).GroupBy(value=>value).OrderByDescending(group=>group.Key).ThenByDescending(group=>group.Count());weights.Clear();int total=0;
-Vector2 uv0=current.TempVer[idx[j]].texCoord0;foreach(var MaterialIdGroup in MaterialIdGroupingOrdered){bool add;                           
+for(int i=0;i<TempVer.Length/3;i++){idx[0]=i*3;idx[1]=i*3+1;idx[2]=i*3+2;for(int j=0;j<3;j++){
+var MaterialIdGroupingOrdered=UVByVertex[verPos[j]=TempVer[idx[j]].pos].ToArray().Select(uv=>{return AtlasHelper.GetMaterialId(uv);}).GroupBy(value=>value).OrderByDescending(group=>group.Key).ThenByDescending(group=>group.Count());weights.Clear();int total=0;
+Vector2 uv0=TempVer[idx[j]].texCoord0;foreach(var MaterialIdGroup in MaterialIdGroupingOrdered){bool add;                           
 Vector2 uv=AtlasHelper.GetUV(MaterialIdGroup.First());
 if(uv0==uv){
 total+=weights[0]=MaterialIdGroup.Count();
-}else if(((add=current.TempVer[idx[j]].texCoord1==EmptyUV)&&current.TempVer[idx[j]].texCoord2!=uv&&current.TempVer[idx[j]].texCoord3!=uv)||current.TempVer[idx[j]].texCoord1==uv){
-if(add){var v1=current.TempVer[idx[0]];v1.texCoord1=uv;current.TempVer[idx[0]]=v1;
-            v1=current.TempVer[idx[1]];v1.texCoord1=uv;current.TempVer[idx[1]]=v1;
-            v1=current.TempVer[idx[2]];v1.texCoord1=uv;current.TempVer[idx[2]]=v1;
+}else if(((add=TempVer[idx[j]].texCoord1==EmptyUV)&&TempVer[idx[j]].texCoord2!=uv&&TempVer[idx[j]].texCoord3!=uv)||TempVer[idx[j]].texCoord1==uv){
+if(add){var v1=TempVer[idx[0]];v1.texCoord1=uv;TempVer[idx[0]]=v1;
+            v1=TempVer[idx[1]];v1.texCoord1=uv;TempVer[idx[1]]=v1;
+            v1=TempVer[idx[2]];v1.texCoord1=uv;TempVer[idx[2]]=v1;
 }
 total+=weights[1]=MaterialIdGroup.Count();
-}else if(((add=current.TempVer[idx[j]].texCoord2==EmptyUV)&&current.TempVer[idx[j]].texCoord3!=uv                                       )||current.TempVer[idx[j]].texCoord2==uv){
-if(add){var v1=current.TempVer[idx[0]];v1.texCoord2=uv;current.TempVer[idx[0]]=v1;
-            v1=current.TempVer[idx[1]];v1.texCoord2=uv;current.TempVer[idx[1]]=v1;
-            v1=current.TempVer[idx[2]];v1.texCoord2=uv;current.TempVer[idx[2]]=v1;
+}else if(((add=TempVer[idx[j]].texCoord2==EmptyUV)&&TempVer[idx[j]].texCoord3!=uv                               )||TempVer[idx[j]].texCoord2==uv){
+if(add){var v1=TempVer[idx[0]];v1.texCoord2=uv;TempVer[idx[0]]=v1;
+            v1=TempVer[idx[1]];v1.texCoord2=uv;TempVer[idx[1]]=v1;
+            v1=TempVer[idx[2]];v1.texCoord2=uv;TempVer[idx[2]]=v1;
 }
 total+=weights[2]=MaterialIdGroup.Count();
-}else if(((add=current.TempVer[idx[j]].texCoord3==EmptyUV)                                                                              )||current.TempVer[idx[j]].texCoord3==uv){
-if(add){var v1=current.TempVer[idx[0]];v1.texCoord3=uv;current.TempVer[idx[0]]=v1;
-            v1=current.TempVer[idx[1]];v1.texCoord3=uv;current.TempVer[idx[1]]=v1;
-            v1=current.TempVer[idx[2]];v1.texCoord3=uv;current.TempVer[idx[2]]=v1;
+}else if(((add=TempVer[idx[j]].texCoord3==EmptyUV)                                                              )||TempVer[idx[j]].texCoord3==uv){
+if(add){var v1=TempVer[idx[0]];v1.texCoord3=uv;TempVer[idx[0]]=v1;
+            v1=TempVer[idx[1]];v1.texCoord3=uv;TempVer[idx[1]]=v1;
+            v1=TempVer[idx[2]];v1.texCoord3=uv;TempVer[idx[2]]=v1;
 }
 total+=weights[3]=MaterialIdGroup.Count();
 }
 }
-if(weights.Count>1){var v2=current.TempVer[idx[j]];
+if(weights.Count>1){var v2=TempVer[idx[j]];
         Color col=v2.color;col.r=(weights[0]/(float)total);
 if(weights.ContainsKey(1)){col.g=(weights[1]/(float)total);}
 if(weights.ContainsKey(2)){col.b=(weights[2]/(float)total);}
 if(weights.ContainsKey(3)){col.a=(weights[3]/(float)total);}
-                  v2.color=col;current.TempVer[idx[j]]=v2;
+                  v2.color=col;TempVer[idx[j]]=v2;
 }
 }}
-current.bake=true;
+bake=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada atualização deste pedaço do terreno:"+cCoord1+"..levou:"+watch.ElapsedMilliseconds+"ms");
 lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();ReleaseData();
 
