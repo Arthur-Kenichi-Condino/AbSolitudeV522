@@ -92,8 +92,8 @@ Material:
     - _CameraPosition: {r: 0, g: 60, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FadeQuadrangularEnd: {r: 16, g: 128, b: 16, a: 1}
-    - _FadeQuadrangularStart: {r: 8, g: 120, b: 8, a: 1}
+    - _FadeQuadrangularEnd: {r: 40, g: 128, b: 40, a: 0}
+    - _FadeQuadrangularStart: {r: 32, g: 120, b: 32, a: 0}
     - _FogColor: {r: 1, g: 1, b: 1, a: 1}
     - _FogQuadrangularEnd: {r: 8, g: 120, b: 8, a: 1}
     - _FogQuadrangularStart: {r: 4, g: 112, b: 4, a: 1}

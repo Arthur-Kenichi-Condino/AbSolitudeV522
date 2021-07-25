@@ -3,6 +3,7 @@ using MLAPI;
 using MLAPI.NetworkVariable;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -111,6 +112,13 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para ator g
 while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();Thread.Sleep(1);}
 }
 }
+}
+public class SimActorTask{
+[NonSerialized]static readonly ConcurrentQueue<SimActor>queued=new ConcurrentQueue<SimActor>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
+public static void StartNew(SimActor state){queued.Enqueue(state);enqueued.Set();}
+
+//...
+
 }
 protected virtual void OnDestroy(){
 Actors.Disabled.Remove(this);Actors.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}

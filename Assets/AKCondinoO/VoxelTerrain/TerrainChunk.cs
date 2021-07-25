@@ -49,6 +49,8 @@ Sand=4,
 public static class AtlasHelper{
 public static readonly string[]_Shader_Input=new string[]{
 "_CameraPosition",
+"_FadeQuadrangularEnd",
+"_FadeQuadrangularStart",
 };
 public static Material Material{get;private set;}
 public static void GetAtlasData(Material material){Material=material;

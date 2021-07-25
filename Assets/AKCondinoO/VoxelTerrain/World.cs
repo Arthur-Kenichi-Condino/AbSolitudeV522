@@ -47,7 +47,7 @@ if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"
 ThreadPool.GetAvailableThreads(out int worker ,out int io         );if(LOG&&LOG_LEVEL<=100){Debug.Log("Thread pool threads available at startup: Worker threads: "+worker+" Asynchronous I/O threads: "+io);}
 ThreadPool.GetMaxThreads(out int workerThreads,out int portThreads);if(LOG&&LOG_LEVEL<=100){Debug.Log("Maximum worker threads: "+workerThreads+" Maximum completion port threads: "+portThreads);           }
 ThreadPool.GetMinThreads(out int minWorker    ,out int minIOC     );if(LOG&&LOG_LEVEL<=100){Debug.Log("minimum number of worker threads: "+minWorker+" minimum asynchronous I/O: "+minIOC);                 }
-var idealMin=(tasksCount+Buildings.Buildings.tasksCount+2+Environment.ProcessorCount);if(minWorker!=idealMin){
+var idealMin=(tasksCount+Buildings.Buildings.tasksCount+2);if(minWorker!=idealMin){
 if(ThreadPool.SetMinThreads(idealMin,minIOC)){if(LOG&&LOG_LEVEL<=100){Debug.Log("changed minimum number of worker threads to:"+(idealMin));}
 }else{                                        if(LOG&&LOG_LEVEL<=100){Debug.Log("SetMinThreads failed");                                   }
 }
@@ -57,6 +57,9 @@ QualitySettings.vSyncCount=0;Application.targetFrameRate=targetFrameRate;
 //...
 
 AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial);
+Vector3 fadeEnd,fadeStart;
+AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[1],fadeEnd=new Vector3((instantiationDistance.x+.5f)*Width,Height/2f,(instantiationDistance.y+.5f)*Depth));
+AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[2],fadeStart=fadeEnd-new Vector3(8,8,8));
             
 //...
 
@@ -95,7 +98,7 @@ foreach(var s in navMeshValidation){Debug.LogError(s);}
 
 Editor.Awake(LOG,LOG_LEVEL);
 for(int i=0;i<tasks.Length;++i){tasks[i]=new TerrainChunkTask(LOG,LOG_LEVEL);}
-for(int i=maxChunks-1;i>=0;--i){GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);}
+for(int i=maxChunks-1;i>=0;--i){long chunkMemoryUsage=-1;if(LOG&&LOG_LEVEL<=-1000){chunkMemoryUsage=System.GC.GetTotalMemory(true);}GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.GetTotalMemory(true)-chunkMemoryUsage;GC.KeepAlive(obj);Debug.Log("instantiating chunk took "+chunkMemoryUsage+" bytes");}}}
 
 //...
 
