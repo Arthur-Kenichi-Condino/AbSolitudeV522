@@ -168,13 +168,12 @@ while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.Tr
 }
 }
 protected virtual void OnDestroy(){
-if(!exitSaved){OnExitSave();}
+if(!exitSaved){OnExitSave();OnRemove();}
 Stop=true;foregroundData.Dispose();backgroundData.Dispose();
 OnSimObjectDestroyed(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-[NonSerialized]bool exitSaved;public void OnExitSave(){exitSaved=true;
-Buildings.Disabled.Remove(this);Buildings.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
+[NonSerialized]bool exitSaved;public void OnExitSave(List<ManualResetEvent>waitAll=null){exitSaved=true;
 #region exit save
 if(atServer){
 backgroundData.WaitOne();
@@ -182,14 +181,17 @@ backgroundData.WaitOne();
 releaseId=true;
 backgroundData.Reset();foregroundData.Set();SimObjectTask.StartNew(this);
 #endregion
-backgroundData.WaitOne();
+if(waitAll==null)backgroundData.WaitOne();else waitAll.Add(backgroundData);
 }
-#region id released so set as not loaded... but don't add to pool because it's being destroyed!
-loadTuple=null;Loaded[type].Remove(this);
-#endregion
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated so I can be deleted..my id:"+id,this);
 #endregion
+}
+public void OnRemove(){
+#region id released so set as not loaded... but don't add to pool because it's being destroyed!
+Buildings.Disabled.Remove(this);Buildings.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
+loadTuple=null;Loaded[type].Remove(this);
 if(DisabledNode!=null)SimObjectPool[type].Remove(DisabledNode);DisabledNode=null;
+#endregion
 }
 public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}protected set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
 
