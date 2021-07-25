@@ -147,11 +147,11 @@ disposed=true;
 
 //...
 
-var simObjects=FindObjectsOfType<SimObject>(true);List<ManualResetEvent>saveEvents=new List<ManualResetEvent>(simObjects.Length);foreach(var simObject in simObjects){simObject.OnExitSave(saveEvents);
+var simObjects=FindObjectsOfType<SimObject>(true);List<ManualResetEvent>saveEvents=new List<ManualResetEvent>(simObjects.Length);for(int i=0;i<simObjects.Length;++i){var simObject=simObjects[i];simObject.OnExitSave(saveEvents);
 
 //...
 
-}foreach(var saveEvent in saveEvents){saveEvent.WaitOne();}foreach(var simObject in simObjects){simObject.OnRemove();}
+}for(int i=0;i<saveEvents.Count;++i){var saveEvent=saveEvents[i];saveEvent.WaitOne();}for(int i=0;i<simObjects.Length;++i){var simObject=simObjects[i];simObject.OnRemove();}
 SimObjectTask.Stop=true;for(int i=0;i<tasks.Length;++i){
                 
 //...
