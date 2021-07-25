@@ -368,7 +368,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6767062035221887569, guid: cbb3a15de59aa2d4a88c4ce3b70d0513, type: 3}
       propertyPath: LOG
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6767062035221887569, guid: cbb3a15de59aa2d4a88c4ce3b70d0513, type: 3}
       propertyPath: DEBUG_CREATE_SIM_OBJECT_POSITION.y

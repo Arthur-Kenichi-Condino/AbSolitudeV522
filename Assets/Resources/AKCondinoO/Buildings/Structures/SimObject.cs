@@ -173,7 +173,7 @@ Stop=true;foregroundData.Dispose();backgroundData.Dispose();
 OnSimObjectDestroyed(this);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-[NonSerialized]bool exitSaved;public void OnExitSave(List<ManualResetEvent>waitAll=null){exitSaved=true;
+[NonSerialized]bool exitSaved=false;public void OnExitSave(List<ManualResetEvent>waitAll=null){exitSaved=true;
 #region exit save
 if(atServer){
 backgroundData.WaitOne();
