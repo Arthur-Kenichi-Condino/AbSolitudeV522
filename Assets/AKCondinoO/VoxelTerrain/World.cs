@@ -8,9 +8,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
 using static AKCondinoO.Voxels.TerrainChunk;
@@ -26,7 +28,7 @@ return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):
                       (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
 }
 public GameObject ChunkPrefab;
-public static Vector2Int expropriationDistance{get;}=new Vector2Int(2,2);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=121;
+public static Vector2Int expropriationDistance{get;}=new Vector2Int(3,3);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=121;
 public static Vector2Int instantiationDistance{get;}=new Vector2Int(2,2);
 [NonSerialized]public static Bounds bounds;
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
@@ -36,10 +38,16 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(2,2);
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 [NonSerialized]public const int maxPlayers=24;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>players=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
-void Awake(){int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1)+(maxPlayers-1)*(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
-GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
+void Awake(){
+GCSettings.LatencyMode=GCLatencyMode.SustainedLowLatency;  
+#if !UNITY_EDITOR
+GarbageCollector.GCMode=GarbageCollector.Mode.Manual;
+#endif
+MemoryManagement.Run();//  Start
             
 //...
+
+int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1)+(maxPlayers-1)*(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
 
 Directory.CreateDirectory(savePath=string.Format("{0}/{1}/",saveFolder,saveName));
 
@@ -98,10 +106,50 @@ foreach(var s in navMeshValidation){Debug.LogError(s);}
 
 Editor.Awake(LOG,LOG_LEVEL);
 for(int i=0;i<tasks.Length;++i){tasks[i]=new TerrainChunkTask(LOG,LOG_LEVEL);}
-for(int i=maxChunks-1;i>=0;--i){long chunkMemoryUsage=-1;if(LOG&&LOG_LEVEL<=-1000){chunkMemoryUsage=System.GC.GetTotalMemory(true);}GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.GetTotalMemory(true)-chunkMemoryUsage;GC.KeepAlive(obj);Debug.Log("instantiating chunk took "+chunkMemoryUsage+" bytes");}}}
+for(int i=maxChunks-1;i>=0;--i){
+#if UNITY_EDITOR
+long chunkMemoryUsage=-1;if(LOG&&LOG_LEVEL<=-1000){chunkMemoryUsage=System.GC.GetTotalMemory(true);}
+#endif
+GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
+#if UNITY_EDITOR
+if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.GetTotalMemory(true)-chunkMemoryUsage;GC.KeepAlive(obj);Debug.Log("instantiating chunk took "+chunkMemoryUsage+" bytes");}}
+#endif
+}
 
 //...
 
+MemoryManagement.Run();//  After init cleaning
+}
+void Start(){
+MemoryManagement.Run();//  After other objects init cleaning
+}
+public static class MemoryManagement{
+public const long HighWater=4L*1024L*1024L*1024L;
+
+//...
+
+public const long collectAfterAllocating=1L*1024L*1024L*1024L;[NonSerialized]static long nextCollectAt;public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
+public static void Run(){
+lastFrameMemory=currentFrameMemory;currentFrameMemory=Profiler.GetMonoUsedSizeLong();
+
+//...
+
+if(currentFrameMemory<lastFrameMemory){//  GC happened.
+nextCollectAt=currentFrameMemory+collectAfterAllocating;
+}
+if(currentFrameMemory>HighWater){//  Trigger immediate GC
+GCSettings.LargeObjectHeapCompactionMode=GCLargeObjectHeapCompactionMode.CompactOnce;
+GC.Collect(GC.MaxGeneration,GCCollectionMode.Forced,true,true);
+GC.WaitForPendingFinalizers();
+}else 
+if(currentFrameMemory>=nextCollectAt){//  Trigger incremental GC
+UnityEngine.Scripting.GarbageCollector.CollectIncremental();
+nextCollectAt=currentFrameMemory+collectAfterAllocating;
+}
+
+//...
+
+}
 }
 void OnDestroy(){
             
@@ -128,6 +176,7 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]Vector2Int actRgn;
 [SerializeField]protected bool DEBUG_EDIT=false;[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
 void Update(){
+MemoryManagement.Run();
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
 frameTimeVariation+=(Time.deltaTime-frameTimeVariation);millisecondsPerFrame=frameTimeVariation*1000.0f;FPS=1.0f/frameTimeVariation;
 frameCounter++;averageFramerateRefreshTimer+=Time.deltaTime;
