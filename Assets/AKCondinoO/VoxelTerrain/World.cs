@@ -28,8 +28,8 @@ return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):
                       (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
 }
 public GameObject ChunkPrefab;
-public static Vector2Int expropriationDistance{get;}=new Vector2Int(3,3);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=121;
-public static Vector2Int instantiationDistance{get;}=new Vector2Int(2,2);
+public static Vector2Int expropriationDistance{get;}=new Vector2Int(5,5);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=121;
+public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
 [NonSerialized]public static Bounds bounds;
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
@@ -43,7 +43,7 @@ GCSettings.LatencyMode=GCLatencyMode.SustainedLowLatency;
 #if !UNITY_EDITOR
 GarbageCollector.GCMode=GarbageCollector.Mode.Manual;
 #endif
-MemoryManagement.Run();//  Start
+MemoryManagement.Run(LOG,LOG_LEVEL);//  Start
             
 //...
 
@@ -118,33 +118,38 @@ if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.Get
 
 //...
 
-MemoryManagement.Run();//  After init cleaning
+MemoryManagement.Run(LOG,LOG_LEVEL);//  After init cleaning
 }
 void Start(){
-MemoryManagement.Run();//  After other objects init cleaning
+MemoryManagement.Run(LOG,LOG_LEVEL);//  After other objects init cleaning
 }
 public static class MemoryManagement{
-public const long HighWater=4L*1024L*1024L*1024L;
+public const long HighWater=12L*1024L*1024L*1024L;const float HighWaterGCDelay=30f;[NonSerialized]static float HighWaterGCTimer=0f;
 
 //...
 
-public const long collectAfterAllocating=1L*1024L*1024L*1024L;[NonSerialized]static long nextCollectAt;public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
-public static void Run(){
+public const long collectAfterAllocating=160L*1024L*1024L;[NonSerialized]static long nextCollectAt;public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
+public static void Run(bool LOG,int LOG_LEVEL){
 lastFrameMemory=currentFrameMemory;currentFrameMemory=Profiler.GetMonoUsedSizeLong();
 
 //...
 
+if(HighWaterGCTimer>0f){HighWaterGCTimer-=Time.deltaTime;}
 if(currentFrameMemory<lastFrameMemory){//  GC happened.
-nextCollectAt=currentFrameMemory+collectAfterAllocating;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("GC happened: currentFrameMemory.."+currentFrameMemory+"..<..lastFrameMemory.."+lastFrameMemory);
 }
-if(currentFrameMemory>HighWater){//  Trigger immediate GC
+if(currentFrameMemory>HighWater&&HighWaterGCTimer<=0f){//  Trigger immediate GC
+if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger immediate GC: currentFrameMemory.."+currentFrameMemory+"..>..HighWater.."+HighWater);
 GCSettings.LargeObjectHeapCompactionMode=GCLargeObjectHeapCompactionMode.CompactOnce;
 GC.Collect(GC.MaxGeneration,GCCollectionMode.Forced,true,true);
 GC.WaitForPendingFinalizers();
+HighWaterGCTimer=HighWaterGCDelay;
 }else 
 if(currentFrameMemory>=nextCollectAt){//  Trigger incremental GC
+if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger incremental GC: currentFrameMemory.."+currentFrameMemory+"..>=..nextCollectAt.."+nextCollectAt);
 UnityEngine.Scripting.GarbageCollector.CollectIncremental();
 nextCollectAt=currentFrameMemory+collectAfterAllocating;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC nextCollectAt.."+nextCollectAt);
 }
 
 //...
@@ -176,7 +181,7 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]Vector2Int actRgn;
 [SerializeField]protected bool DEBUG_EDIT=false;[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
 void Update(){
-MemoryManagement.Run();
+MemoryManagement.Run(LOG,LOG_LEVEL);
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
 frameTimeVariation+=(Time.deltaTime-frameTimeVariation);millisecondsPerFrame=frameTimeVariation*1000.0f;FPS=1.0f/frameTimeVariation;
 frameCounter++;averageFramerateRefreshTimer+=Time.deltaTime;
