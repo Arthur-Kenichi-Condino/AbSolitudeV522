@@ -85,6 +85,7 @@ MonoBehaviour:
   GIZMOS_ENABLED: 1
   savingInterval: 120
   DEBUG_UNPLACE: 0
+  meshFilter: {fileID: 1834088243121113883}
 --- !u!1001 &7641284459781456465
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -142,6 +143,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 146b4ba1043ffea4f81d1989f5cf2043, type: 3}
+--- !u!33 &1834088243121113883 stripped
+MeshFilter:
+  m_CorrespondingSourceObject: {fileID: 8320600634026412362, guid: 146b4ba1043ffea4f81d1989f5cf2043, type: 3}
+  m_PrefabInstance: {fileID: 7641284459781456465}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7868203527323100442
 PrefabInstance:
   m_ObjectHideFlags: 0
