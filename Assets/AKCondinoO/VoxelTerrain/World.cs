@@ -37,7 +37,7 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]static bool navMeshDirty;
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
-[NonSerialized]public const int maxPlayers=24;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>players=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
+[NonSerialized]public const int maxPlayers=6;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>players=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
 void Awake(){
 GCSettings.LatencyMode=GCLatencyMode.SustainedLowLatency;  
 #if !UNITY_EDITOR

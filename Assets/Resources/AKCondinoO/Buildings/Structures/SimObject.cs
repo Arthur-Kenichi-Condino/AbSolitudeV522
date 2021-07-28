@@ -55,6 +55,8 @@ public class SimObjectTask{
 [NonSerialized]static readonly ConcurrentQueue<SimObject>queued=new ConcurrentQueue<SimObject>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
 public static void StartNew(SimObject state){queued.Enqueue(state);enqueued.Set();}
 
+//...
+
 #region current terrain processing data
 SimObject current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 object load_Syn{get;set;}

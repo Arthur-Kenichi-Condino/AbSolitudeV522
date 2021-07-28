@@ -18,7 +18,7 @@ namespace AKCondinoO.Actors{public class SimActor:NetworkBehaviour{public bool L
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
-}[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);[NonSerialized]Task task;
+}[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]public readonly object load_Syn=new object();
 [DataContract(Namespace="")]public class SimActorSaveTransform{
 [DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
@@ -51,14 +51,67 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am awaking at.."+pos+"..and my cCoord is.."+cC
 
 //...
 
+}
+public class SimActorTask{
+[NonSerialized]static readonly ConcurrentQueue<SimActor>queued=new ConcurrentQueue<SimActor>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
+public static void StartNew(SimActor state){queued.Enqueue(state);enqueued.Set();}
+
+//...
+
+#region current terrain processing data
+SimActor current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+object load_Syn{get;set;}
+SimActorSaveTransform saveTransform{get;set;}string transformFile{get{return current.transformFile;}set{current.transformFile=value;}}string transformFolder{get{return current.transformFolder;}set{current.transformFolder=value;}}
+
+//...
+
+Type type{get{return current.type;}set{current.type=value;}}int id{get{return current.id;}set{current.id=value;}}
+
+//...
+
+bool releaseId{get{return current.releaseId;}set{current.releaseId=value;}}
+(Type type,int id,int?cnkIdx)?loadTuple{get{return current.loadTuple;}set{current.loadTuple=value;}}bool loaded{get{return current.loaded;}set{current.loaded=value;}}bool enable{get{return current.enable;}set{current.enable=value;}}
+
+//...
+
+void RenewData(SimActor next){
+current=next;
+foregroundData=next.foregroundData;backgroundData=next.backgroundData;
+load_Syn=next.load_Syn;
+
+//...
+                
+saveTransform=next.saveTransform;
+}
+void ReleaseData(){
+foregroundData=null;backgroundData=null;
+load_Syn=null;
+
+//...
+
+saveTransform=null;
+current=null;
+}
+#endregion current terrain processing data
+
+//...
+
+public static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){enqueued.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]readonly Task task;public void Wait(){try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}}
+public SimActorTask(bool LOG,int LOG_LEVEL){
+
+//...
+
 task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,savePath,actorsFolder,},TaskCreationOptions.LongRunning);
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath&&parameters[3]is string actorsFolder){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para ator");
 var watch=new System.Diagnostics.Stopwatch();
-while(!Stop){foregroundData.WaitOne();if(Stop)goto _Stop;
-if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,this);watch.Restart();}
+while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out SimActor dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar novo processamento de dados de arquivo para este ator:"+id,current);watch.Restart();}
 lock(load_Syn){
 #region safe
 if(id!=-1){
@@ -69,19 +122,19 @@ File.Delete(transformFile);
 Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",saveTransform.type,saveTransform.id));
 Directory.CreateDirectory(string.Format("{0}/",transformFolder));
-if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,this);}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,current);}
 using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
 saveTransformSerializer.WriteObject(file,saveTransform);
 }
 }
 if(id==-1){
 if(loadTuple.HasValue){
-if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Value.id,this);}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Value.id,current);}
 id=loadTuple.Value.id;
 if(loadTuple.Value.cnkIdx.HasValue){
 int cnkIdx1=loadTuple.Value.cnkIdx.Value;
 transformFolder=string.Format("{0}/{1}",actorsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
-if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,this);}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,current);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){                                                
 using(XmlDictionaryReader reader=XmlDictionaryReader.CreateTextReader(file,new XmlDictionaryReaderQuotas())){
 var saveTransformLoaded=saveTransformSerializer.ReadObject(reader,true,null)as SimActorSaveTransform;
@@ -98,48 +151,53 @@ enable=true;
 #endregion safe
 }
 if(releaseId){releaseId=false;
-if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm releasing my id:"+id,this);}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm releasing my id:"+id,current);}
 id=-1;
 transformFolder=null;transformFile=null;
 }
-if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado processamento de dados de arquivo para este ator:"+id+"..levou:"+watch.ElapsedMilliseconds+"ms",this);
-backgroundData.Set();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminado processamento de dados de arquivo para este ator:"+id+"..levou:"+watch.ElapsedMilliseconds+"ms",current);
+backgroundData.Set();ReleaseData();
 }_Stop:{
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para ator graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-while(!Stop){if(!backgroundData.WaitOne(0))backgroundData.Set();Thread.Sleep(1);}
+while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out SimActor dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}if(!backgroundData.WaitOne(0))backgroundData.Set();ReleaseData();Thread.Sleep(1);}_Stop:{}
 }
 }
 }
-public class SimActorTask{
-[NonSerialized]static readonly ConcurrentQueue<SimActor>queued=new ConcurrentQueue<SimActor>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
-public static void StartNew(SimActor state){queued.Enqueue(state);enqueued.Set();}
-
-//...
-
 }
 protected virtual void OnDestroy(){
-Actors.Disabled.Remove(this);Actors.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
+if(!exitSaved){OnExitSave();OnRemove();}
+Stop=true;foregroundData.Dispose();backgroundData.Dispose();
+OnActorDestroyed(this);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
+}
+[NonSerialized]bool exitSaved=false;public void OnExitSave(List<ManualResetEvent>waitAll=null){exitSaved=true;
 #region exit save
 if(atServer){
 backgroundData.WaitOne();
 #region save for the last time and release id...
 releaseId=true;
-backgroundData.Reset();foregroundData.Set();
+backgroundData.Reset();foregroundData.Set();SimActorTask.StartNew(this);
 #endregion
-backgroundData.WaitOne();
+if(waitAll==null)backgroundData.WaitOne();else waitAll.Add(backgroundData);
 }
-#region id released so set as not loaded... but don't add to pool because it's being destroyed!
-loadTuple=null;Loaded[type].Remove(this);
-#endregion
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now deactivated so I can be deleted..my id:"+id,this);
 #endregion
-Stop=true;try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData.Dispose();backgroundData.Dispose();
+
+//...
+
+}
+public void OnRemove(){
+#region id released so set as not loaded... but don't add to pool because it's being destroyed!
+Actors.Disabled.Remove(this);Actors.Enabled.Remove(this);if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
+loadTuple=null;Loaded[type].Remove(this);
 if(DisabledNode!=null)SimActorPool[type].Remove(DisabledNode);DisabledNode=null;
-OnActorDestroyed(this);
-if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
+#endregion
+
+//...
+
 }
 public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}protected set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
 
@@ -224,7 +282,7 @@ if(id!=-1){
 #region save for the last time and release id...
 if(LOG&&LOG_LEVEL<=1){Debug.Log("mark my id:"+id+" to be released",this);}
 releaseId=true;
-backgroundData.Reset();foregroundData.Set();
+backgroundData.Reset();foregroundData.Set();SimActorTask.StartNew(this);
 #endregion
 }else{disabling=false;
 atServer=false;
@@ -240,7 +298,7 @@ if(id==-1){
 if(loadTuple.HasValue){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I need to wake up..loadTuple:"+loadTuple,this);
 nextSaveTimer=savingInterval;
-backgroundData.Reset();foregroundData.Set();
+backgroundData.Reset();foregroundData.Set();SimActorTask.StartNew(this);
 }
 #endregion 
 }else if(nextSaveTimer<=0){
@@ -249,7 +307,7 @@ backgroundData.Reset();foregroundData.Set();
 //...
 
 nextSaveTimer=savingInterval;
-backgroundData.Reset();foregroundData.Set();
+backgroundData.Reset();foregroundData.Set();SimActorTask.StartNew(this);
 #endregion 
 }
 }
