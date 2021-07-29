@@ -7,6 +7,7 @@ using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using s
 namespace AKCondinoO.Buildings{public class DeliciousDonut:Furniture{
 [SerializeField]MeshFilter meshFilter;[NonSerialized]Mesh mesh;
 [NonSerialized]NavMeshBuildSource navMeshSource;
+[NonSerialized]NavMeshBuildMarkup navMeshMarkup;
 protected override void Awake(){
                    base.Awake();
 
@@ -18,7 +19,13 @@ transform=transform.localToWorldMatrix,
 shape=NavMeshBuildSourceShape.Mesh,
 sourceObject=mesh,
 component=meshFilter,
-area=1,//  not walkable
+area=0,//  walkable because it's tiny and doesn't block the passage
+};
+navMeshMarkup=new NavMeshBuildMarkup{
+root=meshFilter.transform,
+area=0,//  walkable
+overrideArea=false,
+ignoreFromBuild=false,
 };
 
 //...
