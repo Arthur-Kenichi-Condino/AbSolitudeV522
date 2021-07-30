@@ -74,7 +74,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6940eb832927ba4ea057e82d7382e9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 0
+  LOG: 1
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
 --- !u!114 &4816931177634341524
@@ -394,7 +394,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -5760275696122447180, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
       propertyPath: LOG
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -5760275696122447180, guid: cb6bec49dad18e142ad61710919319e4, type: 3}
       propertyPath: DEBUG_CREATE_SIM_ACTOR_POSITION.y
