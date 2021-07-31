@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace AKCondinoO.Actors{public class CharacterControllerPhys:MonoBehaviour{
 [NonSerialized]public CharacterController controller;
+[NonSerialized]public bool isUsingAI=true;
 void Awake(){
 
-//...to do: SimActor GetActors e SimActor IsGrounded e find valid pos on enable e disable this gameObject when out of sight
+//...
+
 controller=GetComponent<CharacterController>();
 IsGrounded=true;
 
@@ -22,6 +24,7 @@ IsGrounded_v=value;
 void Update(){
 
 //...
+
 IsGrounded=controller.isGrounded;if(!IsGrounded){
                        
 //...
@@ -31,10 +34,12 @@ IsGrounded=controller.isGrounded;if(!IsGrounded){
 //...
 
 }
+if(!isUsingAI){
             
 //...
-controller.SimpleMove(inputMoveSpeed);
 
+controller.SimpleMove(inputMoveSpeed);
+}
 }
 }
 }

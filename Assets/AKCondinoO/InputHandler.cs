@@ -1,9 +1,12 @@
+using AKCondinoO.Actors;
+using AKCondinoO.Voxels;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine;
+using static AKCondinoO.Voxels.World;
 namespace AKCondinoO{public class InputHandler:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public static Dictionary<string,object[]>AllCommands=new Dictionary<string,object[]>();public static Dictionary<string,object[]>AllStates=new Dictionary<string,object[]>();
 void Awake(){
@@ -45,23 +48,29 @@ bool Get(Func<int    ,bool>     mouseGet,int    button){return      mouseGet(but
 bool Get(Func<string ,bool>controllerGet,string button){return controllerGet(button);}[NonSerialized]readonly Func<string ,bool>[]controllerGets=new Func<string ,bool>[3]{Input.GetButton     ,Input.GetButtonUp     ,Input.GetButtonDown     ,};
 #pragma warning restore IDE0051 
 [NonSerialized]public bool Focus=true;
+void OnApplicationFocus(bool focus){Focus=focus;}
+public static Ray ScreenPointRay{get;private set;}
+public SimActor CurrentControlledActor{get;private set;}
 void Update(){
-foreach(var command in AllCommands){string name=command.Key;Type type=command.Value[0].GetType();string mode=command.Value[1]as string;object[]state=AllStates[name];state[1]=state[0];UpdateCommandState();
+ScreenPointRay=Camera.main.ScreenPointToRay(Input.mousePosition);
+foreach(var command in AllCommands){string name=command.Key;Type type=command.Value[0].GetType();Commands.Modes mode=(Commands.Modes)command.Value[1];object[]state=AllStates[name];state[1]=state[0];UpdateCommandState();
 void UpdateCommandState(){bool get(int getsType){if(type==typeof(KeyCode))return((Func<Func<KeyCode,bool>,KeyCode,bool>)GetMethods[type]).Invoke((Func<KeyCode,bool>)Gets[type][getsType],(KeyCode)command.Value[0]);else
                                                  if(type==typeof(int    ))return((Func<Func<int    ,bool>,int    ,bool>)GetMethods[type]).Invoke((Func<int    ,bool>)Gets[type][getsType],(int    )command.Value[0]);else
                                                                           return((Func<Func<string ,bool>,string ,bool>)GetMethods[type]).Invoke((Func<string ,bool>)Gets[type][getsType],(string )command.Value[0]);}
-if(mode=="holdDelayAfterInRange"){
+if(mode==Commands.Modes.holdDelayAfterInRange){
 state[0]=false;if((bool)command.Value[3]&&get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTime;if(heldTime>=(float)command.Value[2]){heldTime=0;state[0]=true;}state[2]=heldTime;}else{state[2]=0f;}command.Value[3]=false;
 
 //...
 
 }else
-if(mode=="holdDelay"){
+if(mode==Commands.Modes.holdDelay){
 state[0]=false;if(get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTime;if(heldTime>=(float)command.Value[2]){heldTime=0;state[0]=true;}state[2]=heldTime;}else{state[2]=0f;}
 
 //...
 
-}
+}else
+if(mode==Commands.Modes.activeHeld){
+state[0]=get(0);
 
 //...
 
@@ -73,6 +82,46 @@ state[0]=false;if(get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTim
 
 //...
 
+}
+
+//...
+
+bool hit=Physics.Raycast(ScreenPointRay,out RaycastHit hitResult,1000f);
+if((bool)Enabled.ACTION_1[0]&&((bool)Enabled.ACTION_1[0]!=(bool)Enabled.ACTION_1[1])){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1 executado");
+if(hit){
+SimActor actor;if((actor=hitResult.collider.GetComponent<SimActor>())!=null){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: ator para controlar definido..."+CurrentControlledActor,CurrentControlledActor);
+
+//...
+
+CurrentControlledActor=actor;
+
+//...
+
+}
+TerrainChunk chunk;if((chunk=hitResult.collider.GetComponent<TerrainChunk>())!=null){
+if(CurrentControlledActor!=null){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: destino de movimento para ator calculado..."+hitResult.point,CurrentControlledActor);
+if(navMeshAsyncOperation!=null&&navMeshAsyncOperation.isDone&&CurrentControlledActor.navMeshAgent.enabled){
+CurrentControlledActor.navMeshAgent.SetDestination(hitResult.point);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: destino de movimento para ator definido",CurrentControlledActor);
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: navMeshAgent não disponível",CurrentControlledActor);
+}
+
+//...
+
+}
+
+//...                        
+                        
+}
+}
+
+//...
+
+}
 }
 }
 public static class Enabled{
@@ -91,18 +140,19 @@ public static readonly object[]ACTION_2={false,false};
 public static readonly object[]INTERACT={false,false,0f};
 }
 public static class Commands{
-public static object[]PAUSE={KeyCode.Tab,"alternateDown"};
-public static object[]FORWARD ={KeyCode.W,"activeHeld"};
-public static object[]BACKWARD={KeyCode.S,"activeHeld"};
-public static object[]RIGHT   ={KeyCode.D,"activeHeld"};
-public static object[]LEFT    ={KeyCode.A,"activeHeld"};
-public static object[]JUMP    ={KeyCode.E,"whenUp"};
-public static object[]CROUCH  ={KeyCode.Q,"whenUp"};
+public enum Modes{holdDelayAfterInRange,holdDelay,activeHeld,alternateDown,whenUp,}
+public static object[]PAUSE={KeyCode.Tab,Modes.alternateDown};
+public static object[]FORWARD ={KeyCode.W,Modes.activeHeld};
+public static object[]BACKWARD={KeyCode.S,Modes.activeHeld};
+public static object[]RIGHT   ={KeyCode.D,Modes.activeHeld};
+public static object[]LEFT    ={KeyCode.A,Modes.activeHeld};
+public static object[]JUMP    ={KeyCode.E,Modes.whenUp};
+public static object[]CROUCH  ={KeyCode.Q,Modes.whenUp};
 public static float ROTATION_SENSITIVITY_X=360.0f;
 public static float ROTATION_SENSITIVITY_Y=360.0f;
-public static object[]SWITCH_CAMERA_MODE={KeyCode.RightAlt,"alternateDown"};  //  Free camera, or following the player
-public static object[]ACTION_1={(int)0,"activeHeld"};
-public static object[]ACTION_2={(int)1,"activeHeld"};
-public static object[]INTERACT={KeyCode.G,"holdDelayAfterInRange",2f,false};//  holdDelayAfterInRange so you can't, for example, "steal an item" instantly
+public static object[]SWITCH_CAMERA_MODE={KeyCode.RightAlt,Modes.alternateDown};  //  Free camera, or following the player
+public static object[]ACTION_1={(int)0,Modes.activeHeld};
+public static object[]ACTION_2={(int)1,Modes.activeHeld};
+public static object[]INTERACT={KeyCode.G,Modes.holdDelayAfterInRange,2f,false};//  holdDelayAfterInRange so you can't, for example, "steal an item" instantly
 }
 }

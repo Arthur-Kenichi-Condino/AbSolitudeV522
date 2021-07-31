@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using UnityEngine;
+using UnityEngine.AI;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
 namespace AKCondinoO.Actors{public class SimActor:NetworkBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 [NonSerialized]public LinkedListNode<SimActor>DisabledNode=null;
@@ -31,19 +32,23 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
-[NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
+[NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;[NonSerialized]bool acting;
 [NonSerialized]public NetworkObject network;[NonSerialized]bool atServer;
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public new CharacterControllerPhys collider;
+[NonSerialized]public NavMeshAgent navMeshAgent;[NonSerialized]public bool useAI=true;
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
 saveTransform.type=type.FullName;
 saveStateData.type=type.FullName;
 network=GetComponent<NetworkObject>();
 collider=GetComponent<CharacterControllerPhys>();
+navMeshAgent=GetComponent<NavMeshAgent>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
+acting=false;
 collider.controller.enabled=false;
 collider           .enabled=false;
+navMeshAgent       .enabled=false;
 Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 DisabledNode=SimActorPool[type].AddLast(this);
 pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
@@ -237,8 +242,10 @@ aCoord_Pre=aCoord;}
 }
 void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
+acting=false;
 collider.controller.enabled=false;
 collider           .enabled=false;
+navMeshAgent       .enabled=false;
 Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
 network.Despawn();
 disabling=true;
@@ -254,10 +261,35 @@ Disable();
 ){
 Disable();
 }else if(enabling){
+acting=true;
 collider.controller.enabled=true;
 collider           .enabled=true;
 }
 firstLoop=false;enabling=false;}
+if(acting){
+collider.isUsingAI=useAI;
+if(useAI){
+
+//...
+
+if(!navMeshAgent.enabled){
+if(navMeshAsyncOperation!=null&&navMeshAsyncOperation.isDone&&NavMesh.SamplePosition(transform.position,out NavMeshHit hitResult,Mathf.Max(Width,Depth),navMeshAgent.areaMask)){
+transform.position=hitResult.position;
+navMeshAgent       .enabled=true;
+}
+}
+}else{
+if(navMeshAgent.enabled){
+navMeshAgent       .enabled=false;
+}
+
+//...
+
+}
+
+//...
+
+}
 if(backgroundData.WaitOne(0)){
 if(id!=-1){
 #region get data if loaded or set if saving...
