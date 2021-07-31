@@ -609,6 +609,7 @@ collider.enabled=true;
 collider.sharedMesh=null;
 collider.sharedMesh=mesh;
 if(DEBUG_MODE)Debug.Assert(collider.sharedMesh!=null);
+navMeshDirty=true;
 }else{
 renderer.enabled=false;
 collider.enabled=false;

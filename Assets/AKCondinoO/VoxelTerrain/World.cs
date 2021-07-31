@@ -35,7 +35,7 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildMarkup>navMeshMarkups=new Dictionary<GameObject,NavMeshBuildMarkup>();[NonSerialized]public static readonly List<NavMeshBuildMarkup>markups=new List<NavMeshBuildMarkup>();
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]public static bool navMeshDirty;
-[NonSerialized]public NavMeshData[]multiplayerNavMeshDatas=new NavMeshData[maxPlayers-1];
+[NonSerialized]public static readonly NavMeshDataInstance[]multiplayerNavMesh=new NavMeshDataInstance[maxPlayers-1];[NonSerialized]public static readonly NavMeshData[]multiplayerNavMeshData=new NavMeshData[maxPlayers-1];
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 [NonSerialized]public const int maxPlayers=6;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>players=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
@@ -99,6 +99,15 @@ navMeshData=new NavMeshData(0){//  Humanoid agent
 hideFlags=HideFlags.None,
 };
 navMesh=NavMesh.AddNavMeshData(navMeshData);
+for(int i=0;i<multiplayerNavMeshData.Length;++i){
+multiplayerNavMeshData[i]=new NavMeshData(0){
+hideFlags=HideFlags.None,
+};
+multiplayerNavMesh[i]=NavMesh.AddNavMeshData(multiplayerNavMeshData[i]);
+
+//...                    
+                    
+}
 }else{
 foreach(var s in navMeshValidation){Debug.LogError(s);}
 }
@@ -330,12 +339,13 @@ if(navMeshDirty||DEBUG_BAKE_NAV_MESH){
 
 //...
 
+if(navMeshAsyncOperation==null||navMeshAsyncOperation.isDone){
 navMeshDirty=false;DEBUG_BAKE_NAV_MESH=false;
-
 sources.Clear();sources.AddRange(navMeshSources.Values);
 markups.Clear();markups.AddRange(navMeshMarkups.Values);
 NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
+}
 }
 
 //...
