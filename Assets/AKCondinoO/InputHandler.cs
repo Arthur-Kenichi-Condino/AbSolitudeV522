@@ -50,11 +50,16 @@ foreach(var command in AllCommands){string name=command.Key;Type type=command.Va
 void UpdateCommandState(){bool get(int getsType){if(type==typeof(KeyCode))return((Func<Func<KeyCode,bool>,KeyCode,bool>)GetMethods[type]).Invoke((Func<KeyCode,bool>)Gets[type][getsType],(KeyCode)command.Value[0]);else
                                                  if(type==typeof(int    ))return((Func<Func<int    ,bool>,int    ,bool>)GetMethods[type]).Invoke((Func<int    ,bool>)Gets[type][getsType],(int    )command.Value[0]);else
                                                                           return((Func<Func<string ,bool>,string ,bool>)GetMethods[type]).Invoke((Func<string ,bool>)Gets[type][getsType],(string )command.Value[0]);}
-if(mode=="holdDelay"){
-if(get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTime;state[2]=heldTime;}else{state[2]=0f;}
+if(mode=="holdDelayAfterInRange"){
+state[0]=false;if((bool)command.Value[3]&&get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTime;if(heldTime>=(float)command.Value[2]){heldTime=0;state[0]=true;}state[2]=heldTime;}else{state[2]=0f;}command.Value[3]=false;
 
 //...
-Debug.LogWarning(state[2]);
+
+}else
+if(mode=="holdDelay"){
+state[0]=false;if(get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTime;if(heldTime>=(float)command.Value[2]){heldTime=0;state[0]=true;}state[2]=heldTime;}else{state[2]=0f;}
+
+//...
 
 }
 
@@ -98,6 +103,6 @@ public static float ROTATION_SENSITIVITY_Y=360.0f;
 public static object[]SWITCH_CAMERA_MODE={KeyCode.RightAlt,"alternateDown"};  //  Free camera, or following the player
 public static object[]ACTION_1={(int)0,"activeHeld"};
 public static object[]ACTION_2={(int)1,"activeHeld"};
-public static object[]INTERACT={KeyCode.G,"holdDelay",2f};//  holdDelay so you can't, for example, "steal an item" instantly
+public static object[]INTERACT={KeyCode.G,"holdDelayAfterInRange",2f,false};//  holdDelayAfterInRange so you can't, for example, "steal an item" instantly
 }
 }
