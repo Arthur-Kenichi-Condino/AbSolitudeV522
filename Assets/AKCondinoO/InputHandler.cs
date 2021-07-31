@@ -51,8 +51,10 @@ void UpdateCommandState(){bool get(int getsType){if(type==typeof(KeyCode))return
                                                  if(type==typeof(int    ))return((Func<Func<int    ,bool>,int    ,bool>)GetMethods[type]).Invoke((Func<int    ,bool>)Gets[type][getsType],(int    )command.Value[0]);else
                                                                           return((Func<Func<string ,bool>,string ,bool>)GetMethods[type]).Invoke((Func<string ,bool>)Gets[type][getsType],(string )command.Value[0]);}
 if(mode=="holdDelay"){
+if(get(0)){float heldTime=(float)state[2];heldTime+=Time.deltaTime;state[2]=heldTime;}else{state[2]=0f;}
 
 //...
+Debug.LogWarning(state[2]);
 
 }
 
