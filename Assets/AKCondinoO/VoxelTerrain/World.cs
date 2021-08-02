@@ -41,7 +41,7 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
 void Awake(){
 GCSettings.LatencyMode=GCLatencyMode.SustainedLowLatency;  
 #if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
+GarbageCollector.GCMode=GarbageCollector.Mode.Manual;
 #endif
 MemoryManagement.Run(LOG,LOG_LEVEL);//  Start
             
@@ -125,77 +125,48 @@ MemoryManagement.Run(LOG,LOG_LEVEL);//  After other objects init cleaning
 }
 public static class MemoryManagement{
 public const long MaxMemoryUsage=32*1024L*1024L*1024L;
-
-//...
-
-public const long ForcedGCThreshold=16L*1024L*1024L*1024L;const float ForcedGCDelay=30f;[NonSerialized]static float ForcedGCTimer=0f;
-
-//...
-
-public const long collectAfterAllocating=160L*1024L*1024L;[NonSerialized]static bool collecting;[NonSerialized]const ulong incrementalCollectTime=1000000000;[NonSerialized]const float incrementalCollectDelay=(float)incrementalCollectTime/1000000000.0f+.5f;[NonSerialized]static float incrementalCollectTimer=0f;[NonSerialized]static long nextCollectAt;public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
+public const long ForcedGCThreshold=16L*1024L*1024L*1024L;const float forcedGCDelay=30f;[NonSerialized]static float forcedGCTimer=0f;
+public const long collectAfterAllocating=160L*1024L*1024L;[NonSerialized]const float collectDelay=1f;[NonSerialized]static float collectTimer=0f;[NonSerialized]static long nextCollectAt;
+public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
 public static void Run(bool LOG,int LOG_LEVEL){
 lastFrameMemory=currentFrameMemory;currentFrameMemory=Profiler.GetMonoUsedSizeLong();
 
 //...
 
-if(incrementalCollectTimer>0){incrementalCollectTimer-=Time.deltaTime;}
-if(ForcedGCTimer>0f){ForcedGCTimer-=Time.deltaTime;}
-if(currentFrameMemory<lastFrameMemory){//  GC happened.
-if(LOG&&LOG_LEVEL<=100)Debug.Log("GC happened: currentFrameMemory.."+currentFrameMemory+"..<..lastFrameMemory.."+lastFrameMemory);
-}
-if(currentFrameMemory>MaxMemoryUsage||(currentFrameMemory>ForcedGCThreshold&&ForcedGCTimer<=0f)){//  Trigger immediate GC
-if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger immediate GC: currentFrameMemory.."+currentFrameMemory+"..>..HighWater.."+ForcedGCThreshold);
-#if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
-#endif
+if(forcedGCTimer>0f){forcedGCTimer-=Time.deltaTime;}
+static void fullBlockingGC(){
 GCSettings.LargeObjectHeapCompactionMode=GCLargeObjectHeapCompactionMode.CompactOnce;
 GC.Collect(GC.MaxGeneration,GCCollectionMode.Forced,true,true);
 GC.WaitForPendingFinalizers();
-collecting=false;
-#if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
-#endif
-ForcedGCTimer=ForcedGCDelay;
-}else 
-if(!collecting&&incrementalCollectTimer<=0&&currentFrameMemory>=nextCollectAt){//  Trigger incremental GC
-if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger incremental GC: currentFrameMemory.."+currentFrameMemory+"..>=..nextCollectAt.."+nextCollectAt);
-#if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
-#endif
-if(!UnityEngine.Scripting.GarbageCollector.CollectIncremental(incrementalCollectTime)){
-#if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
-#endif
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: completed instantly");
+}
+if(collectTimer>0){collectTimer-=Time.deltaTime;}
+static void nonBlockingGC(){
+GC.Collect(0,GCCollectionMode.Optimized,false,false);
+}
+if(currentFrameMemory<lastFrameMemory){//  GC happened.
+nextCollectAt=currentFrameMemory+collectAfterAllocating;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("GC happened: currentFrameMemory.."+currentFrameMemory+"..<..lastFrameMemory.."+lastFrameMemory+"..;non blocking GC nextCollectAt.."+nextCollectAt);
+}
+if(currentFrameMemory>MaxMemoryUsage){
+if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger immediate GC: currentFrameMemory.."+currentFrameMemory+"..>..MaxMemoryUsage.."+MaxMemoryUsage);
+fullBlockingGC();
 nextCollectAt=(currentFrameMemory=Profiler.GetMonoUsedSizeLong())+collectAfterAllocating;
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC nextCollectAt.."+nextCollectAt+"..(currentFrameMemory.."+currentFrameMemory+"..)");
-}else{
-collecting=true;
-
-//...
-
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: is now running");
-}
-incrementalCollectTimer=incrementalCollectDelay;
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC incrementalCollectTimer.."+incrementalCollectTimer);
-}else 
-if(collecting&&incrementalCollectTimer<=0){
-if(!UnityEngine.Scripting.GarbageCollector.CollectIncremental(incrementalCollectTime)){
-collecting=false;
-#if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
-#endif
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: completed");
+if(LOG&&LOG_LEVEL<=100)Debug.Log("immediate GC done: currentFrameMemory.."+currentFrameMemory+"..;non blocking GC nextCollectAt.."+nextCollectAt);
+}else
+if(currentFrameMemory>ForcedGCThreshold&&forcedGCTimer<=0f){//  Trigger immediate GC
+if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger immediate GC: currentFrameMemory.."+currentFrameMemory+"..>..ForcedGCThreshold.."+ForcedGCThreshold);
+fullBlockingGC();
+forcedGCTimer=forcedGCDelay;
 nextCollectAt=(currentFrameMemory=Profiler.GetMonoUsedSizeLong())+collectAfterAllocating;
-}else{
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: needs to be kept running");
+if(LOG&&LOG_LEVEL<=100)Debug.Log("immediate GC done: currentFrameMemory.."+currentFrameMemory+"..;non blocking GC nextCollectAt.."+nextCollectAt);
+}else 
+if(currentFrameMemory>=nextCollectAt&&collectTimer<=0){//  Trigger non blocking GC because incremental GC didn't collect enough
+if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger non blocking GC: currentFrameMemory.."+currentFrameMemory+"..>=..nextCollectAt.."+nextCollectAt);
+nonBlockingGC();
+collectTimer=collectDelay;
+nextCollectAt=(currentFrameMemory=Profiler.GetMonoUsedSizeLong())+collectAfterAllocating;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("non blocking GC done: currentFrameMemory.."+currentFrameMemory+"..;non blocking GC nextCollectAt.."+nextCollectAt);
 }
-incrementalCollectTimer=incrementalCollectDelay;
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC incrementalCollectTimer.."+incrementalCollectTimer);
-}
-
-//...
-
 }
 }
 void OnDestroy(){
