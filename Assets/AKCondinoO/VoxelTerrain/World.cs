@@ -35,14 +35,13 @@ public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildMarkup>navMeshMarkups=new Dictionary<GameObject,NavMeshBuildMarkup>();[NonSerialized]public static readonly List<NavMeshBuildMarkup>markups=new List<NavMeshBuildMarkup>();
 [NonSerialized]public static AsyncOperation navMeshAsyncOperation;[NonSerialized]public static bool navMeshDirty;
-[NonSerialized]public static readonly NavMeshDataInstance[]multiplayerNavMesh=new NavMeshDataInstance[maxPlayers-1];[NonSerialized]public static readonly NavMeshData[]multiplayerNavMeshData=new NavMeshData[maxPlayers-1];
 [NonSerialized]public static readonly BiomeBase biome=new Plains();
 [SerializeField]public int targetFrameRate=60;
 [NonSerialized]public const int maxPlayers=6;[NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>players=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);
 void Awake(){
 GCSettings.LatencyMode=GCLatencyMode.SustainedLowLatency;  
 #if !UNITY_EDITOR
-GarbageCollector.GCMode=GarbageCollector.Mode.Manual;
+GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
 #endif
 MemoryManagement.Run(LOG,LOG_LEVEL);//  Start
             
@@ -99,15 +98,6 @@ navMeshData=new NavMeshData(0){//  Humanoid agent
 hideFlags=HideFlags.None,
 };
 navMesh=NavMesh.AddNavMeshData(navMeshData);
-for(int i=0;i<multiplayerNavMeshData.Length;++i){
-multiplayerNavMeshData[i]=new NavMeshData(0){
-hideFlags=HideFlags.None,
-};
-multiplayerNavMesh[i]=NavMesh.AddNavMeshData(multiplayerNavMeshData[i]);
-
-//...                    
-                    
-}
 }else{
 foreach(var s in navMeshValidation){Debug.LogError(s);}
 }
@@ -134,32 +124,74 @@ void Start(){
 MemoryManagement.Run(LOG,LOG_LEVEL);//  After other objects init cleaning
 }
 public static class MemoryManagement{
-public const long HighWater=12L*1024L*1024L*1024L;const float HighWaterGCDelay=30f;[NonSerialized]static float HighWaterGCTimer=0f;
+public const long MaxMemoryUsage=32*1024L*1024L*1024L;
 
 //...
 
-public const long collectAfterAllocating=160L*1024L*1024L;[NonSerialized]static long nextCollectAt;public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
+public const long ForcedGCThreshold=16L*1024L*1024L*1024L;const float ForcedGCDelay=30f;[NonSerialized]static float ForcedGCTimer=0f;
+
+//...
+
+public const long collectAfterAllocating=160L*1024L*1024L;[NonSerialized]static bool collecting;[NonSerialized]const ulong incrementalCollectTime=1000000000;[NonSerialized]const float incrementalCollectDelay=(float)incrementalCollectTime/1000000000.0f+.5f;[NonSerialized]static float incrementalCollectTimer=0f;[NonSerialized]static long nextCollectAt;public static long currentFrameMemory{get;private set;}public static long lastFrameMemory{get;private set;}
 public static void Run(bool LOG,int LOG_LEVEL){
 lastFrameMemory=currentFrameMemory;currentFrameMemory=Profiler.GetMonoUsedSizeLong();
 
 //...
 
-if(HighWaterGCTimer>0f){HighWaterGCTimer-=Time.deltaTime;}
+if(incrementalCollectTimer>0){incrementalCollectTimer-=Time.deltaTime;}
+if(ForcedGCTimer>0f){ForcedGCTimer-=Time.deltaTime;}
 if(currentFrameMemory<lastFrameMemory){//  GC happened.
 if(LOG&&LOG_LEVEL<=100)Debug.Log("GC happened: currentFrameMemory.."+currentFrameMemory+"..<..lastFrameMemory.."+lastFrameMemory);
 }
-if(currentFrameMemory>HighWater&&HighWaterGCTimer<=0f){//  Trigger immediate GC
-if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger immediate GC: currentFrameMemory.."+currentFrameMemory+"..>..HighWater.."+HighWater);
+if(currentFrameMemory>MaxMemoryUsage||(currentFrameMemory>ForcedGCThreshold&&ForcedGCTimer<=0f)){//  Trigger immediate GC
+if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger immediate GC: currentFrameMemory.."+currentFrameMemory+"..>..HighWater.."+ForcedGCThreshold);
+#if !UNITY_EDITOR
+GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
+#endif
 GCSettings.LargeObjectHeapCompactionMode=GCLargeObjectHeapCompactionMode.CompactOnce;
 GC.Collect(GC.MaxGeneration,GCCollectionMode.Forced,true,true);
 GC.WaitForPendingFinalizers();
-HighWaterGCTimer=HighWaterGCDelay;
+collecting=false;
+#if !UNITY_EDITOR
+GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
+#endif
+ForcedGCTimer=ForcedGCDelay;
 }else 
-if(currentFrameMemory>=nextCollectAt){//  Trigger incremental GC
+if(!collecting&&incrementalCollectTimer<=0&&currentFrameMemory>=nextCollectAt){//  Trigger incremental GC
 if(LOG&&LOG_LEVEL<=100)Debug.Log("Trigger incremental GC: currentFrameMemory.."+currentFrameMemory+"..>=..nextCollectAt.."+nextCollectAt);
-UnityEngine.Scripting.GarbageCollector.CollectIncremental();
-nextCollectAt=currentFrameMemory+collectAfterAllocating;
-if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC nextCollectAt.."+nextCollectAt);
+#if !UNITY_EDITOR
+GarbageCollector.GCMode=GarbageCollector.Mode.Enabled;
+#endif
+if(!UnityEngine.Scripting.GarbageCollector.CollectIncremental(incrementalCollectTime)){
+#if !UNITY_EDITOR
+GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
+#endif
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: completed instantly");
+nextCollectAt=(currentFrameMemory=Profiler.GetMonoUsedSizeLong())+collectAfterAllocating;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC nextCollectAt.."+nextCollectAt+"..(currentFrameMemory.."+currentFrameMemory+"..)");
+}else{
+collecting=true;
+
+//...
+
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: is now running");
+}
+incrementalCollectTimer=incrementalCollectDelay;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC incrementalCollectTimer.."+incrementalCollectTimer);
+}else 
+if(collecting&&incrementalCollectTimer<=0){
+if(!UnityEngine.Scripting.GarbageCollector.CollectIncremental(incrementalCollectTime)){
+collecting=false;
+#if !UNITY_EDITOR
+GarbageCollector.GCMode=GarbageCollector.Mode.Disabled;
+#endif
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: completed");
+nextCollectAt=(currentFrameMemory=Profiler.GetMonoUsedSizeLong())+collectAfterAllocating;
+}else{
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC: needs to be kept running");
+}
+incrementalCollectTimer=incrementalCollectDelay;
+if(LOG&&LOG_LEVEL<=100)Debug.Log("incremental GC incrementalCollectTimer.."+incrementalCollectTimer);
 }
 
 //...
@@ -263,6 +295,10 @@ TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode!=null){TerrainC
 _skip:{}
 if(iCoord.x==0){break;}}}
 if(iCoord.y==0){break;}}}
+
+//...
+
+navMeshDirty=true;
 aCoord_Pre=aCoord;}
 AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[0],actPos);
 }
@@ -347,6 +383,13 @@ NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshColl
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
 }
+
+//...
+
+var keys=players.Keys.ToList();for(int i=0;i<keys.Count;++i){players[keys[i]]=null;}
+firstLoop=false;
+}
+if(NetworkManager.Singleton.IsClient){
 
 //...
 
