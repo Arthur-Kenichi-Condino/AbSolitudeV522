@@ -47,8 +47,6 @@ MemoryManagement.Run(LOG,LOG_LEVEL);//  Start
             
 //...
 
-int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1)+(maxPlayers-1)*(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
-
 Directory.CreateDirectory(savePath=string.Format("{0}/{1}/",saveFolder,saveName));
 
 if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"+Environment.ProcessorCount);
@@ -106,15 +104,6 @@ foreach(var s in navMeshValidation){Debug.LogError(s);}
 
 Editor.Awake(LOG,LOG_LEVEL);
 for(int i=0;i<tasks.Length;++i){tasks[i]=new TerrainChunkTask(LOG,LOG_LEVEL);}
-for(int i=maxChunks-1;i>=0;--i){
-#if UNITY_EDITOR
-long chunkMemoryUsage=-1;if(LOG&&LOG_LEVEL<=-1000){chunkMemoryUsage=System.GC.GetTotalMemory(true);}
-#endif
-GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
-#if UNITY_EDITOR
-if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.GetTotalMemory(true)-chunkMemoryUsage;GC.KeepAlive(obj);Debug.Log("instantiating chunk took "+chunkMemoryUsage+" bytes");}}
-#endif
-}
 
 //...
 
@@ -189,9 +178,9 @@ public static float averageFramerate{
 private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;}           }
 }[NonSerialized]static readonly object averageFramerate_Syn=new object();[NonSerialized]static float averageFramerate_v=60;[NonSerialized]int frameCounter;[NonSerialized]float averageFramerateRefreshTimer;[NonSerialized]float averageFramerateRefreshTime=1.0f;
 [NonSerialized]float frameTimeVariation;[NonSerialized]float millisecondsPerFrame;
-[NonSerialized]Vector3    actPos;
-[NonSerialized]Vector2Int aCoord,aCoord_Pre;
-[NonSerialized]Vector2Int actRgn;
+[NonSerialized]static Vector3    actPos;
+[NonSerialized]static Vector2Int aCoord,aCoord_Pre;
+[NonSerialized]static Vector2Int actRgn;
 [SerializeField]protected bool DEBUG_EDIT=false;[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
 void Update(){
 MemoryManagement.Run(LOG,LOG_LEVEL);
@@ -208,6 +197,19 @@ UI_FPS.text="FPS:"+FPS;
 UI_FPS_RefreshTimer=0;
 }
 if(NetworkManager.Singleton.IsServer){
+if(TerrainChunkPool.Count==0){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("init TerrainChunkPool");
+int maxChunks=(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1)+(maxPlayers-1)*(expropriationDistance.x*2+1)*(expropriationDistance.y*2+1);
+for(int i=maxChunks-1;i>=0;--i){
+#if UNITY_EDITOR
+long chunkMemoryUsage=-1;if(LOG&&LOG_LEVEL<=-1000){chunkMemoryUsage=System.GC.GetTotalMemory(true);}
+#endif
+GameObject obj=Instantiate(ChunkPrefab,transform);TerrainChunk scr=obj.GetComponent<TerrainChunk>();scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);scr.network.Spawn();
+#if UNITY_EDITOR
+if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.GetTotalMemory(true)-chunkMemoryUsage;GC.KeepAlive(obj);Debug.Log("instantiating chunk took "+chunkMemoryUsage+" bytes");}}
+#endif
+}
+}
 
 //...
 
@@ -228,8 +230,8 @@ goto _skip;
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
 if((Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
-    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(v=>{return(v.Key.IsLocalPlayer||(Mathf.Abs(cCoord1.x-v.Key.cCoord.x)>instantiationDistance.x||
-                                                                                                         Mathf.Abs(cCoord1.y-v.Key.cCoord.y)>instantiationDistance.y));})){
+    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(p=>{return(p.Key.IsLocalPlayer||(Mathf.Abs(cCoord1.x-p.Key.cCoord.x)>instantiationDistance.x||
+                                                                                                         Mathf.Abs(cCoord1.y-p.Key.cCoord.y)>instantiationDistance.y));})){
 int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
 TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
@@ -290,8 +292,8 @@ goto _skip;
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
 if((Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
-    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(v=>{return(Mathf.Abs(cCoord1.x-v.Key.cCoord.x)>instantiationDistance.x||
-                                                                                   Mathf.Abs(cCoord1.y-v.Key.cCoord.y)>instantiationDistance.y);})){
+    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(p=>{return(Mathf.Abs(cCoord1.x-p.Key.cCoord.x)>instantiationDistance.x||
+                                                                                   Mathf.Abs(cCoord1.y-p.Key.cCoord.y)>instantiationDistance.y);})){
 int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
 TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
@@ -368,6 +370,41 @@ var keys=players.Keys.ToList();for(int i=0;i<keys.Count;++i){players[keys[i]]=nu
 firstLoop=false;
 }
 }
+public static void OnPlayerRemoved(UNetDefaultPrefab player,bool LOG,int LOG_LEVEL){
+var pCoord=vecPosTocCoord(player.transform.position);
+for(Vector2Int iCoord=new Vector2Int(),cCoord1=new Vector2Int();iCoord.y<=instantiationDistance.y;iCoord.y++){for(cCoord1.y=-iCoord.y+pCoord.y;cCoord1.y<=iCoord.y+pCoord.y;cCoord1.y+=iCoord.y*2){
+for(           iCoord.x=0                                      ;iCoord.x<=instantiationDistance.x;iCoord.x++){for(cCoord1.x=-iCoord.x+pCoord.x;cCoord1.x<=iCoord.x+pCoord.x;cCoord1.x+=iCoord.x*2){
+if(Math.Abs(cCoord1.x)>=MaxcCoordx||
+   Math.Abs(cCoord1.y)>=MaxcCoordy){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do not try to expropriate out of world chunk at coord:.."+cCoord1);
+goto _skip;
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("try to expropriate chunk:.."+cCoord1);
+if((Mathf.Abs(cCoord1.x-aCoord.x)>instantiationDistance.x||
+    Mathf.Abs(cCoord1.y-aCoord.y)>instantiationDistance.y)&&players.All(p=>{return(Mathf.Abs(cCoord1.x-p.Key.cCoord.x)>instantiationDistance.x||
+                                                                                   Mathf.Abs(cCoord1.y-p.Key.cCoord.y)>instantiationDistance.y);})){
+int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);if(ActiveTerrain.ContainsKey(cnkIdx1)){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("do expropriate chunk for:.."+cnkIdx1);
+TerrainChunk scr=ActiveTerrain[cnkIdx1];if(scr.ExpropriationNode==null){scr.ExpropriationNode=TerrainChunkPool.AddLast(scr);
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("but chunk is already expropriated:.."+cnkIdx1);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("no chunk to expropriate for index:.."+cnkIdx1);
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("no need to expropriate chunk at:.."+cCoord1);
+}
+
+//...
+
+_skip:{}
+if(iCoord.x==0){break;}}}
+if(iCoord.y==0){break;}}}
+}
+
+//...
+
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
 #region Initialize
 protected readonly System.Random[]Random=new System.Random[2];

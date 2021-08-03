@@ -246,7 +246,7 @@ Disable();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("deactivate myself because the server shutdown",this);
 Disable();
 }else if(cnk==null||!cnk.Built
-||(!bounds.Contains(transform.position)&&players.All(v=>v.Key.IsLocalPlayer||!v.Key.bounds.Contains(transform.position)))
+||(!bounds.Contains(transform.position)&&players.All(p=>p.Key.IsLocalPlayer||!p.Key.bounds.Contains(transform.position)))
 ){
 Disable();
 }else if(DEBUG_UNPLACE){

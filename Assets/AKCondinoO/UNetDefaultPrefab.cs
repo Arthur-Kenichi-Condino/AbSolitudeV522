@@ -32,9 +32,11 @@ bounds=new Bounds(Vector3.zero,World.bounds.size);
 }
 void OnDestroy(){
 players.Remove(this);
+if(LOG&&LOG_LEVEL<=1){Debug.Log("I'm now unregistered from players;players.Count:.."+players.Count);}
 if(navMesh.valid){
 NavMesh.RemoveNavMeshData(navMesh);
 }
+OnPlayerRemoved(this,LOG,LOG_LEVEL);
 }
 [NonSerialized]bool firstLoop=true;
 [NonSerialized]Vector3 pos;

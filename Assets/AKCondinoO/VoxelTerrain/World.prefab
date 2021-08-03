@@ -110,6 +110,7 @@ MonoBehaviour:
     NetworkTransport: {fileID: 5920524141564126650}
     RegisteredScenes:
     - VoxelTerrain
+    - 
     AllowRuntimeSceneChanges: 0
     NetworkPrefabs:
     - Prefab: {fileID: 2721794647798712771, guid: 25f8717ce7de3f84ca3fff6562f42663, type: 3}
@@ -125,6 +126,8 @@ MonoBehaviour:
     - Prefab: {fileID: 4910938398884149468, guid: cf9f1890896240a449ab1804f2042205, type: 3}
       PlayerPrefab: 0
     - Prefab: {fileID: 7435026749567759579, guid: a3e066e3c50070c41afdc6a90f976dac, type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 691516936545703101, guid: 1bf1030aa1d826f41a3ecea1210331d0, type: 3}
       PlayerPrefab: 0
     PlayerPrefabHash:
       id: 0
