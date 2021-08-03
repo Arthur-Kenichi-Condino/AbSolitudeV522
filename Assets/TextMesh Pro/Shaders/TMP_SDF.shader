@@ -1,4 +1,4 @@
-Shader "TextMeshPro/Distance Field Overlay" {
+Shader "TextMeshPro/Distance Field" {
 
 Properties {
 	_FaceTex			("Face Texture", 2D) = "white" {}
@@ -43,7 +43,7 @@ Properties {
 	_UnderlayDilate		("Border Dilate", Range(-1,1)) = 0
 	_UnderlaySoftness	("Border Softness", Range(0,1)) = 0
 
-	[HDR]_GlowColor		("Color", Color) = (0, 1, 0, 0.5)
+	[HDR]_GlowColor			("Color", Color) = (0, 1, 0, 0.5)
 	_GlowOffset			("Offset", Range(-1,1)) = 0
 	_GlowInner			("Inner", Range(0,1)) = 0.05
 	_GlowOuter			("Outer", Range(0,1)) = 0.05
@@ -84,31 +84,31 @@ Properties {
 	_ColorMask			("Color Mask", Float) = 15
 }
 
-SubShader{
+SubShader {
 
 	Tags
-  {
-		"Queue" = "Overlay"
-		"IgnoreProjector" = "True"
-		"RenderType" = "Transparent"
+	{
+		"Queue"="Transparent"
+		"IgnoreProjector"="True"
+		"RenderType"="Transparent"
 	}
 
 	Stencil
 	{
-		Ref[_Stencil]
-		Comp[_StencilComp]
-		Pass[_StencilOp]
-		ReadMask[_StencilReadMask]
-		WriteMask[_StencilWriteMask]
+		Ref [_Stencil]
+		Comp [_StencilComp]
+		Pass [_StencilOp]
+		ReadMask [_StencilReadMask]
+		WriteMask [_StencilWriteMask]
 	}
 
-	Cull[_CullMode]
+	Cull [_CullMode]
 	ZWrite Off
 	Lighting Off
 	Fog { Mode Off }
-	ZTest Always
+	ZTest [unity_GUIZTestMode]
 	Blend One OneMinusSrcAlpha
-	ColorMask[_ColorMask]
+	ColorMask [_ColorMask]
 
 	Pass {
 		CGPROGRAM
@@ -124,14 +124,8 @@ SubShader{
 
 		#include "UnityCG.cginc"
 		#include "UnityUI.cginc"
-
-//...
-
-#include "/TMPro_Properties.cginc"
-#include "/TMPro.cginc"
-float _Sharpness;
-
-//...
+		#include "TMPro_Properties.cginc"
+		#include "TMPro.cginc"
 
 		struct vertex_t {
 			UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -192,7 +186,7 @@ float _Sharpness;
 
 			float bias =(.5 - weight) + (.5 / scale);
 
-			float alphaClip = (1.0 - _OutlineWidth*_ScaleRatioA - _OutlineSoftness*_ScaleRatioA);
+			float alphaClip = (1.0 - _OutlineWidth * _ScaleRatioA - _OutlineSoftness * _ScaleRatioA);
 
 		#if GLOW_ON
 			alphaClip = min(alphaClip, 1.0 - _GlowOffset * _ScaleRatioB - _GlowOuter * _ScaleRatioB);
@@ -311,7 +305,7 @@ float _Sharpness;
 			clip(faceColor.a - 0.001);
 		#endif
 
-			return faceColor * input.color.a;
+  		return faceColor * input.color.a;
 		}
 
 		ENDCG
