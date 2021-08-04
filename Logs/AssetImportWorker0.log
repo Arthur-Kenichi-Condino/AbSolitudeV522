@@ -1,0 +1,1130 @@
+Using pre-set license
+Built from '2020.3/release' branch; Version is '2020.3.15f2 (6cf78cb77498) revision 7141260'; Using compiler version '192528614'; Build Type 'Release'
+OS: 'Windows 10 Pro; OS build 19043.1151; Version 2009; 64bit' Language: 'pt' Physical Memory: 31649 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1, IsPro: 0
+
+ COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\2020.3.15f2\Editor\Unity.exe
+-adb2
+-batchMode
+-noUpm
+-name
+AssetImportWorker0
+-projectPath
+E:/Users/Arthur/GitHub/AbSolitudeV522
+-logFile
+Logs/AssetImportWorker0.log
+-srvPort
+29632
+Successfully changed project path to: E:/Users/Arthur/GitHub/AbSolitudeV522
+E:/Users/Arthur/GitHub/AbSolitudeV522
+Using Asset Import Pipeline V2.
+Refreshing native plugins compatible for Editor in 71.44 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 2020.3.15f2 (6cf78cb77498)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/2020.3.15f2/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path E:/Users/Arthur/GitHub/AbSolitudeV522/Assets
+GfxDevice: creating device client; threaded=0
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 2060 (ID=0x1e89)
+    Vendor:   
+    VRAM:     5968 MB
+    Driver:   30.0.14.7141
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/2020.3.15f2/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/2020.3.15f2/Editor/Data/MonoBleedingEdge/lib/mono/unityjit'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/2020.3.15f2/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56808
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/2020.3.15f2/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.001339 seconds.
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 72.87 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  1.430 seconds
+Domain Reload Profiling:
+	ReloadAssembly (1431ms)
+		BeginReloadAssembly (37ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (0ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (1ms)
+		EndReloadAssembly (348ms)
+			LoadAssemblies (35ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (113ms)
+			ReleaseScriptCaches (0ms)
+			RebuildScriptCaches (21ms)
+			SetupLoadedEditorAssemblies (162ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (3ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (73ms)
+				BeforeProcessingInitializeOnLoad (10ms)
+				ProcessInitializeOnLoadAttributes (55ms)
+				ProcessInitializeOnLoadMethodAttributes (20ms)
+				AfterProcessingInitializeOnLoad (0ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (0ms)
+Platform modules already initialized, skipping
+Registering precompiled user dll's ...
+Registered in 0.005653 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 71.60 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  1.264 seconds
+Domain Reload Profiling:
+	ReloadAssembly (1265ms)
+		BeginReloadAssembly (106ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (3ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (14ms)
+		EndReloadAssembly (1113ms)
+			LoadAssemblies (72ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (319ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (68ms)
+			SetupLoadedEditorAssemblies (558ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (3ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (72ms)
+				BeforeProcessingInitializeOnLoad (79ms)
+				ProcessInitializeOnLoadAttributes (392ms)
+				ProcessInitializeOnLoadMethodAttributes (9ms)
+				AfterProcessingInitializeOnLoad (4ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+========================================================================
+Worker process is ready to serve import requests
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.03 seconds
+Refreshing native plugins compatible for Editor in 0.97 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4156 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 253.1 MB.
+System memory in use after: 253.3 MB.
+
+Unloading 48 unused Assets to reduce memory usage. Loaded Objects now: 4577.
+Total: 2.818700 ms (FindLiveObjects: 0.316600 ms CreateObjectMapping: 0.199800 ms MarkObjects: 2.216900 ms  DeleteObjects: 0.084600 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Import Request.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.fbx
+  artifactKey: Guid(c18553752f2095b4f9d56d5ede11f29e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.fbx using Guid(c18553752f2095b4f9d56d5ede11f29e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2c997300d8420edbb2b9d87d20f9be85') in 0.113286 seconds 
+  Import took 0.118080 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000182 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.mat
+  artifactKey: Guid(af19be1c1fff2984b831293028b55d74) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.mat using Guid(af19be1c1fff2984b831293028b55d74) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2d1caeb3ecbc73d5eaec35e4ec26b84e') in 0.023610 seconds 
+  Import took 0.029267 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000209 seconds.
+  path: Assets/AKCondinoO/SkyBox/Sun.prefab
+  artifactKey: Guid(a981d33a9202f7347940da0f6164befb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/Sun.prefab using Guid(a981d33a9202f7347940da0f6164befb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '35656a73b1c051814708094e2bf8d8d5') in 0.008373 seconds 
+  Import took 0.013428 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000132 seconds.
+  path: Assets/AKCondinoO/SkyBox/SkyBoxMaterial.mat
+  artifactKey: Guid(05d4f9f2abb001343b4ed8f91f8a2f6a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/SkyBoxMaterial.mat using Guid(05d4f9f2abb001343b4ed8f91f8a2f6a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '4826631d850f90a8d070081d9753d862') in 0.010806 seconds 
+  Import took 0.015637 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000133 seconds.
+  path: Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg
+  artifactKey: Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg using Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '32db7830fb260fc34419830fe66670c2') in 0.031565 seconds 
+  Import took 0.036357 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000282 seconds.
+  path: Assets/AKCondinoO/SkyBox/SkyCamera.prefab
+  artifactKey: Guid(49bb6e9669fa45948939a91b0d713d9b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/SkyCamera.prefab using Guid(49bb6e9669fa45948939a91b0d713d9b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '1a8942928adee877dc4f880b30141e09') in 0.007366 seconds 
+  Import took 0.012080 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000123 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(75c5ec902204c13408f88108af2698d8) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(75c5ec902204c13408f88108af2698d8) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2682fa662d5d3c11b4503151d4c2dd19') in 0.010923 seconds 
+  Import took 0.015808 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.003204 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(75c5ec902204c13408f88108af2698d8) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(75c5ec902204c13408f88108af2698d8) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2682fa662d5d3c11b4503151d4c2dd19') in 0.007079 seconds 
+  Import took 0.012219 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 80.819249 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.cs
+  artifactKey: Guid(ba96a5afeb3c6de48903e02876468c85) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.cs using Guid(ba96a5afeb3c6de48903e02876468c85) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '0493e1eb38fba2729af6713a6cd76601') in 0.003654 seconds 
+  Import took 0.008996 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.004392 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.cs
+  artifactKey: Guid(ba96a5afeb3c6de48903e02876468c85) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.cs using Guid(ba96a5afeb3c6de48903e02876468c85) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '0493e1eb38fba2729af6713a6cd76601') in 0.001426 seconds 
+  Import took 0.006418 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 71.775628 seconds.
+  path: Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg
+  artifactKey: Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg using Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'd332825e81b3356186631adab8ad29e6') in 0.058417 seconds 
+  Import took 0.066209 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 45.859229 seconds.
+  path: Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg
+  artifactKey: Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg using Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '3b0ef343fb9d9466730b7fe4456037c8') in 0.072617 seconds 
+  Import took 0.079289 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 70.397460 seconds.
+  path: Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg
+  artifactKey: Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg using Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'ea71d399dd44ed65beb1a5b092e1ba8f') in 0.038122 seconds 
+  Import took 0.043579 seconds .
+
+========================================================================
+Received Prepare
+Registering precompiled user dll's ...
+Registered in 0.005603 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 0.95 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  1.021 seconds
+Domain Reload Profiling:
+	ReloadAssembly (1021ms)
+		BeginReloadAssembly (97ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (4ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (35ms)
+		EndReloadAssembly (880ms)
+			LoadAssemblies (72ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (304ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (52ms)
+			SetupLoadedEditorAssemblies (375ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (4ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (1ms)
+				BeforeProcessingInitializeOnLoad (73ms)
+				ProcessInitializeOnLoadAttributes (287ms)
+				ProcessInitializeOnLoadMethodAttributes (6ms)
+				AfterProcessingInitializeOnLoad (4ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+Refreshing native plugins compatible for Editor in 0.99 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4065 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 247.9 MB.
+System memory in use after: 248.1 MB.
+
+Unloading 40 unused Assets to reduce memory usage. Loaded Objects now: 4624.
+Total: 2.388300 ms (FindLiveObjects: 0.333700 ms CreateObjectMapping: 0.192000 ms MarkObjects: 1.840000 ms  DeleteObjects: 0.021800 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Import Request.
+  Time since last request: 4333.461567 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome0.blender.fbx
+  artifactKey: Guid(bb304bd8a1f3d414aae656dccb20bca9) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome0.blender.fbx using Guid(bb304bd8a1f3d414aae656dccb20bca9) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '6902307af2b02af9e969b376907a79b9') in 0.084579 seconds 
+  Import took 0.090679 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 95.937670 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.fbx
+  artifactKey: Guid(bb304bd8a1f3d414aae656dccb20bca9) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.fbx using Guid(bb304bd8a1f3d414aae656dccb20bca9) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '3f4e3d7d17d864221308379873e9537a') in 0.033521 seconds 
+  Import took 0.038975 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 9.125135 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '5ec9bdb7aafe6807368f0d4809439186') in 0.026390 seconds 
+  Import took 0.031893 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 73.341268 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'e62d4e1bbd74bf1ce548cc916c7fafdb') in 0.019370 seconds 
+  Import took 0.024992 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 16.483012 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '1a1213ffa582860b1de75724b0a41ce5') in 0.006657 seconds 
+  Import took 0.012000 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.398053 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'dcdbddc990926ce26e5ab0a69522c60b') in 0.006379 seconds 
+  Import took 0.012089 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 31.927377 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '798469acb609b6cf684d77717841f403') in 0.012019 seconds 
+  Import took 0.017260 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 47.650676 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'c474934ff54b286f46db022df3c0beb4') in 0.009782 seconds 
+  Import took 0.014998 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 62.207374 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(feb28ed624fffb44896ed64a0cf58731) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '74ba363892363bd8a9873983200c86c9') in 0.014896 seconds 
+  Import took 0.020253 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 1004.541429 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.fbx
+  artifactKey: Guid(bb304bd8a1f3d414aae656dccb20bca9) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.fbx using Guid(bb304bd8a1f3d414aae656dccb20bca9) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '7d6860a37a7b4b6675fa0c9cbda1e188') in 0.048044 seconds 
+  Import took 0.054476 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 103.717001 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.prefab
+  artifactKey: Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.prefab using Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '4c392595e50d45932b8a4d473f8b8176') in 0.034351 seconds 
+  Import took 0.040124 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 9.725267 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '0601bd496fe4c68b2d94ad1def2f6717') in 0.017144 seconds 
+  Import took 0.022268 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 17.370229 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'baa1e3b1999f288e099b13aa13cee691') in 0.007624 seconds 
+  Import took 0.013238 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.997395 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(2903bd311c53ae8418f69ef729185d1a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'f67c1b5c6049fcac088d7bd725dcbb53') in 0.006861 seconds 
+  Import took 0.012098 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 57.400757 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome 1.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome 1.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'c4d81c5b7d46ab729c3da03eb606c24f') in 0.012929 seconds 
+  Import took 0.018307 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.002675 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome 1.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome 1.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'c4d81c5b7d46ab729c3da03eb606c24f') in 0.018323 seconds 
+  Import took 0.023892 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 15.921712 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2fb3b676b9e3f4bd2806214bae67c6c5') in 0.025286 seconds 
+  Import took 0.030416 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 125.010595 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2366e991b54699c8dc48aaf39b19c1e9') in 0.004289 seconds 
+  Import took 0.009387 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000429 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2366e991b54699c8dc48aaf39b19c1e9') in 0.001752 seconds 
+  Import took 0.006793 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 47.722426 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '262ff1c0d251c6f83dfe0d8fba71e223') in 0.001815 seconds 
+  Import took 0.007106 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 154.529923 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.fbx
+  artifactKey: Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.fbx using Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'e6b41ebae851e1c539a35aa17697d800') in 0.037241 seconds 
+  Import took 0.043369 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 69.985686 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '900a832fc1972a1ba267345a403580ed') in 0.020647 seconds 
+  Import took 0.025919 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.001345 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '900a832fc1972a1ba267345a403580ed') in 0.018830 seconds 
+  Import took 0.024125 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 20.390459 seconds.
+  path: Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/DeliciousDonut.prefab
+  artifactKey: Guid(cf9f1890896240a449ab1804f2042205) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/DeliciousDonut.prefab using Guid(cf9f1890896240a449ab1804f2042205) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '8e1ac9139be7af3ba855c180671fba96') in 0.066328 seconds 
+  Import took 0.075600 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.731882 seconds.
+  path: Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/Materials
+  artifactKey: Guid(dbf2ba121b058fe46943622bdd525e5a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/Materials using Guid(dbf2ba121b058fe46943622bdd525e5a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'bd1ea476471f3e0ffe126b1df0b12b77') in 0.005262 seconds 
+  Import took 0.010657 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.126083 seconds.
+  path: Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/Materials/Donut.blender.fbx
+  artifactKey: Guid(3e33dd7debb76a642a66767e82be0e51) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/Materials/Donut.blender.fbx using Guid(3e33dd7debb76a642a66767e82be0e51) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '3e80c0fa24e26ebc0e9017bf6b2f9ea0') in 0.097632 seconds 
+  Import took 0.108193 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000174 seconds.
+  path: Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/Materials/Donut.blender.prefab
+  artifactKey: Guid(146b4ba1043ffea4f81d1989f5cf2043) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/AKCondinoO/Buildings/Structures/DeliciousDonut/Materials/Donut.blender.prefab using Guid(146b4ba1043ffea4f81d1989f5cf2043) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '6ac5a762e762c7e65a60f12fa162124e') in 0.043824 seconds 
+  Import took 0.053392 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 22.272712 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.fbx
+  artifactKey: Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.fbx using Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'cddf690e1f26f8ab2c665910afccd7c7') in 0.032245 seconds 
+  Import took 0.037754 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 41.669200 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '694838f5797f0e9e148222992836b62f') in 0.031423 seconds 
+  Import took 0.036831 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.775744 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '56e7526783bfdaf2d45e65438e22df4f') in 0.007205 seconds 
+  Import took 0.012568 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 10.725429 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(61bcc86ffb5e420489af27b1be9fe256) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '9cd9ee64654f9e046b03cfc9c0191681') in 0.013611 seconds 
+  Import took 0.018995 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 872.083806 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '55c5bd93bd93c9667395c38b88395f1e') in 0.002064 seconds 
+  Import took 0.008610 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 547.423745 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '676919563249fc6fc4d0e4c7671197c2') in 0.002020 seconds 
+  Import took 0.008739 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 544.643715 seconds.
+  path: Assets/AKCondinoO/Debugger.prefab
+  artifactKey: Guid(f64d6c45991e0674bba54acf9e8ce7cc) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/Debugger.prefab using Guid(f64d6c45991e0674bba54acf9e8ce7cc) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '91b725f2142760ba2b5f441e1763a364') in 0.012768 seconds 
+  Import took 0.019249 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000170 seconds.
+  path: Assets/AKCondinoO/Empty.prefab
+  artifactKey: Guid(a0ddd028489df494c90f4d36d6ea56f4) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/Empty.prefab using Guid(a0ddd028489df494c90f4d36d6ea56f4) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '3e1d3bfea8d6aca5cb6a465f44e90373') in 0.007354 seconds 
+  Import took 0.012585 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000232 seconds.
+  path: Assets/AKCondinoO/UNetDefaultPrefab.prefab
+  artifactKey: Guid(25f8717ce7de3f84ca3fff6562f42663) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/UNetDefaultPrefab.prefab using Guid(25f8717ce7de3f84ca3fff6562f42663) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'e840e3f5b0354db531b5f7bcd7a093e5') in 0.008115 seconds 
+  Import took 0.013686 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 2.994675 seconds.
+  path: Assets/AKCondinoO/VoxelTerrain/TerrainChunk.prefab
+  artifactKey: Guid(1bf1030aa1d826f41a3ecea1210331d0) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/VoxelTerrain/TerrainChunk.prefab using Guid(1bf1030aa1d826f41a3ecea1210331d0) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '0318dfe0eed405a6e84113cd36c9635d') in 0.012052 seconds 
+  Import took 0.018505 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000194 seconds.
+  path: Assets/AKCondinoO/VoxelTerrain/TerrainChunkAtlas.png
+  artifactKey: Guid(27f43b9245a0fae4698ce0a3005e89ae) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/VoxelTerrain/TerrainChunkAtlas.png using Guid(27f43b9245a0fae4698ce0a3005e89ae) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'dbc73cd249bc54c9c55db28cbaa904c0') in 0.319564 seconds 
+  Import took 0.326807 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000175 seconds.
+  path: Assets/AKCondinoO/VoxelTerrain/TerrainChunkMaterial.mat
+  artifactKey: Guid(bbb518af9ff73d149889c4900bbfdcc5) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/VoxelTerrain/TerrainChunkMaterial.mat using Guid(bbb518af9ff73d149889c4900bbfdcc5) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'b37f1ff64da4603d58a36eb80691d0ff') in 0.079215 seconds 
+  Import took 0.086206 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000162 seconds.
+  path: Assets/AKCondinoO/VoxelTerrain/World.prefab
+  artifactKey: Guid(9957063c516ea544fb64a6f739039e1b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/VoxelTerrain/World.prefab using Guid(9957063c516ea544fb64a6f739039e1b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '1e4611efd2dff0ba4d8716beb2cd4046') in 0.615047 seconds 
+  Import took 0.627476 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 274.955992 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.fbx
+  artifactKey: Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.fbx using Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '287dc963bc63f841b626da22314d4629') in 0.020665 seconds 
+  Import took 0.027155 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 22.403210 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.prefab
+  artifactKey: Guid(3cfbf5ad7da005a4abfb282195441a5e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.prefab using Guid(3cfbf5ad7da005a4abfb282195441a5e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '536b8f13bfbe50fa6ce967751e62b7d8') in 0.012971 seconds 
+  Import took 0.019596 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 7.337341 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(3cfbf5ad7da005a4abfb282195441a5e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(3cfbf5ad7da005a4abfb282195441a5e) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '93218406f344b05721425062d787f500') in 0.008925 seconds 
+  Import took 0.014847 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 47.458140 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '1ee2b43a70ef2da0f841d20a480e3837') in 0.012404 seconds 
+  Import took 0.017866 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 6.862820 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'd4dc435698239b56909913331fb4cd0f') in 0.007503 seconds 
+  Import took 0.013094 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 43.852852 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '3cb7ac1936c9db08e43e19657ff64fee') in 0.016893 seconds 
+  Import took 0.022406 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 35.394591 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'bf93adc8bc4b13d82c50caa75cf2849d') in 0.011887 seconds 
+  Import took 0.017656 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 19.097371 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'a734045174571290c62cfbecce5a34b0') in 0.001931 seconds 
+  Import took 0.008564 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 104.690549 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'a4b7e4b8e301561c9bca5bfee0242535') in 0.007557 seconds 
+  Import took 0.014085 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.008212 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'b0d8a16e19e8536dc8201a11bcd1dd64') in 0.007183 seconds 
+  Import took 0.012997 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 6.456482 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(421cf467e3dd45e4bbc86aad4f38b71b) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'b78b1764829bd18763da2af7a0634e84') in 0.011233 seconds 
+  Import took 0.020282 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 213.338151 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.fbx
+  artifactKey: Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.fbx using Guid(e7dbda7446e8541408b5cf22a91baddb) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '0f641d22179d41d229ce33af4d6489bc') in 0.025123 seconds 
+  Import took 0.032231 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 25.009021 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.blender.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.blender.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'dc152e7a23379e14d0bd6e3c32732243') in 0.011320 seconds 
+  Import took 0.017419 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 3.873910 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'da459ee623439c4a8728d53df9dfb965') in 0.027574 seconds 
+  Import took 0.033065 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 15.702203 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '274c6fd0b9dd69d200f27660538bb306') in 0.018608 seconds 
+  Import took 0.024103 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 1.660667 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'cc8e101ab26fc7da6e3272290f795a8f') in 0.007887 seconds 
+  Import took 0.013472 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 5.725656 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '0a0f3808f70c9eedc7c9fb9963a51bb3') in 0.018664 seconds 
+  Import took 0.024336 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 27.079548 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '070fc10215b5c77cd04a1b7ab022d7ab') in 0.009291 seconds 
+  Import took 0.016085 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 4.423577 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'ee71daca2e9f451090efe17f6bdf9c36') in 0.012206 seconds 
+  Import took 0.017955 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 30.877280 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '91aa9aca0c7460e6a8f3dd9dcd4cb9b6') in 0.011166 seconds 
+  Import took 0.016958 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 127.577967 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'b8ee37ae6c7e013a377e3ad0332e1070') in 0.001920 seconds 
+  Import took 0.007833 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.013180 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'b8ee37ae6c7e013a377e3ad0332e1070') in 0.001755 seconds 
+  Import took 0.007744 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 27.611033 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'd8ddd656a4030404a82c5750c469b94c') in 0.001734 seconds 
+  Import took 0.007820 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 14.863591 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'bee5a2704b416b25302f8aa0ad51ccc8') in 0.001934 seconds 
+  Import took 0.007829 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 9.700634 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.shader
+  artifactKey: Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.shader using Guid(81f950a3c719ab6419ef2804edb0cb37) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '2d53603a3b597dd4686870ca2cab801f') in 0.001732 seconds 
+  Import took 0.007677 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 199.108156 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '8cde8537ca3861d15cb1f1191dbcf42d') in 0.013275 seconds 
+  Import took 0.019278 seconds .
+
+========================================================================
+Received Import Request.
+  Time since last request: 12.178107 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.mat
+  artifactKey: Guid(af19be1c1fff2984b831293028b55d74) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.mat using Guid(af19be1c1fff2984b831293028b55d74) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '44157be459a79189b8022cdee03d98aa') in 0.107503 seconds 
+  Import took 0.112992 seconds .
+
+========================================================================
+Received Prepare
+Registering precompiled user dll's ...
+Registered in 1.033266 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 0.99 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  6.860 seconds
+Domain Reload Profiling:
+	ReloadAssembly (6860ms)
+		BeginReloadAssembly (1973ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (4ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (50ms)
+		EndReloadAssembly (4841ms)
+			LoadAssemblies (5063ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (1021ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (55ms)
+			SetupLoadedEditorAssemblies (473ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (4ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (1ms)
+				BeforeProcessingInitializeOnLoad (79ms)
+				ProcessInitializeOnLoadAttributes (379ms)
+				ProcessInitializeOnLoadMethodAttributes (6ms)
+				AfterProcessingInitializeOnLoad (4ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+Refreshing native plugins compatible for Editor in 1.07 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4065 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 251.7 MB.
+System memory in use after: 251.9 MB.
+
+Unloading 42 unused Assets to reduce memory usage. Loaded Objects now: 4630.
+Total: 3.055400 ms (FindLiveObjects: 0.446800 ms CreateObjectMapping: 0.264100 ms MarkObjects: 2.302000 ms  DeleteObjects: 0.041400 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Import Request.
+  Time since last request: 187.591162 seconds.
+  path: Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg
+  artifactKey: Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg using Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '7c0f9ee0f908548156eb641c72730f56') in 0.053907 seconds 
+  Import took 0.060008 seconds .
+
+========================================================================
+Received Prepare
+Registering precompiled user dll's ...
+Registered in 0.005772 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 0.97 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  1.052 seconds
+Domain Reload Profiling:
+	ReloadAssembly (1052ms)
+		BeginReloadAssembly (90ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (5ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (33ms)
+		EndReloadAssembly (917ms)
+			LoadAssemblies (73ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (308ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (55ms)
+			SetupLoadedEditorAssemblies (392ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (4ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (1ms)
+				BeforeProcessingInitializeOnLoad (78ms)
+				ProcessInitializeOnLoadAttributes (297ms)
+				ProcessInitializeOnLoadMethodAttributes (7ms)
+				AfterProcessingInitializeOnLoad (5ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+Refreshing native plugins compatible for Editor in 1.07 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4065 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 251.7 MB.
+System memory in use after: 251.9 MB.
+
+Unloading 39 unused Assets to reduce memory usage. Loaded Objects now: 4632.
+Total: 3.052600 ms (FindLiveObjects: 0.446200 ms CreateObjectMapping: 0.290900 ms MarkObjects: 2.264000 ms  DeleteObjects: 0.050700 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Import Request.
+  Time since last request: 109.715320 seconds.
+  path: Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg
+  artifactKey: Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NASA_UGC_12158.jpg using Guid(61c0e2c0e0ca6de41be6c852afe13704) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: '551d4bca9209b2a0d64ea10a91295205') in 0.041215 seconds 
+  Import took 0.047242 seconds .
+
+========================================================================
+Received Prepare
+Registering precompiled user dll's ...
+Registered in 0.007354 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 0.94 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  1.020 seconds
+Domain Reload Profiling:
+	ReloadAssembly (1020ms)
+		BeginReloadAssembly (102ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (5ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (35ms)
+		EndReloadAssembly (874ms)
+			LoadAssemblies (73ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (297ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (55ms)
+			SetupLoadedEditorAssemblies (373ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (4ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (1ms)
+				BeforeProcessingInitializeOnLoad (74ms)
+				ProcessInitializeOnLoadAttributes (284ms)
+				ProcessInitializeOnLoadMethodAttributes (6ms)
+				AfterProcessingInitializeOnLoad (4ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+Refreshing native plugins compatible for Editor in 1.00 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4065 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 251.7 MB.
+System memory in use after: 252.0 MB.
+
+Unloading 39 unused Assets to reduce memory usage. Loaded Objects now: 4634.
+Total: 2.750000 ms (FindLiveObjects: 0.351900 ms CreateObjectMapping: 0.168800 ms MarkObjects: 2.171400 ms  DeleteObjects: 0.057000 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Import Request.
+  Time since last request: 372.801018 seconds.
+  path: Assets/AKCondinoO/SkyBox/NightDome.prefab
+  artifactKey: Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/AKCondinoO/SkyBox/NightDome.prefab using Guid(dbbda92cb449de14dbbc80e22b789515) Importer(815301076,1909f56bfc062723c751e8b465ee728b)  -> (artifact id: 'e0b381883ef577d49e1ad71c356c8601') in 0.060337 seconds 
+  Import took 0.065902 seconds .
+
+========================================================================
+Received Prepare
+Registering precompiled user dll's ...
+Registered in 0.005564 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 0.95 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  1.013 seconds
+Domain Reload Profiling:
+	ReloadAssembly (1014ms)
+		BeginReloadAssembly (89ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (4ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (34ms)
+		EndReloadAssembly (878ms)
+			LoadAssemblies (71ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (302ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (52ms)
+			SetupLoadedEditorAssemblies (377ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (4ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (1ms)
+				BeforeProcessingInitializeOnLoad (73ms)
+				ProcessInitializeOnLoadAttributes (288ms)
+				ProcessInitializeOnLoadMethodAttributes (6ms)
+				AfterProcessingInitializeOnLoad (4ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+Refreshing native plugins compatible for Editor in 0.96 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4065 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 251.8 MB.
+System memory in use after: 252.0 MB.
+
+Unloading 39 unused Assets to reduce memory usage. Loaded Objects now: 4637.
+Total: 2.758100 ms (FindLiveObjects: 0.320200 ms CreateObjectMapping: 0.189400 ms MarkObjects: 2.226100 ms  DeleteObjects: 0.021800 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+========================================================================
+Received Prepare
+Registering precompiled user dll's ...
+Registered in 0.005509 seconds.
+Begin MonoManager ReloadAssembly
+Native extension for WindowsStandalone target not found
+Refreshing native plugins compatible for Editor in 0.96 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Mono: successfully reloaded assembly
+- Completed reload, in  0.991 seconds
+Domain Reload Profiling:
+	ReloadAssembly (991ms)
+		BeginReloadAssembly (87ms)
+			ExecutionOrderSort (0ms)
+			DisableScriptedObjects (4ms)
+			BackupInstance (0ms)
+			ReleaseScriptingObjects (0ms)
+			CreateAndSetChildDomain (30ms)
+		EndReloadAssembly (860ms)
+			LoadAssemblies (70ms)
+			RebuildTransferFunctionScriptingTraits (0ms)
+			SetupTypeCache (291ms)
+			ReleaseScriptCaches (1ms)
+			RebuildScriptCaches (54ms)
+			SetupLoadedEditorAssemblies (367ms)
+				LogAssemblyErrors (0ms)
+				InitializePlatformSupportModulesInManaged (4ms)
+				SetLoadedEditorAssemblies (0ms)
+				RefreshPlugins (1ms)
+				BeforeProcessingInitializeOnLoad (73ms)
+				ProcessInitializeOnLoadAttributes (279ms)
+				ProcessInitializeOnLoadMethodAttributes (6ms)
+				AfterProcessingInitializeOnLoad (4ms)
+				EditorAssembliesLoaded (0ms)
+			ExecutionOrderSort2 (0ms)
+			AwakeInstancesAfterBackupRestoration (5ms)
+Platform modules already initialized, skipping
+Refreshing native plugins compatible for Editor in 0.96 ms, found 11 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 4065 Unused Serialized files (Serialized files now loaded: 0)
+System memory in use before: 251.8 MB.
+System memory in use after: 252.0 MB.
+
+Unloading 39 unused Assets to reduce memory usage. Loaded Objects now: 4639.
+Total: 2.639400 ms (FindLiveObjects: 0.353100 ms CreateObjectMapping: 0.206600 ms MarkObjects: 2.058000 ms  DeleteObjects: 0.020900 ms)
+
+AssetImportParameters requested are different than current active one (requested -> active):
+  custom:framework-win-MediaFoundation: 216162199b28c13a410421893ffa2e32 -> 
+  custom:video-decoder-ogg-theora: a1e56fd34408186e4bbccfd4996cb3dc -> 
+  custom:container-muxer-webm: aa71ff27fc2769a1b78a27578f13a17b -> 
+  custom:container-demuxer-webm: 4f35f7cbe854078d1ac9338744f61a02 -> 
+  custom:container-demuxer-ogg: 62fdf1f143b41e24485cea50d1cbac27 -> 
+  custom:video-encoder-webm-vp8: eb34c28f22e8b96e1ab97ce403110664 -> 
+  custom:video-decoder-webm-vp8: 9c59270c3fd7afecdb556c50c9e8de78 -> 
+  custom:audio-decoder-ogg-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 
+  custom:audio-encoder-webm-vorbis: bf7c407c2cedff20999df2af8eb42d56 -> 

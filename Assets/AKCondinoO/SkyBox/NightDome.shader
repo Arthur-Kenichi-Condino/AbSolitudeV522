@@ -2,8 +2,8 @@
 // Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 Shader "Unlit/NightDome" {
 Properties{
-_Alpha("Alpha",Range(0,1))=1 _Color("Color",Color)=(0.60,0.68,0.69,1) _MainTex("Albedo (RGB)",2D)="white"
-_TimeOfDay("Time Of Day",Float)=0 _Position("Position",Vector)=(0,0,0,0) _VerticalOpacityThreshold("Vertical Opacity Threshold",Float)=50 _VerticalTransparencyThreshold("Vertical Transparency Threshold",Float)=-100
+_Alpha("Alpha",Range(0,1))=1 _MainTex("Albedo (RGB)",2D)="white"
+_VerticalOpacityThreshold("Vertical Opacity Threshold",Float)=0.5 _VerticalTransparencyThreshold("Vertical Transparency Threshold",Float)=0.1
 }
 SubShader{Tags{"Queue"="Transparent" "RenderType"="Transparent"}
 ZWrite Off
@@ -22,8 +22,6 @@ float _Alpha;
 float4 _Color;
 uniform sampler2D _MainTex;
 uniform float4    _MainTex_ST;
-float _TimeOfDay;
-float4 _Position;
 half _VerticalOpacityThreshold;
 half _VerticalTransparencyThreshold;
 struct input{
