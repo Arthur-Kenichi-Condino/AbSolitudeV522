@@ -17,6 +17,7 @@ void Update(){
 
 //...
 
+if(!(bool)Enabled.PAUSE[0]){
 #region ROTATE
 inputViewRotationEuler.x+=-Enabled.MOUSE_ROTATION_DELTA_Y[0]*ViewRotationSmoothValue;
 inputViewRotationEuler.y+= Enabled.MOUSE_ROTATION_DELTA_X[0]*ViewRotationSmoothValue;
@@ -30,6 +31,20 @@ if(!(bool)Enabled.FORWARD[0]&&!(bool)Enabled.BACKWARD[0]){inputMoveSpeed.z=0;}
 if( inputMoveSpeed.z>MaxMoveSpeed.z){inputMoveSpeed.z= MaxMoveSpeed.z;}
 if(-inputMoveSpeed.z>MaxMoveSpeed.z){inputMoveSpeed.z=-MaxMoveSpeed.z;}
 #endregion
+#region RIGHT LEFT
+if((bool)Enabled.RIGHT   [0]){inputMoveSpeed.x+=MoveAcceleration.x;} 
+if((bool)Enabled.LEFT    [0]){inputMoveSpeed.x-=MoveAcceleration.x;}
+if(!(bool)Enabled.RIGHT[0]&&!(bool)Enabled.LEFT[0]){inputMoveSpeed.x=0;}
+if( inputMoveSpeed.x>MaxMoveSpeed.x){inputMoveSpeed.x= MaxMoveSpeed.x;}
+if(-inputMoveSpeed.x>MaxMoveSpeed.x){inputMoveSpeed.x=-MaxMoveSpeed.x;}
+#endregion
+}else{
+inputViewRotationEuler=Vector3.zero;
+inputMoveSpeed=Vector3.zero;
+
+//...
+
+}
 
 //...
 

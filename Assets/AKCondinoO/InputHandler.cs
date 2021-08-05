@@ -77,7 +77,13 @@ state[0]=get(0);
 
 //...
 
-}
+}else
+if(mode==Commands.Modes.alternateDown){
+if(get(2)){state[0]=!(bool)state[0];}
+
+//...
+
+}//
 
 //...
 
@@ -86,11 +92,25 @@ state[0]=get(0);
 //...
 
 }
+Enabled.PAUSE[0]=(bool)Enabled.PAUSE[0]||Escape||!Focus;
+if((bool)Enabled.PAUSE[0]!=(bool)Enabled.PAUSE[1]){
+if((bool)Enabled.PAUSE[0]){
+Cursor.visible=true;
+Cursor.lockState=CursorLockMode.None;
+}else{
+Cursor.visible=false;
+Cursor.lockState=CursorLockMode.Locked;
+}
+}
+
+//...
+
 Enabled.MOUSE_ROTATION_DELTA_X[1]=Enabled.MOUSE_ROTATION_DELTA_X[0];Enabled.MOUSE_ROTATION_DELTA_X[0]=Commands.ROTATION_SENSITIVITY_X*Input.GetAxis("Mouse X");
 Enabled.MOUSE_ROTATION_DELTA_Y[1]=Enabled.MOUSE_ROTATION_DELTA_Y[0];Enabled.MOUSE_ROTATION_DELTA_Y[0]=Commands.ROTATION_SENSITIVITY_Y*Input.GetAxis("Mouse Y");
 
 //...
 
+if(!(bool)Enabled.PAUSE[0]){
 bool hit=Physics.Raycast(ScreenPointRay,out RaycastHit hitResult,1000f);
 if((bool)Enabled.ACTION_1[0]&&((bool)Enabled.ACTION_1[0]!=(bool)Enabled.ACTION_1[1])){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1 executado");
@@ -104,7 +124,7 @@ CurrentControlledActor=actor;
 
 //...
 
-}
+}else{
 void TrySetDest(){
 if(CurrentControlledActor!=null){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: destino de movimento para ator calculado..."+hitResult.point,CurrentControlledActor);
@@ -133,9 +153,11 @@ TrySetDest();
 }
 }
 }
+}
 
 //...
 
+}
 }
 }
 }
