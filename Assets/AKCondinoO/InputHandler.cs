@@ -1,4 +1,5 @@
 using AKCondinoO.Actors;
+using AKCondinoO.Buildings;
 using AKCondinoO.Voxels;
 using System;
 using System.Collections;
@@ -104,7 +105,7 @@ CurrentControlledActor=actor;
 //...
 
 }
-TerrainChunk chunk;if((chunk=hitResult.collider.GetComponent<TerrainChunk>())!=null){
+void TrySetDest(){
 if(CurrentControlledActor!=null){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: destino de movimento para ator calculado..."+hitResult.point,CurrentControlledActor);
 if(navMeshAsyncOperation!=null&&navMeshAsyncOperation.isDone&&CurrentControlledActor.navMeshAgent.enabled){
@@ -117,9 +118,19 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("ACTION_1: navMeshAgent não disponível",CurrentCo
 //...
 
 }
+}
+TerrainChunk chunk;if((chunk=hitResult.collider.GetComponent<TerrainChunk>())!=null){
+TrySetDest();
 
 //...                        
                         
+}else{
+SimObject simObject;if((simObject=hitResult.collider.GetComponent<SimObject>())!=null){
+TrySetDest();
+
+//...
+
+}
 }
 }
 

@@ -355,5 +355,10 @@ if(NetworkManager.Singleton.IsClient){
 transform.position=networkPosition.Value;
 }
 }
+public class AStarPathfinder{
+
+//...
+
+}
 }
 }

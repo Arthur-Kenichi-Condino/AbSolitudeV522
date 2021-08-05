@@ -32,7 +32,7 @@ public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;[NonSerialized]bool unplace;[NonSerialized]bool unplacing;[NonSerialized]int unplacedId;
 [NonSerialized]bool releaseId;
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
-[NonSerialized]public NetworkObject network;[NonSerialized]bool atServer;
+[NonSerialized]public NetworkObject network;[NonSerialized]protected bool atServer;
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public new Collider[]collider;[NonSerialized]public new Rigidbody rigidbody;
 protected virtual void Awake(){if(transform.parent!=Buildings.staticScript.transform){transform.parent=Buildings.staticScript.transform;}
@@ -194,6 +194,7 @@ Buildings.Disabled.Remove(this);Buildings.Enabled.Remove(this);if(LOG&&LOG_LEVEL
 loadTuple=null;Loaded[type].Remove(this);
 if(DisabledNode!=null)SimObjectPool[type].Remove(DisabledNode);DisabledNode=null;
 #endregion
+RemoveFromNavMesh();
 }
 public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}protected set{if(IsOutOfSight_v!=value){IsOutOfSight_v=value;
 
@@ -236,6 +237,7 @@ void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
 foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
 Buildings.Disabled.Add(this);Buildings.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
+RemoveFromNavMesh();
 network.Despawn();
 disabling=true;
 }
@@ -259,6 +261,7 @@ unplace=true;
 DEBUG_UNPLACE=false;
 }else if(enabling){
 foreach(var col in collider){col.enabled=true;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.None;}
+AddToNavMesh();
 }
 firstLoop=false;enabling=false;}
 if(backgroundData.WaitOne(0)){
@@ -335,6 +338,12 @@ networkPosition.Value=transform.position;
 if(NetworkManager.Singleton.IsClient){
 transform.position=networkPosition.Value;
 }
+}
+protected virtual void AddToNavMesh(){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now added to the NavMesh system..my id:"+id,this);
+}
+protected virtual void RemoveFromNavMesh(){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now removed from the NavMesh system..my id:"+id,this);
 }
 }
 }

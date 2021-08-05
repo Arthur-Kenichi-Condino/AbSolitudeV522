@@ -1,3 +1,4 @@
+using MLAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,6 +31,28 @@ ignoreFromBuild=false,
 
 //...
 
+}
+protected override void Update(){
+                   base.Update();
+if(NetworkManager.Singleton.IsServer||atServer){
+
+//... to do: update navMeshSource transform
+
+}
+}
+protected override void AddToNavMesh(){
+navMeshSources[gameObject]=navMeshSource;
+navMeshMarkups[gameObject]=navMeshMarkup;
+
+//... to do: mark nav mesh as dirty
+
+                   base.AddToNavMesh();
+}
+protected override void RemoveFromNavMesh(){
+
+//...
+
+                   base.RemoveFromNavMesh();
 }
 }
 }
