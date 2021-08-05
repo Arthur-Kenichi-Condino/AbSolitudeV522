@@ -10,7 +10,9 @@ using UnityEngine;
 using static AKCondinoO.Voxels.World;
 namespace AKCondinoO{public class InputHandler:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 public static Dictionary<string,object[]>AllCommands=new Dictionary<string,object[]>();public static Dictionary<string,object[]>AllStates=new Dictionary<string,object[]>();
+[NonSerialized]UIHandler UI;
 void Awake(){
+UI=GetComponent<UIHandler>();
 foreach(FieldInfo field in typeof(Commands).GetFields(BindingFlags.Public|BindingFlags.Static)){
 if(field.GetValue(null)is object[]command){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("add command input to handle:"+field.Name);
@@ -97,9 +99,11 @@ if((bool)Enabled.PAUSE[0]!=(bool)Enabled.PAUSE[1]){
 if((bool)Enabled.PAUSE[0]){
 Cursor.visible=true;
 Cursor.lockState=CursorLockMode.None;
+UI.OnPause();
 }else{
 Cursor.visible=false;
 Cursor.lockState=CursorLockMode.Locked;
+UI.OnResume();
 }
 }
 

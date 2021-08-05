@@ -688,6 +688,7 @@ static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();}}
 }[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
+[NonSerialized]static readonly Dictionary<int,Dictionary<Vector3Int,(double density,MaterialId materialId)>>cnkIdxvxlEdts=new Dictionary<int,Dictionary<Vector3Int,(double,MaterialId)>>();
 public static void Awake(bool LOG,int LOG_LEVEL){
 
 //...
@@ -726,14 +727,29 @@ public static void OnDestroy(bool LOG,int LOG_LEVEL){
 if(Stop==true){return;}Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa do sistema para edições no terreno");
 }
-public static void Edit(){
-
+[NonSerialized]static readonly List<int>dirty=new List<int>();
+public static void Update(bool LOG,int LOG_LEVEL){
 if(backgroundData1.WaitOne(0)){
 
 //...
 
-backgroundData1.Reset();foregroundData1.Set();
+if(editData.Count>0){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("editData.Count>0;comece a registrar edições");
+
+//...
+
+editData.Clear();//  remover referências que vão pro plano de fundo
+backgroundData1.Reset();foregroundData1.Set();}
 }
+
+//...
+
+}
+[NonSerialized]static readonly Dictionary<int,Dictionary<Vector3Int,(double density,MaterialId materialId)>>editData=new Dictionary<int,Dictionary<Vector3Int,(double,MaterialId)>>();
+public static void Edit(bool LOG,int LOG_LEVEL){
+
+//...
+editData.Add(0,new Dictionary<Vector3Int,(double,MaterialId)>());
 
 }
 }

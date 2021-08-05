@@ -338,9 +338,13 @@ if(DEBUG_EDIT){
 
 //...
 
-Editor.Edit();
+Editor.Edit(LOG,LOG_LEVEL);
 
 }
+
+//...
+
+Editor.Update(LOG,LOG_LEVEL);
 
 //...
 
