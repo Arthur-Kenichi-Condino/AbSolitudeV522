@@ -31,6 +31,7 @@ if(-inputMoveSpeed.z>MaxMoveSpeed.z){inputMoveSpeed.z=-MaxMoveSpeed.z;}
 
 //...
 
+#region ROTATION LERP
 if(inputViewRotationEuler!=Vector3.zero){
 tgtRot+=inputViewRotationEuler;
 inputViewRotationEuler=Vector3.zero;
@@ -63,6 +64,14 @@ tgtRotLerpTime=0;
 }
 }
 }
+#endregion
+#region POSITION LERP
+if(inputMoveSpeed!=Vector3.zero){
+
+//...                
+                
+}
+#endregion
 
 //...
 

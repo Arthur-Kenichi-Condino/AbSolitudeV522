@@ -49,9 +49,11 @@ bool Get(Func<string ,bool>controllerGet,string button){return controllerGet(but
 #pragma warning restore IDE0051 
 [NonSerialized]public bool Focus=true;
 void OnApplicationFocus(bool focus){Focus=focus;}
+[NonSerialized]public bool Escape;
 public static Ray ScreenPointRay{get;private set;}
 public SimActor CurrentControlledActor{get;private set;}
 void Update(){
+Escape=Input.GetKey(KeyCode.Escape)||Input.GetKeyDown(KeyCode.Escape)||Input.GetKeyUp(KeyCode.Escape);
 ScreenPointRay=Camera.main.ScreenPointToRay(Input.mousePosition);
 foreach(var command in AllCommands){string name=command.Key;Type type=command.Value[0].GetType();Commands.Modes mode=(Commands.Modes)command.Value[1];object[]state=AllStates[name];state[1]=state[0];UpdateCommandState();
 void UpdateCommandState(){bool get(int getsType){if(type==typeof(KeyCode))return((Func<Func<KeyCode,bool>,KeyCode,bool>)GetMethods[type]).Invoke((Func<KeyCode,bool>)Gets[type][getsType],(KeyCode)command.Value[0]);else
