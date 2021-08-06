@@ -16,7 +16,7 @@ using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
 using static AKCondinoO.Voxels.TerrainChunk;
-namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
+namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;public bool DEBUG_MODE=true;
 [NonSerialized]public static string savePath;[NonSerialized]public static string saveName="world";[NonSerialized]public static readonly string saveFolder=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).Replace("\\","/").ToString()+"/AbSolitudeV522";
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
 public const int MaxcCoordx=6250;
@@ -26,6 +26,9 @@ public static Vector2Int vecPosTocCoord(Vector3 pos){
                                                 pos.z/=(float)Depth;
 return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):Mathf.RoundToInt(pos.x)):(int)Math.Round(pos.x,MidpointRounding.AwayFromZero),
                       (pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero));
+}
+public static Vector2Int vecPosTocnkRgn(Vector3 pos){Vector2Int coord=vecPosTocCoord(pos);
+return new Vector2Int(coord.x*Width,coord.y*Depth);
 }
 public GameObject ChunkPrefab;
 public static Vector2Int expropriationDistance{get;}=new Vector2Int(5,5);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=121;
@@ -344,7 +347,7 @@ Editor.Edit(LOG,LOG_LEVEL);
 
 //...
 
-Editor.Update(LOG,LOG_LEVEL);
+Editor.Update(LOG,LOG_LEVEL,DEBUG_MODE);
 
 //...
 

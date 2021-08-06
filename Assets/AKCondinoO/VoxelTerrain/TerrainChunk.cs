@@ -23,6 +23,16 @@ public const ushort Depth=(16);
 public const ushort FlattenOffset=(Width*Depth);
 public const int VoxelsPerChunk=(FlattenOffset*Height);
 public static int GetvxlIdx(int vcx,int vcy,int vcz){return vcy*FlattenOffset+vcx*Depth+vcz;}
+public static Vector3Int vecPosTovCoord(Vector3 pos){
+Vector2Int rgn=vecPosTocnkRgn(pos);
+pos.x=(pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):Mathf.RoundToInt(pos.x)):(int)Math.Round(pos.x,MidpointRounding.AwayFromZero);
+pos.y=(pos.y>0)?(pos.y-(int)pos.y==0.5f?Mathf.FloorToInt(pos.y):Mathf.RoundToInt(pos.y)):(int)Math.Round(pos.y,MidpointRounding.AwayFromZero);
+pos.z=(pos.z>0)?(pos.z-(int)pos.z==0.5f?Mathf.FloorToInt(pos.z):Mathf.RoundToInt(pos.z)):(int)Math.Round(pos.z,MidpointRounding.AwayFromZero);
+Vector3Int coord=new Vector3Int((int)pos.x-rgn.x,(int)pos.y,(int)pos.z-rgn.y);
+coord.x+=Mathf.FloorToInt(Width /2.0f);coord.x=Mathf.Clamp(coord.x,0,Width -1);
+coord.y+=Mathf.FloorToInt(Height/2.0f);coord.y=Mathf.Clamp(coord.y,0,Height-1);
+coord.z+=Mathf.FloorToInt(Depth /2.0f);coord.z=Mathf.Clamp(coord.z,0,Depth -1);
+return coord;}
 public static Vector2Int cCoordTocnkRgn(Vector2Int cCoord){return new Vector2Int(cCoord.x*Width,cCoord.y*Depth);}
 public static Vector2Int cnkRgnTocCoord(Vector2Int cnkRgn){return new Vector2Int(cnkRgn.x/Width,cnkRgn.y/Depth);}
 public static int GetcnkIdx(int cx,int cy){return cy+cx*(MaxcCoordy+1);}
@@ -688,31 +698,52 @@ static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();}}
 }[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
-[NonSerialized]static readonly Dictionary<int,Dictionary<Vector3Int,(double density,MaterialId materialId)>>cnkIdxvxlEdts=new Dictionary<int,Dictionary<Vector3Int,(double,MaterialId)>>();
 public static void Awake(bool LOG,int LOG_LEVEL){
 
 //...
 
-if(task1!=null){return;}task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,},TaskCreationOptions.LongRunning);
+if(task1!=null){return;}task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
 static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
-if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL&&parameters[2]is string savePath){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar sistema para edições no terreno");
 var watch=new System.Diagnostics.Stopwatch();
 
 //...
 
+Dictionary<int,Dictionary<Vector3Int,(double density,MaterialId materialId)>>saveData=new Dictionary<int,Dictionary<Vector3Int,(double,MaterialId)>>();
 while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova edição no terreno");watch.Restart();}
 
+//... to do editData: lista de posição, formato, tamanho e material da edição
+for(int i=0;i<editDataBG.Count;++i){var edit=editDataBG[i];Vector3 position=edit.position;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("edit at.."+edit);
+Vector2Int cCoord1=vecPosTocCoord(position);
+
+for(int x=0;x<10;++x){
+for(int y=0;y<10;++y){
+for(int z=0;z<10;++z){
+//editData[0][new Vector3Int(x,y,z)]=(100.0,MaterialId.Dirt);
+}
+}
+}
+
+}
+editDataBG.Clear();
+
 foreach(var syn in load_Syn_All)Monitor.Enter(syn);try{
+/*  Save edits for each chunk..  */foreach(var data in saveData){int cnkIdx1=data.Key;
+string editsFolder=string.Format("{0}{1}",savePath,cnkIdx1);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
+if(LOG&&LOG_LEVEL<=1)Debug.Log("editsFolder.."+editsFolder+"..e editsFile.."+editsFile+"..para:.."+cnkIdx1+"..(cnkIdx1)");
+Directory.CreateDirectory(string.Format("{0}/",editsFolder));
 
-//... Directory.CreateDirectory(string.Format("{0}{1}/",savePath,cnkIdx1));
+//... 
 
+}
 }catch{throw;}finally{foreach(var syn in load_Syn_All)Monitor.Exit(syn);}
-
 if(LOG&&LOG_LEVEL<=1)Debug.Log("terminada edição no terreno (dados salvos nos arquivos)..levou:"+watch.ElapsedMilliseconds+"ms");
 backgroundData1.Set();
+saveData.Clear();
 
 //...
 
@@ -728,28 +759,27 @@ if(Stop==true){return;}Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogE
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa do sistema para edições no terreno");
 }
 [NonSerialized]static readonly List<int>dirty=new List<int>();
-public static void Update(bool LOG,int LOG_LEVEL){
+public static void Update(bool LOG,int LOG_LEVEL,bool DEBUG_MODE){
 if(backgroundData1.WaitOne(0)){
 
 //...
 
 if(editData.Count>0){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("editData.Count>0;comece a registrar edições");
-
-//...
-
-editData.Clear();//  remover referências que vão pro plano de fundo
+if(LOG&&LOG_LEVEL<=1)Debug.Log("editData.Count>0[.."+editData.Count+"..];comece a registrar edições");
+editDataBG.AddRange(editData);
+editData.Clear();
 backgroundData1.Reset();foregroundData1.Set();}
 }
 
 //...
 
 }
-[NonSerialized]static readonly Dictionary<int,Dictionary<Vector3Int,(double density,MaterialId materialId)>>editData=new Dictionary<int,Dictionary<Vector3Int,(double,MaterialId)>>();
+public enum EditMode{cube,}
+[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>editData=new List<(Vector3,EditMode)>();[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>editDataBG=new List<(Vector3,EditMode)>();
 public static void Edit(bool LOG,int LOG_LEVEL){
 
 //...
-editData.Add(0,new Dictionary<Vector3Int,(double,MaterialId)>());
+editData.Add((Vector3.zero,EditMode.cube));
 
 }
 }
