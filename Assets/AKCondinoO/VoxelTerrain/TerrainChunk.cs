@@ -240,29 +240,28 @@ if(offset.x== 0&&offset.y== 1)return 6;
 if(offset.x==-1&&offset.y== 1)return 7;
 if(offset.x== 1&&offset.y== 1)return 8;
 return -1;}
+var neighbors=new Dictionary<int,Voxel>[8];for(int i=0;i<neighbors.Length;i++){neighbors[i]=new Dictionary<int,Voxel>();}
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out TerrainChunk dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();lock(tasksBusyCount_Syn){tasksBusyCount++;}queue.WaitOne(tasksBusyCount*5000);
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terreno:"+cCoord1);watch.Restart();}
-Array.Clear(voxels,0,voxels.Length);
+Array.Clear(voxels,0,voxels.Length);for(int i=0;i<neighbors.Length;i++){neighbors[i].Clear();}
 TempVer.Clear();
 TempTri.Clear();
 
 //...
 
-string editsFolder=string.Format("{0}{1}",savePath,cnkIdx1);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
-if(LOG&&LOG_LEVEL<=1)Debug.Log("editsFolder.."+editsFolder+"..e editsFile.."+editsFile+"..para:.."+cCoord1);
-
 lock(load_Syn){
 
 //...
 
+string editsFolder=string.Format("{0}{1}",savePath,cnkIdx1);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
+if(LOG&&LOG_LEVEL<=1)Debug.Log("editsFolder.."+editsFolder+"..e editsFile.."+editsFile+"..para:.."+cCoord1);
 if(File.Exists(editsFile)){
 using(FileStream file=new FileStream(editsFile,FileMode.Open,FileAccess.Read,FileShare.Read)){
 var edits=MessagePackSerializer.Deserialize(typeof(Dictionary<Vector3Int,(double density,MaterialId materialId)>),file)as Dictionary<Vector3Int,(double density,MaterialId materialId)>;
 foreach(var edit in edits){
 voxels[GetvxlIdx(edit.Key.x,edit.Key.y,edit.Key.z)]=new Voxel(edit.Value.density,Vector3.zero,edit.Value.materialId);
 
-//...
-Debug.LogWarning(edit);
+//... Debug.LogWarning(edit);
 
 }
 }
@@ -270,6 +269,23 @@ Debug.LogWarning(edit);
 
 //...
 
+for(int x=-1;x<=1;x++){
+for(int z=-1;z<=1;z++){
+if(x==0&&z==0)continue;
+Vector2Int nCoord1=cCoord1;nCoord1.x+=x;nCoord1.y+=z;int ngbIdx1=GetcnkIdx(nCoord1.x,nCoord1.y);int i1=GetnbrIdx(nCoord1-cCoord1)-1;
+string nEditsFolder=string.Format("{0}{1}",savePath,ngbIdx1);string nEditsFile=string.Format("{0}/{1}",nEditsFolder,"terrainEdits.MessagePack");
+if(File.Exists(nEditsFile)){
+using(FileStream file=new FileStream(nEditsFile,FileMode.Open,FileAccess.Read,FileShare.Read)){
+var edits=MessagePackSerializer.Deserialize(typeof(Dictionary<Vector3Int,(double density,MaterialId materialId)>),file)as Dictionary<Vector3Int,(double density,MaterialId materialId)>;
+foreach(var edit in edits){
+
+//...
+
+}
+}
+}
+}
+}
 }
 ushort vertexCount=0;
 Vector2Int posOffset=Vector2Int.zero;
@@ -700,6 +716,10 @@ if(!init&&this.cCoord==cCoord)return;init=false;this.cCoord=cCoord;cnkRgn=cCoord
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OncCoordChanged(Vector2Int cCoord.."+cCoord+"..);cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
+public void OnEdited(){
+rebuild=true;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("OnEdited();cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
+}
 [NonSerialized]static readonly VertexAttributeDescriptor[]layout=new[]{
 new VertexAttributeDescriptor(VertexAttribute.Position ,VertexAttributeFormat.Float32,3),
 new VertexAttributeDescriptor(VertexAttribute.Normal   ,VertexAttributeFormat.Float32,3),
@@ -732,7 +752,7 @@ while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova edição no terreno");watch.Restart();}
 
 //... to do editData: lista de posição, formato, tamanho e material da edição
-for(int i=0;i<editDataBG.Count;++i){var edit=editDataBG[i];Vector3 position=edit.position;
+for(int i=0;i<BG_editData.Count;++i){var edit=BG_editData[i];Vector3 position=edit.position;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("edit at.."+edit);
 Vector2Int cCoord1=vecPosTocCoord(position),        cCoord3;
 Vector3Int vCoord1=vecPosTovCoord(position),vCoord2,vCoord3;
@@ -752,16 +772,22 @@ int cnkIdx3=GetcnkIdx(cCoord3.x,cCoord3.y);
 if(!saveData.ContainsKey(cnkIdx3))saveData.Add(cnkIdx3,new Dictionary<Vector3Int,(double density,MaterialId materialId)>());
 saveData[cnkIdx3][vCoord3]=(100.0,MaterialId.Dirt);
 
+//...
+
+BG_dirty.Add(cnkIdx3);
+
+//...
+
 //editData[0][new Vector3Int(x,y,z)]=(100.0,MaterialId.Dirt);
  if(z==0){break;}}}
  if(x==0){break;}}}
 }if(y==0){break;}}}
 
 }
-editDataBG.Clear();
+BG_editData.Clear();
 
 foreach(var syn in load_Syn_All)Monitor.Enter(syn);try{
-/*  Save edits for each chunk..  */foreach(var data in saveData){int cnkIdx1=data.Key;
+/*  Save edits for each chunk..  */foreach(var edits in saveData){int cnkIdx1=edits.Key;
 string editsFolder=string.Format("{0}{1}",savePath,cnkIdx1);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
 if(LOG&&LOG_LEVEL<=1)Debug.Log("editsFolder.."+editsFolder+"..e editsFile.."+editsFile+"..para:.."+cnkIdx1+"..(cnkIdx1)");
 Directory.CreateDirectory(string.Format("{0}/",editsFolder));
@@ -770,17 +796,23 @@ Directory.CreateDirectory(string.Format("{0}/",editsFolder));
 
 using(FileStream file=new FileStream(editsFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
 if(file.Length>0){
-MessagePackSerializer.Deserialize(typeof(Dictionary<Vector3Int,(double density,MaterialId materialId)>),file);
+var fileEdits=MessagePackSerializer.Deserialize(typeof(Dictionary<Vector3Int,(double density,MaterialId materialId)>),file)as Dictionary<Vector3Int,(double density,MaterialId materialId)>;
+foreach(var fileEdit in fileEdits){
 
 //...
 
+if(!edits.Value.ContainsKey(fileEdit.Key)){edits.Value.Add(fileEdit.Key,fileEdit.Value);}//  Carregue edições já feitas sem substituir as novas, pois senão o que foi editado anteriormente é perdido
+
+//...
+
+}
 }
 file.SetLength(0);
 file.Flush(true);
 
 //...
 
-MessagePackSerializer.Serialize(file,data.Value);
+MessagePackSerializer.Serialize(file,edits.Value);
 }
 
 //... 
@@ -804,16 +836,28 @@ public static void OnDestroy(bool LOG,int LOG_LEVEL){
 if(Stop==true){return;}Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa do sistema para edições no terreno");
 }
-[NonSerialized]static readonly List<int>dirty=new List<int>();
+[NonSerialized]static readonly HashSet<int>BG_dirty=new HashSet<int>();
 public static void Update(bool LOG,int LOG_LEVEL,bool DEBUG_MODE){
 if(backgroundData1.WaitOne(0)){
 
 //...
 
-if(editData.Count>0){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("editData.Count>0[.."+editData.Count+"..];comece a registrar edições");
-editDataBG.AddRange(editData);
-editData.Clear();
+foreach(int dirty in BG_dirty){
+if(ActiveTerrain.TryGetValue(dirty,out TerrainChunk chunk)){
+chunk.OnEdited();
+}
+
+//...
+
+}
+BG_dirty.Clear();
+
+//...
+
+if(FG_editData.Count>0){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("editData.Count>0[.."+FG_editData.Count+"..];comece a registrar edições");
+BG_editData.AddRange(FG_editData);
+FG_editData.Clear();
 backgroundData1.Reset();foregroundData1.Set();}
 }
 
@@ -821,11 +865,12 @@ backgroundData1.Reset();foregroundData1.Set();}
 
 }
 public enum EditMode{cube,}
-[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>editData=new List<(Vector3,EditMode)>();[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>editDataBG=new List<(Vector3,EditMode)>();
+[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>FG_editData=new List<(Vector3,EditMode)>();
+[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>BG_editData=new List<(Vector3,EditMode)>();
 public static void Edit(bool LOG,int LOG_LEVEL){
 
 //...
-editData.Add((new Vector3(0,40,0),EditMode.cube));
+FG_editData.Add((new Vector3(-8,50,0),EditMode.cube));
 
 }
 }
