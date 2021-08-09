@@ -273,7 +273,8 @@ if(useAI){
 //...
 
 if(!navMeshAgent.enabled){
-if(navMeshAsyncOperation!=null&&navMeshAsyncOperation.isDone&&NavMesh.SamplePosition(transform.position,out NavMeshHit hitResult,Mathf.Max(Width,Depth),navMeshAgent.areaMask)){
+if(navMeshAsyncOperation!=null&&navMeshAsyncOperation.isDone&&(NavMesh.SamplePosition(transform.position,out NavMeshHit hitResult,Mathf.Max(Width,Depth),navMeshAgent.areaMask)
+                                                             ||NavMesh.SamplePosition(transform.position,out            hitResult,Height                ,navMeshAgent.areaMask))){
 transform.position=hitResult.position;
 navMeshAgent       .enabled=true;
 }

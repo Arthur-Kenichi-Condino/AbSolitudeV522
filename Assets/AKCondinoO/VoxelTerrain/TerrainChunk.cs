@@ -124,7 +124,7 @@ texCoord2=new Vector2(-1f,-1f);
 texCoord3=new Vector2(-1f,-1f);
                         }
 }
-[NonSerialized]NativeList<ushort>TempTri;
+[NonSerialized]NativeList<UInt32>TempTri;
 [NonSerialized]public LinkedListNode<TerrainChunk>ExpropriationNode=null;
 bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
@@ -158,7 +158,7 @@ ignoreFromBuild=false,
 };
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);
-TempTri=new NativeList<ushort>(Allocator.Persistent);
+TempTri=new NativeList<UInt32>(Allocator.Persistent);
 }
 public class TerrainChunkTask{
 [NonSerialized]static readonly ConcurrentQueue<TerrainChunk>queued=new ConcurrentQueue<TerrainChunk>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
@@ -168,7 +168,7 @@ public static void StartNew(TerrainChunk state){queued.Enqueue(state);enqueued.S
 
 #region current terrain processing data
 [NonSerialized]NativeList<Vertex>TempVer;
-[NonSerialized]NativeList<ushort>TempTri;
+[NonSerialized]NativeList<UInt32>TempTri;
 TerrainChunk current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 object load_Syn{get;set;}
 
@@ -229,7 +229,7 @@ MaterialId[]materials=new MaterialId[12];
    Vector3[]  normals=new Vector3[12];
 double[]density=new double[2];Vector3[]vertex=new Vector3[2];MaterialId[]material=new MaterialId[2];float[]distance=new float[2];
 int[]idx=new int[3];Vector3[]verPos=new Vector3[3];Dictionary<Vector3,List<Vector2>>UVByVertex=new Dictionary<Vector3,List<Vector2>>();Dictionary<int,int>weights=new Dictionary<int,int>(4);
-int GetnbrIdx(Vector2Int offset){
+int GetoftIdx(Vector2Int offset){
 if(offset.x== 0&&offset.y== 0)return 0;
 if(offset.x==-1&&offset.y== 0)return 1;
 if(offset.x== 1&&offset.y== 0)return 2;
@@ -243,7 +243,7 @@ return -1;}
 var neighbors=new Dictionary<int,Voxel>[8];for(int i=0;i<neighbors.Length;i++){neighbors[i]=new Dictionary<int,Voxel>();}
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out TerrainChunk dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();lock(tasksBusyCount_Syn){tasksBusyCount++;}queue.WaitOne(tasksBusyCount*5000);
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova atualização deste pedaço do terreno:"+cCoord1);watch.Restart();}
-Array.Clear(voxels,0,voxels.Length);for(int i=0;i<neighbors.Length;i++){neighbors[i].Clear();}
+Array.Clear(voxels,0,voxels.Length);
 TempVer.Clear();
 TempTri.Clear();
 
@@ -272,12 +272,13 @@ voxels[GetvxlIdx(edit.Key.x,edit.Key.y,edit.Key.z)]=new Voxel(edit.Value.density
 for(int x=-1;x<=1;x++){
 for(int z=-1;z<=1;z++){
 if(x==0&&z==0)continue;
-Vector2Int nCoord1=cCoord1;nCoord1.x+=x;nCoord1.y+=z;int ngbIdx1=GetcnkIdx(nCoord1.x,nCoord1.y);int i1=GetnbrIdx(nCoord1-cCoord1)-1;
+Vector2Int nCoord1=cCoord1;nCoord1.x+=x;nCoord1.y+=z;int ngbIdx1=GetcnkIdx(nCoord1.x,nCoord1.y);int oftIdx1=GetoftIdx(nCoord1-cCoord1)-1;
 string nEditsFolder=string.Format("{0}{1}",savePath,ngbIdx1);string nEditsFile=string.Format("{0}/{1}",nEditsFolder,"terrainEdits.MessagePack");
 if(File.Exists(nEditsFile)){
 using(FileStream file=new FileStream(nEditsFile,FileMode.Open,FileAccess.Read,FileShare.Read)){
 var edits=MessagePackSerializer.Deserialize(typeof(Dictionary<Vector3Int,(double density,MaterialId materialId)>),file)as Dictionary<Vector3Int,(double density,MaterialId materialId)>;
 foreach(var edit in edits){
+neighbors[oftIdx1][GetvxlIdx(edit.Key.x,edit.Key.y,edit.Key.z)]=new Voxel(edit.Value.density,Vector3.zero,edit.Value.materialId);
 
 //...
 
@@ -323,12 +324,12 @@ Vector2Int cCoord2=cCoord1;
 if(vCoord2.x<0||vCoord2.x>=Width||
    vCoord2.z<0||vCoord2.z>=Depth){ValidateCoord(ref cnkRgn2,ref vCoord2);cCoord2=cnkRgnTocCoord(cnkRgn2);}
        int vxlIdx2=GetvxlIdx(vCoord2.x,vCoord2.y,vCoord2.z);
-              int nbrIdx2=GetnbrIdx(cCoord2-cCoord1);
-if(nbrIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];//  já construído
+              int oftIdx2=GetoftIdx(cCoord2-cCoord1);
+if(oftIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];}else if(oftIdx2>0&&neighbors[oftIdx2-1].ContainsKey(vxlIdx2)){polygonCell[corner]=neighbors[oftIdx2-1][vxlIdx2];//  já construído
 }else{//  pegar valor do bioma
 Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                            noiseInput.z+=cnkRgn2.y;
-biome.result(vCoord2,noiseInput,nCache,mCache,nbrIdx2,vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
+biome.result(vCoord2,noiseInput,nCache,mCache,oftIdx2,vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
 }
 if(polygonCell[corner].Material!=MaterialId.Air&&polygonCell[corner].Normal==Vector3.zero){//  calcular normal
 int tmpIdx=0;Vector3Int vCoord3=vCoord2;vCoord3.x++;                                                                                                                                                                SetpolygonCellNormalSettmpVxl();
@@ -346,15 +347,14 @@ void SetpolygonCellNormalSettmpVxl(){
     if(vCoord3.x<0||vCoord3.x>=Width||
        vCoord3.z<0||vCoord3.z>=Depth){ValidateCoord(ref cnkRgn3,ref vCoord3);cCoord3=cnkRgnTocCoord(cnkRgn3);}
            int vxlIdx3=GetvxlIdx(vCoord3.x,vCoord3.y,vCoord3.z);
-                  int nbrIdx3=GetnbrIdx(cCoord3-cCoord1);
-    if(nbrIdx3==0&&voxels[vxlIdx3].IsCreated){tmpVxl[tmpIdx]=voxels[vxlIdx3];
+                  int oftIdx3=GetoftIdx(cCoord3-cCoord1);
+    if(oftIdx3==0&&voxels[vxlIdx3].IsCreated){tmpVxl[tmpIdx]=voxels[vxlIdx3];}else if(oftIdx3>0&&neighbors[oftIdx3-1].ContainsKey(vxlIdx3)){tmpVxl[tmpIdx]=neighbors[oftIdx3-1][vxlIdx3];
     }else{
     Vector3 noiseInput=vCoord3;noiseInput.x+=cnkRgn3.x;
                                noiseInput.z+=cnkRgn3.y;
-    biome.result(vCoord3,noiseInput,nCache,mCache,nbrIdx3,vCoord3.z+vCoord3.x*Depth,ref tmpVxl[tmpIdx]);
+    biome.result(vCoord3,noiseInput,nCache,mCache,oftIdx3,vCoord3.z+vCoord3.x*Depth,ref tmpVxl[tmpIdx]);
     }
-    if(nbrIdx3==0){voxels[vxlIdx3]=tmpVxl[tmpIdx];
-    }
+    if(oftIdx3==0){voxels[vxlIdx3]=tmpVxl[tmpIdx];}else if(oftIdx3>0){neighbors[oftIdx3-1][vxlIdx3]=tmpVxl[tmpIdx];}
     }
 }
 polygonCellNormal=new Vector3{
@@ -365,8 +365,7 @@ polygonCell[corner].Normal=polygonCellNormal;
 if(polygonCell[corner].Normal!=Vector3.zero){
 polygonCell[corner].Normal.Normalize();
 }
-if(nbrIdx2==0){voxels[vxlIdx2]=polygonCell[corner];//  salvar valor construído no chunk
-}
+if(oftIdx2==0){voxels[vxlIdx2]=polygonCell[corner];}else if(oftIdx2>0){neighbors[oftIdx2-1][vxlIdx2]=polygonCell[corner];}//  salvar valor construído no chunk
 }
 voxelsBuffer2[0][0]=polygonCell[corner];
 voxelsBuffer2[1][vCoord2.z]=polygonCell[corner];
@@ -507,12 +506,12 @@ void SetpolygonCellVoxel(){
     if(vCoord2.x<0||vCoord2.x>=Width||
        vCoord2.z<0||vCoord2.z>=Depth){ValidateCoord(ref cnkRgn2,ref vCoord2);cCoord2=cnkRgnTocCoord(cnkRgn2);}
            int vxlIdx2=GetvxlIdx(vCoord2.x,vCoord2.y,vCoord2.z);
-                  int nbrIdx2=GetnbrIdx(cCoord2-cCoord1);
-    if(nbrIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];
+                  int oftIdx2=GetoftIdx(cCoord2-cCoord1);
+    if(oftIdx2==0&&voxels[vxlIdx2].IsCreated){polygonCell[corner]=voxels[vxlIdx2];}else if(oftIdx2>0&&neighbors[oftIdx2-1].ContainsKey(vxlIdx2)){polygonCell[corner]=neighbors[oftIdx2-1][vxlIdx2];
     }else{
     Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
                                noiseInput.z+=cnkRgn2.y;
-    biome.result(vCoord2,noiseInput,nCache,mCache,nbrIdx2,vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
+    biome.result(vCoord2,noiseInput,nCache,mCache,oftIdx2,vCoord2.z+vCoord2.x*Depth,ref polygonCell[corner]);
     }
     }
 }
@@ -614,6 +613,7 @@ lock(tasksBusyCount_Syn){tasksBusyCount--;}queue.Set();backgroundData.Set();Rele
 
 //...
 
+for(int i=0;i<neighbors.Length;i++){neighbors[i].Clear();}
 for(int i=0;i<biome.cacheCount;++i){
 for(int j=0;j<nCache[i].Length;++j){if(nCache[i][j]!=null)Array.Clear(nCache[i][j],0,nCache[i][j].Length);}
 for(int j=0;j<mCache[i].Length;++j){if(mCache[i][j]!=null)Array.Clear(mCache[i][j],0,mCache[i][j].Length);}
@@ -683,7 +683,7 @@ mesh.SetVertexBufferData(TempVer.AsArray(),0,0,TempVer.Length,0,meshFlags);
 #endregion 
 #region IndexBuffer
 if(resize){
-    mesh.SetIndexBufferParams(TempTri.Length,IndexFormat.UInt16);}
+    mesh.SetIndexBufferParams(TempTri.Length,IndexFormat.UInt32);}
 mesh.SetIndexBufferData(TempTri.AsArray(),0,0,TempTri.Length,meshFlags);
 #endregion 
 #region SubMesh
