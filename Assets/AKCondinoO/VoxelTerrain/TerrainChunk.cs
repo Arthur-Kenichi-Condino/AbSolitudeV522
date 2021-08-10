@@ -752,14 +752,16 @@ while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova edição no terreno");watch.Restart();}
 
 //... to do editData: lista de posição, formato, tamanho e material da edição
-for(int i=0;i<BG_editData.Count;++i){var edit=BG_editData[i];Vector3 position=edit.position;
+for(int i=0;i<BG_editData.Count;++i){var edit=BG_editData[i];Vector3 position=edit.position;EditMode mode=edit.mode;Vector3Int size=edit.size;double density=edit.density;MaterialId materialId=edit.materialId;int smoothness=edit.smoothness;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("edit at.."+edit);
+switch(mode){
+default:{
 Vector2Int cCoord1=vecPosTocCoord(position),        cCoord3;
 Vector3Int vCoord1=vecPosTovCoord(position),vCoord2,vCoord3;
 Vector2Int cnkRgn1=cCoordTocnkRgn(cCoord1 ),        cnkRgn3;
-for(int y=0;y<3;++y){for(vCoord2=new Vector3Int(vCoord1.x,vCoord1.y-y,vCoord1.z);vCoord2.y<=vCoord1.y+y;vCoord2.y+=y*2){if(vCoord2.y>=0&&vCoord2.y<Height){
-for(int x=0;x<3;++x){for(vCoord2.x=vCoord1.x-x                                  ;vCoord2.x<=vCoord1.x+x;vCoord2.x+=x*2){
-for(int z=0;z<3;++z){for(vCoord2.z=vCoord1.z-z                                  ;vCoord2.z<=vCoord1.z+z;vCoord2.z+=z*2){
+for(int y=0;y<size.y;++y){for(vCoord2=new Vector3Int(vCoord1.x,vCoord1.y-y,vCoord1.z);vCoord2.y<=vCoord1.y+y;vCoord2.y+=y*2){if(vCoord2.y>=0&&vCoord2.y<Height){
+for(int x=0;x<size.x;++x){for(vCoord2.x=vCoord1.x-x                                  ;vCoord2.x<=vCoord1.x+x;vCoord2.x+=x*2){
+for(int z=0;z<size.z;++z){for(vCoord2.z=vCoord1.z-z                                  ;vCoord2.z<=vCoord1.z+z;vCoord2.z+=z*2){
 cCoord3=cCoord1;
 cnkRgn3=cnkRgn1;
 vCoord3=vCoord2;
@@ -770,7 +772,7 @@ int cnkIdx3=GetcnkIdx(cCoord3.x,cCoord3.y);
 //... Debug.LogWarning(vCoord3);
 
 if(!saveData.ContainsKey(cnkIdx3))saveData.Add(cnkIdx3,new Dictionary<Vector3Int,(double density,MaterialId materialId)>());
-saveData[cnkIdx3][vCoord3]=(100.0,MaterialId.Dirt);
+saveData[cnkIdx3][vCoord3]=(density,materialId);
 
 //...
 
@@ -778,11 +780,34 @@ BG_dirty.Add(cnkIdx3);
 
 //...
 
-//editData[0][new Vector3Int(x,y,z)]=(100.0,MaterialId.Dirt);
  if(z==0){break;}}}
  if(x==0){break;}}}
 }if(y==0){break;}}}
+Vector3 lerpValue=new Vector3();
+for(int y=size.y;y<size.y+smoothness;++y){lerpValue.y=((size.y+smoothness)-y)/(smoothness+1f);for(vCoord2=new Vector3Int(vCoord1.x,vCoord1.y-y,vCoord1.z);vCoord2.y<=vCoord1.y+y;vCoord2.y+=y*2){if(vCoord2.y>=0&&vCoord2.y<Height){
+for(int x=size.x;x<size.x+smoothness;++x){lerpValue.x=((size.x+smoothness)-x)/(smoothness+1f);for(vCoord2.x=vCoord1.x-x                                  ;vCoord2.x<=vCoord1.x+x;vCoord2.x+=x*2){
+for(int z=size.z;z<size.z+smoothness;++z){lerpValue.z=((size.z+smoothness)-z)/(smoothness+1f);for(vCoord2.z=vCoord1.z-z                                  ;vCoord2.z<=vCoord1.z+z;vCoord2.z+=z*2){
+cCoord3=cCoord1;
+cnkRgn3=cnkRgn1;
+vCoord3=vCoord2;
+if(vCoord2.x<0||vCoord2.x>=Width||
+   vCoord2.z<0||vCoord2.z>=Depth){ValidateCoord(ref cnkRgn3,ref vCoord3);cCoord3=cnkRgnTocCoord(cnkRgn3);}
+int cnkIdx3=GetcnkIdx(cCoord3.x,cCoord3.y);
 
+//...
+//Debug.LogWarning(lerpValue);
+
+//double d=density*Mathf.Max(lerpValue.x,lerpValue.y,lerpValue.z);
+//if(!saveData.ContainsKey(cnkIdx3))saveData.Add(cnkIdx3,new Dictionary<Vector3Int,(double density,MaterialId materialId)>());
+//saveData[cnkIdx3][vCoord3]=(d,materialId);
+
+//...
+
+ if(z==0){break;}}}
+ if(x==0){break;}}}
+}if(y==0){break;}}}
+break;}
+}
 }
 BG_editData.Clear();
 
@@ -865,12 +890,15 @@ backgroundData1.Reset();foregroundData1.Set();}
 
 }
 public enum EditMode{cube,}
-[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>FG_editData=new List<(Vector3,EditMode)>();
-[NonSerialized]static readonly List<(Vector3 position,EditMode mode)>BG_editData=new List<(Vector3,EditMode)>();
-public static void Edit(bool LOG,int LOG_LEVEL){
+[NonSerialized]static readonly List<(Vector3 position,EditMode mode,Vector3Int size,double density,MaterialId materialId,int smoothness)>FG_editData=new List<(Vector3,EditMode,Vector3Int,double,MaterialId,int)>();
+[NonSerialized]static readonly List<(Vector3 position,EditMode mode,Vector3Int size,double density,MaterialId materialId,int smoothness)>BG_editData=new List<(Vector3,EditMode,Vector3Int,double,MaterialId,int)>();
+public static void Edit(Vector3 at,EditMode mode,Vector3Int size,double density,MaterialId materialId,int smoothness,bool LOG,int LOG_LEVEL){
 
 //...
-FG_editData.Add((new Vector3(-8,50,0),EditMode.cube));
+
+FG_editData.Add((at,mode,size,density,materialId,smoothness));
+
+//...
 
 }
 }

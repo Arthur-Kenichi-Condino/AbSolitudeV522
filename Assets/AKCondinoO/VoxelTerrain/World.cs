@@ -16,6 +16,7 @@ using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 using UnityEngine.UI;
 using static AKCondinoO.Voxels.TerrainChunk;
+using static AKCondinoO.Voxels.TerrainChunk.Editor;
 namespace AKCondinoO.Voxels{public class World:MonoBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;public bool DEBUG_MODE=true;
 [NonSerialized]public static string savePath;[NonSerialized]public static string saveName="world";[NonSerialized]public static readonly string saveFolder=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).Replace("\\","/").ToString()+"/AbSolitudeV522";
 public Text UI_FPS;[NonSerialized]float UI_FPS_RefreshTimer;[NonSerialized]float UI_FPS_RefreshTime=1.0f;
@@ -184,7 +185,14 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]static Vector3    actPos;
 [NonSerialized]static Vector2Int aCoord,aCoord_Pre;
 [NonSerialized]static Vector2Int actRgn;
-[SerializeField]protected bool DEBUG_EDIT=false;[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
+[SerializeField]protected bool       DEBUG_EDIT=false;
+[SerializeField]protected Vector3    DEBUG_EDIT_AT=Vector3.zero;
+[SerializeField]protected EditMode   DEBUG_EDIT_MODE=EditMode.cube;
+[SerializeField]protected Vector3Int DEBUG_EDIT_SIZE=new Vector3Int(3,3,3);
+[SerializeField]protected double     DEBUG_EDIT_DENSITY=100.0;
+[SerializeField]protected MaterialId DEBUG_EDIT_MATERIAL_ID=MaterialId.Dirt;
+[SerializeField]protected int        DEBUG_EDIT_SMOOTHNESS=5;
+[SerializeField]protected bool DEBUG_BAKE_NAV_MESH=false;
 void Update(){
 MemoryManagement.Run(LOG,LOG_LEVEL);
 if(Application.targetFrameRate!=targetFrameRate)Application.targetFrameRate=targetFrameRate;
@@ -341,7 +349,7 @@ if(DEBUG_EDIT){
 
 //...
 
-Editor.Edit(LOG,LOG_LEVEL);
+Editor.Edit(DEBUG_EDIT_AT,DEBUG_EDIT_MODE,DEBUG_EDIT_SIZE,DEBUG_EDIT_DENSITY,DEBUG_EDIT_MATERIAL_ID,DEBUG_EDIT_SMOOTHNESS,LOG,LOG_LEVEL);
 
 }
 
