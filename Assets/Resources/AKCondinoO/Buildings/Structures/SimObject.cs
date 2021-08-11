@@ -2,15 +2,12 @@ using AKCondinoO.Voxels;
 using MLAPI;
 using MLAPI.NetworkVariable;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using UnityEngine;
 using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Buildings.Buildings;
 namespace AKCondinoO.Buildings{public class SimObject:NetworkBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
@@ -20,13 +17,13 @@ get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 }[NonSerialized]readonly object Stop_Syn=new object();[NonSerialized]bool Stop_v=false;[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]public readonly object load_Syn=new object();
-[DataContract(Namespace="")]public class SimObjectSaveTransform{
-[DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
-[DataMember]public SerializableQuaternion rotation{get;set;}
-[DataMember]public SerializableVector3    position{get;set;}
-}[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;static readonly DataContractSerializer saveTransformSerializer=new DataContractSerializer(typeof(SimObjectSaveTransform));
-[DataContract(Namespace="")]public class SimObjectSaveStateData{
-[DataMember]public string type{get;set;}[DataMember]public int id{get;set;}
+[Serializable]public class SimObjectSaveTransform{
+public string type{get;set;}public int id{get;set;}
+public SerializableQuaternion rotation{get;set;}
+public SerializableVector3    position{get;set;}
+}[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
+[Serializable]public class SimObjectSaveStateData{
+public string type{get;set;}public int id{get;set;}
 }[NonSerialized]readonly SimObjectSaveStateData saveStateData=new SimObjectSaveStateData();[NonSerialized]string stateDataFolder;[NonSerialized]string stateDataFile;
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;[NonSerialized]bool unplace;[NonSerialized]bool unplacing;[NonSerialized]int unplacedId;
@@ -118,11 +115,15 @@ File.Delete(transformFile);
 }
 if(!unplacing){
 Vector2Int cCoord1=vecPosTocCoord(saveTransform.position);int cnkIdx1=GetcnkIdx(cCoord1.x,cCoord1.y);
-transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",saveTransform.type,saveTransform.id));
+transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).StreamWriter",saveTransform.type,saveTransform.id));
 Directory.CreateDirectory(string.Format("{0}/",transformFolder));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform save file:.."+transformFile,current);}
 using(FileStream file=new FileStream(transformFile,FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
-saveTransformSerializer.WriteObject(file,saveTransform);
+using(StreamWriter writer=new StreamWriter(file)){
+writer.WriteLine(saveTransform.id);
+writer.WriteLine(saveTransform.position);
+writer.WriteLine(saveTransform.rotation);
+}
 }
 }else{
 if(LOG&&LOG_LEVEL<=1){Debug.Log("I am now unplaced; my id:"+id,current);}
@@ -135,14 +136,14 @@ if(LOG&&LOG_LEVEL<=1){Debug.Log("I need to be activated with id:"+loadTuple.Valu
 id=loadTuple.Value.id;
 if(loadTuple.Value.cnkIdx.HasValue){
 int cnkIdx1=loadTuple.Value.cnkIdx.Value;
-transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).DataContract",type,id));
+transformFolder=string.Format("{0}/{1}",buildingsFolder,cnkIdx1);transformFile=string.Format("{0}/{1}",transformFolder,string.Format("({0},{1}).StreamWriter",type,id));
 if(LOG&&LOG_LEVEL<=1){Debug.Log("my id:"+id+"..my transform load file:.."+transformFile,current);}
 using(FileStream file=new FileStream(transformFile,FileMode.Open,FileAccess.Read,FileShare.None)){
-using(XmlDictionaryReader reader=XmlDictionaryReader.CreateTextReader(file,new XmlDictionaryReaderQuotas())){
-var saveTransformLoaded=saveTransformSerializer.ReadObject(reader,true,null)as SimObjectSaveTransform;
-saveTransform.id=id;
-saveTransform.position=saveTransformLoaded.position;
-saveTransform.rotation=saveTransformLoaded.rotation;
+using(StreamReader reader=new StreamReader(file)){
+saveTransform.id=id;reader.ReadLine();
+string line;
+var positionValues=(line=reader.ReadLine()).Substring(1,line.Length-2).Split('_');saveTransform.position=new SerializableVector3(float.Parse(positionValues[0]),float.Parse(positionValues[1]),float.Parse(positionValues[2]));
+var rotationValues=(line=reader.ReadLine()).Substring(1,line.Length-2).Split('_');saveTransform.rotation=new SerializableQuaternion(float.Parse(rotationValues[0]),float.Parse(rotationValues[1]),float.Parse(rotationValues[2]),float.Parse(rotationValues[3]));
 }
 }
 loaded=true;
@@ -164,7 +165,8 @@ backgroundData.Set();ReleaseData();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para objeto sim graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}finally{
-while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out SimObject dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}if(!backgroundData.WaitOne(0))backgroundData.Set();ReleaseData();Thread.Sleep(1);}_Stop:{}
+if(backgroundData!=null)backgroundData.Set();ReleaseData();
+while(!Stop){enqueued.WaitOne(1000);if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out SimObject dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}if(!backgroundData.WaitOne(0))backgroundData.Set();ReleaseData();Thread.Sleep(1);}_Stop:{}
 }
 }
 }

@@ -70,6 +70,7 @@ MonoBehaviour:
   DEBUG_EDIT_SIZE: {x: 3, y: 3, z: 3}
   DEBUG_EDIT_DENSITY: 100
   DEBUG_EDIT_MATERIAL_ID: 2
+  DEBUG_EDIT_SMOOTHNESS: 5
   DEBUG_BAKE_NAV_MESH: 0
 --- !u!114 &1818680293
 MonoBehaviour:
@@ -99,6 +100,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MenuPanel: {fileID: 8814611826977321590}
+  btnHost: {fileID: 790589381322965545}
+  btnClient: {fileID: 790589382766099426}
 --- !u!114 &2616274494070854273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -323,6 +326,28 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8118712614092064060, guid: 34e75755c979ef947a749342532c7658, type: 3}
   m_PrefabInstance: {fileID: 790589382036846410}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &790589381322965545 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 729019747, guid: 34e75755c979ef947a749342532c7658, type: 3}
+  m_PrefabInstance: {fileID: 790589382036846410}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &790589382766099426 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1970769064, guid: 34e75755c979ef947a749342532c7658, type: 3}
+  m_PrefabInstance: {fileID: 790589382036846410}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1400133542689798196
 PrefabInstance:
   m_ObjectHideFlags: 0

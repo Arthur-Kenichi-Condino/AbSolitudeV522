@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
 using UnityEngine;
 namespace AKCondinoO{public static class Util{
 #region[https://answers.unity.com/questions/956047/serialize-quaternion-or-vector3.html]
@@ -10,19 +7,19 @@ namespace AKCondinoO{public static class Util{
  /// need to create our own version. This one will automatically convert
  /// between Vector3 and SerializableVector3
  /// </summary>
- [System.Serializable][DataContract(Namespace="")]public struct SerializableVector3{
+ [Serializable]public struct SerializableVector3{
 /// <summary>
 /// x component
 /// </summary>
-[DataMember]public float x;
+public float x;
 /// <summary>
 /// y component
 /// </summary>
-[DataMember]public float y;
+public float y;
 /// <summary>
 /// z component
 /// </summary>
-[DataMember]public float z;
+public float z;
 /// <summary>
 /// Constructor
 /// </summary>
@@ -39,7 +36,7 @@ z=rZ;
 /// </summary>
 /// <returns></returns>
 public override string ToString(){
-return String.Format("[{0}, {1}, {2}]",x,y,z);
+return String.Format("[{0}_{1}_{2}]",x,y,z);
 }
 /// <summary>
 /// Automatic conversion from SerializableVector3 to Vector3
@@ -63,23 +60,23 @@ return new SerializableVector3(rValue.x, rValue.y, rValue.z);
  /// need to create our own version. This one will automatically convert
  /// between Quaternion and SerializableQuaternion
  /// </summary>
-[System.Serializable][DataContract(Namespace="")]public struct SerializableQuaternion{
+[Serializable]public struct SerializableQuaternion{
 /// <summary>
 /// x component
 /// </summary>
-[DataMember]public float x;     
+public float x;     
 /// <summary>
 /// y component
 /// </summary>
-[DataMember]public float y;     
+public float y;     
 /// <summary>
 /// z component
 /// </summary>
-[DataMember]public float z;     
+public float z;     
 /// <summary>
 /// w component
 /// </summary>
-[DataMember]public float w;     
+public float w;     
 /// <summary>
 /// Constructor
 /// </summary>
@@ -98,7 +95,7 @@ w=rW;
 /// </summary>
 /// <returns></returns>
 public override string ToString(){
-return String.Format("[{0}, {1}, {2}, {3}]",x,y,z,w);
+return String.Format("[{0}_{1}_{2}_{3}]",x,y,z,w);
 }
 /// <summary>
 /// Automatic conversion from SerializableQuaternion to Quaternion
