@@ -272,7 +272,10 @@ voxels[GetvxlIdx(edit.Key.x,edit.Key.y,edit.Key.z)]=new Voxel(edit.Value.density
 for(int x=-1;x<=1;x++){
 for(int z=-1;z<=1;z++){
 if(x==0&&z==0)continue;
-Vector2Int nCoord1=cCoord1;nCoord1.x+=x;nCoord1.y+=z;int ngbIdx1=GetcnkIdx(nCoord1.x,nCoord1.y);int oftIdx1=GetoftIdx(nCoord1-cCoord1)-1;
+Vector2Int nCoord1=cCoord1;nCoord1.x+=x;nCoord1.y+=z;
+if(Math.Abs(nCoord1.x)>=MaxcCoordx||
+   Math.Abs(nCoord1.y)>=MaxcCoordy){continue;}
+int ngbIdx1=GetcnkIdx(nCoord1.x,nCoord1.y);int oftIdx1=GetoftIdx(nCoord1-cCoord1)-1;
 string nEditsFolder=string.Format("{0}{1}",savePath,ngbIdx1);string nEditsFile=string.Format("{0}/{1}",nEditsFolder,"terrainEdits.MessagePack");
 if(File.Exists(nEditsFile)){
 using(FileStream file=new FileStream(nEditsFile,FileMode.Open,FileAccess.Read,FileShare.Read)){
@@ -751,7 +754,8 @@ Dictionary<int,Dictionary<Vector3Int,(double density,MaterialId materialId)>>sav
 while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
 if(LOG&&LOG_LEVEL<=1){Debug.Log("começar nova edição no terreno");watch.Restart();}
 
-//... to do editData: lista de posição, formato, tamanho e material da edição
+//... 
+
 for(int i=0;i<BG_editData.Count;++i){var edit=BG_editData[i];Vector3 position=edit.position;EditMode mode=edit.mode;Vector3Int size=edit.size;double density=edit.density;MaterialId materialId=edit.materialId;int smoothness=edit.smoothness;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("edit at.."+edit);
 switch(mode){
@@ -759,13 +763,16 @@ default:{
 float sqrt_yx_1=Mathf.Sqrt(Mathf.Pow(size.y,2)+Mathf.Pow(size.x,2)),sqrt_yx_2;
 float sqrt_xz_1=Mathf.Sqrt(Mathf.Pow(size.x,2)+Mathf.Pow(size.z,2)),sqrt_xz_2;
 float sqrt_zy_1=Mathf.Sqrt(Mathf.Pow(size.z,2)+Mathf.Pow(size.y,2)),sqrt_zy_2;
-float dis1=(sqrt_yx_1+sqrt_xz_1+sqrt_zy_1)/3f,dis2;
+float sqrt_yx_xz_1=Mathf.Sqrt(Mathf.Pow(sqrt_yx_1,2)+Mathf.Pow(sqrt_xz_1,2));float sqrt_yx_xz_zy_1=Mathf.Sqrt(Mathf.Pow(sqrt_yx_xz_1,2)+Mathf.Pow(sqrt_zy_1,2));
+//Vector3 lerp=new Vector3();
+//float max1=Mathf.Max(sqrt_yx_1,sqrt_xz_1,sqrt_zy_1),max2;
+//float max1=(sqrt_yx_1+sqrt_xz_1+sqrt_zy_1)/3f,max2;
 //Vector3 lerpValue=new Vector3();
 Vector2Int cCoord1=vecPosTocCoord(position),        cCoord3;
 Vector3Int vCoord1=vecPosTovCoord(position),vCoord2,vCoord3;
 Vector2Int cnkRgn1=cCoordTocnkRgn(cCoord1 ),        cnkRgn3;
-//float sqrt_yx_xz_1=Mathf.Sqrt(Mathf.Pow(sqrt_yx_1,2)+Mathf.Pow(sqrt_xz_1,2));float sqrt_yx_xz_zy_1=Mathf.Sqrt(Mathf.Pow(sqrt_yx_xz_1,2)+Mathf.Pow(sqrt_zy_1,2));
 for(int y=0;y<size.y+smoothness;++y){for(vCoord2=new Vector3Int(vCoord1.x,vCoord1.y-y,vCoord1.z);vCoord2.y<=vCoord1.y+y;vCoord2.y+=y*2){if(vCoord2.y>=0&&vCoord2.y<Height){
+//lerp.y=(1f-(y-size.y)/(float)y);
 for(int x=0;x<size.x+smoothness;++x){for(vCoord2.x=vCoord1.x-x                                  ;vCoord2.x<=vCoord1.x+x;vCoord2.x+=x*2){
 sqrt_yx_2=Mathf.Sqrt(Mathf.Pow(y,2)+Mathf.Pow(x,2));
 for(int z=0;z<size.z+smoothness;++z){for(vCoord2.z=vCoord1.z-z                                  ;vCoord2.z<=vCoord1.z+z;vCoord2.z+=z*2){
@@ -784,18 +791,26 @@ sqrt_zy_2=Mathf.Sqrt(Mathf.Pow(z,2)+Mathf.Pow(y,2));
 double resultDensity;
 if(y>=size.y||x>=size.x||z>=size.z){
 if(y>=size.y&&x>=size.x&&z>=size.z){
-//dis2=(sqrt_yx_2+sqrt_xz_2+sqrt_zy_2)/3f;
-//resultDensity=density*(.95f-(dis2-dis1)/(dis2));
-resultDensity=0d;
+float sqrt_yx_xz_2=Mathf.Sqrt(Mathf.Pow(sqrt_yx_2,2)+Mathf.Pow(sqrt_xz_2,2));float sqrt_yx_xz_zy_2=Mathf.Sqrt(Mathf.Pow(sqrt_yx_xz_2,2)+Mathf.Pow(sqrt_zy_2,2));
+resultDensity=density*(1f-(sqrt_yx_xz_zy_2-sqrt_yx_xz_1)/(sqrt_yx_xz_zy_2));
 }else 
 if(y>=size.y&&x>=size.x){
-resultDensity=density*(.95f-(sqrt_yx_2-sqrt_yx_1)/(sqrt_yx_2));
+resultDensity=density*(1f-(sqrt_yx_2-sqrt_yx_1)/(sqrt_yx_2));
 }else 
 if(x>=size.x&&z>=size.z){
-resultDensity=density*(.95f-(sqrt_xz_2-sqrt_xz_1)/(sqrt_xz_2));
+resultDensity=density*(1f-(sqrt_xz_2-sqrt_xz_1)/(sqrt_xz_2));
 }else 
 if(z>=size.z&&y>=size.y){
-resultDensity=density*(.95f-(sqrt_zy_2-sqrt_zy_1)/(sqrt_zy_2));
+resultDensity=density*(1f-(sqrt_zy_2-sqrt_zy_1)/(sqrt_zy_2));
+}else 
+if(y>=size.y){
+resultDensity=density*(1f-(y-size.y)/(float)y)*1.414f;
+}else 
+if(x>=size.x){
+resultDensity=density*(1f-(x-size.x)/(float)x)*1.414f;
+}else 
+if(z>=size.z){
+resultDensity=density*(1f-(z-size.z)/(float)z)*1.414f;
 }else{
 resultDensity=0d;
 }
@@ -847,11 +862,20 @@ resultDensity=density;
 //}
 
 if(!saveData.ContainsKey(cnkIdx3))saveData.Add(cnkIdx3,new Dictionary<Vector3Int,(double density,MaterialId materialId)>());
-saveData[cnkIdx3][vCoord3]=(resultDensity,materialId);
+saveData[cnkIdx3][vCoord3]=(resultDensity,-resultDensity>=50d?MaterialId.Air:materialId);
 
 //...
 
 BG_dirty.Add(cnkIdx3);
+for(int cx=-1;cx<=1;cx++){
+for(int cz=-1;cz<=1;cz++){
+if(cx==0&&cz==0)continue;
+Vector2Int cCoord4=cCoord3+new Vector2Int(cx,cz);
+if(Math.Abs(cCoord4.x)>=MaxcCoordx||
+   Math.Abs(cCoord4.y)>=MaxcCoordy){continue;}
+int cnkIdx4=GetcnkIdx(cCoord4.x,cCoord4.y);
+BG_dirty.Add(cnkIdx4);
+}}
 
 //...
 
@@ -863,6 +887,9 @@ BG_dirty.Add(cnkIdx3);
 
 break;}
 }
+
+//... to do: load here data from files, or use biome value, to mix/blend density value
+
 }
 BG_editData.Clear();
 
