@@ -30,7 +30,7 @@ public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;
 [NonSerialized]bool releaseId;
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;[NonSerialized]bool acting;
-[NonSerialized]public NetworkObject network;[NonSerialized]bool atServer;
+[NonSerialized]public NetworkObject network;[NonSerialized]bool networkHidden;[NonSerialized]bool atServer;
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public new CharacterControllerPhys collider;
 [NonSerialized]public NavMeshAgent navMeshAgent;[NonSerialized]public bool useAI=true;
@@ -39,6 +39,7 @@ type=GetType();id=-1;
 saveTransform.type=type.FullName;
 saveStateData.type=type.FullName;
 network=GetComponent<NetworkObject>();
+network.CheckObjectVisibility=((clientId)=>{return!networkHidden;});
 collider=GetComponent<CharacterControllerPhys>();
 navMeshAgent=GetComponent<NavMeshAgent>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to actors pool",this);
@@ -249,7 +250,9 @@ collider.controller.enabled=false;
 collider           .enabled=false;
 navMeshAgent       .enabled=false;
 Actors.Disabled.Add(this);Actors.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Actors.Enabled.Count:"+Actors.Enabled.Count+"..Actors.Disabled.Count:"+Actors.Disabled.Count,this);}
-network.Despawn();
+if(!networkHidden)foreach(var client in NetworkManager.ConnectedClients){if(client.Key==NetworkManager.Singleton.ServerClientId)continue;
+network.NetworkHide(client.Key);}
+networkHidden=true;
 disabling=true;
 }
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
@@ -266,6 +269,9 @@ Disable();
 acting=true;
 collider.controller.enabled=true;
 collider           .enabled=true;
+if(networkHidden)foreach(var client in NetworkManager.ConnectedClients){if(client.Key==NetworkManager.Singleton.ServerClientId)continue;
+network.NetworkShow(client.Key);}
+networkHidden=false;
 }
 firstLoop=false;enabling=false;}
 if(acting){
@@ -352,7 +358,9 @@ NetworkUpdate();
 }
 protected virtual void NetworkUpdate(){
 if(NetworkManager.Singleton.IsServer){
+if(!networkHidden){
 networkPosition.Value=transform.position;
+}
 }
 if(NetworkManager.Singleton.IsClient){
 transform.position=networkPosition.Value;

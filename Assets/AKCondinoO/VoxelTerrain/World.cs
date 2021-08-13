@@ -472,9 +472,10 @@ m=MaterialIdPicking[0].Item1;
 return m;}
 protected Vector3 _deround{get;}=new Vector3(.5f,.5f,.5f);
 public virtual int cacheCount{get{return 1;}}
-public virtual void result(Vector3Int vCoord,Vector3 input,double[][][]nCache,MaterialId[][][]mCache,int nbrIdx,int inputIndex,ref Voxel v){if(nCache[0][nbrIdx]==null)nCache[0][nbrIdx]=new double[FlattenOffset];if(mCache[0][nbrIdx]==null)mCache[0][nbrIdx]=new MaterialId[FlattenOffset];
+public virtual void result(Vector3Int vCoord,Vector3 input,double[][][]nCache,MaterialId[][][]mCache,int nbrIdx,int inputIndex,ref Voxel v){if(nCache!=null&&nCache[0][nbrIdx]==null)nCache[0][nbrIdx]=new double[FlattenOffset];if(mCache!=null&&mCache[0][nbrIdx]==null)mCache[0][nbrIdx]=new MaterialId[FlattenOffset];
                                                      input+=_deround;
-double noiseValue1=nCache[0][nbrIdx][inputIndex]!=0?nCache[0][nbrIdx][inputIndex]:(nCache[0][nbrIdx][inputIndex]=Modules[IdxForHgt].GetValue(input.z,input.x,0));
+double Get(){return Modules[IdxForHgt].GetValue(input.z,input.x,0);}
+double noiseValue1=(nCache!=null&&nCache[0][nbrIdx][inputIndex]!=0)?nCache[0][nbrIdx][inputIndex]:(nCache!=null?(nCache[0][nbrIdx][inputIndex]=Get()):Get());
 if(input.y<=noiseValue1){double d;
 v=new Voxel(d=density(100,input,noiseValue1),Vector3.zero,material(d,input,mCache,nbrIdx,inputIndex));return;
 }
@@ -515,7 +516,7 @@ Modules.Add(module4c);
 MaterialIdSelectors[0]=(Select)module4b;
 }
 protected override MaterialId material(double density,Vector3 input,MaterialId[][][]mCache,int nbrIdx,int inputIndex){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
-if(mCache[0][nbrIdx][inputIndex]!=0){return mCache[0][nbrIdx][inputIndex];}
+if(mCache!=null&&mCache[0][nbrIdx][inputIndex]!=0){return mCache[0][nbrIdx][inputIndex];}
 double min=MaterialIdSelectors[0].Minimum;
 double max=MaterialIdSelectors[0].Maximum;
 double fallOff=MaterialIdSelectors[0].FallOff*.5;
@@ -525,7 +526,7 @@ m=MaterialIdPicking[0].Item2;
 }else{
 m=MaterialIdPicking[0].Item1;
 }
-return mCache[0][nbrIdx][inputIndex]=m;}
+return mCache!=null?mCache[0][nbrIdx][inputIndex]=m:m;}
 }
 #if UNITY_EDITOR
 public static void DrawBounds(Bounds b,Color color,float duration=0){//[https://gist.github.com/unitycoder/58f4b5d80f423d29e35c814a9556f9d9]

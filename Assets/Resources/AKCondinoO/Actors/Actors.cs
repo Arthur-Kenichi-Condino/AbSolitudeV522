@@ -167,7 +167,7 @@ if(backgroundData1.WaitOne(0)){
 SimActor Create(Type type,Vector3 position,Vector3 rotation){
 _getActor:{}
 if(SimActorPool[type].Count>0){//  get from pool
-SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.DisabledNode=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;load_Syn_All.Add(actor.load_Syn);actor.network.Spawn();return actor;
+SimActor actor=SimActorPool[type].First.Value;SimActorPool[type].RemoveFirst();actor.DisabledNode=null;actor.transform.rotation=Quaternion.Euler(rotation);actor.transform.position=position;load_Syn_All.Add(actor.load_Syn);if(!actor.network.IsSpawned)actor.network.Spawn();return actor;
 }else{
 Instantiate(Prefabs[type]);
 goto _getActor;
