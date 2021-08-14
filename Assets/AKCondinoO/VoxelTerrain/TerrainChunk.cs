@@ -815,18 +815,27 @@ resultDensity=density;
 if(!fileData.ContainsKey(cnkIdx3)){
 string editsFolder=string.Format("{0}{1}",savePath,cnkIdx3);string editsFile=string.Format("{0}/{1}",editsFolder,"terrainEdits.MessagePack");
 if(File.Exists(editsFile)){
+using(FileStream file=new FileStream(editsFile,FileMode.Open,FileAccess.Read,FileShare.Read)){
+var fileEdits=MessagePackSerializer.Deserialize(typeof(Dictionary<Vector3Int,(double density,MaterialId materialId)>),file)as Dictionary<Vector3Int,(double density,MaterialId materialId)>;
+fileData.Add(cnkIdx3,fileEdits);
+}
+}
+}
 
 //...
 
-}
-}
+Voxel currentVoxel;
+if(fileData.ContainsKey(cnkIdx3)&&fileData[cnkIdx3].ContainsKey(vCoord3)){var voxelData=fileData[cnkIdx3][vCoord3];
+currentVoxel=new Voxel(voxelData.density,Vector3.zero,voxelData.materialId);
 
 //...
 
-Voxel currentVoxel=new Voxel();
+}else{
+currentVoxel=new Voxel();
 Vector3 noiseInput=vCoord3;noiseInput.x+=cnkRgn3.x;
                            noiseInput.z+=cnkRgn3.y;
 biome.result(vCoord3,noiseInput,null,null,0,vCoord3.z+vCoord3.x*Depth,ref currentVoxel);
+}
 resultDensity=Math.Max(resultDensity,currentVoxel.Density);
 if(!saveData.ContainsKey(cnkIdx3))saveData.Add(cnkIdx3,new Dictionary<Vector3Int,(double density,MaterialId materialId)>());
 saveData[cnkIdx3][vCoord3]=(resultDensity,-resultDensity>=50d?MaterialId.Air:materialId);
