@@ -161,6 +161,7 @@ ignoreFromBuild=false,
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);
 TempTri=new NativeList<UInt32>(Allocator.Persistent);
+aStar.Awake(this,LOG,LOG_LEVEL);
 }
 public class TerrainChunkTask{
 [NonSerialized]static readonly ConcurrentQueue<TerrainChunk>queued=new ConcurrentQueue<TerrainChunk>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
@@ -646,6 +647,7 @@ void OnDestroy(){
 Stop=true;foregroundData.Dispose();backgroundData.Dispose();
 TempVer.Dispose();
 TempTri.Dispose();
+aStar.OnDestroy(LOG,LOG_LEVEL);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
 public bool Built{
@@ -736,36 +738,70 @@ new VertexAttributeDescriptor(VertexAttribute.TexCoord3,VertexAttributeFormat.Fl
 };
 [NonSerialized]readonly AStarPathfinderData aStar=new AStarPathfinderData();
 public class AStarPathfinderData{
-[NonSerialized]NativeList<RaycastCommand>MapGround;
-public void Awake(){
-MapGround=new NativeList<RaycastCommand>(Allocator.Persistent);
+[NonSerialized]NativeList<RaycastCommand>MapGroundRays;
+[NonSerialized]NativeList<RaycastHit    >MapGroundHits;
+[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
+[NonSerialized]TerrainChunk chunk;
+[NonSerialized]readonly List<RaycastHit>GroundMap=new List<RaycastHit>();
+public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
+MapGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
+MapGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
+
+//...
+
+waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
+waitUntilDirty=new WaitUntil(()=>Dirty);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("construção completa");
+update=chunk.StartCoroutine(Update(LOG,LOG_LEVEL));
+}
+public void OnDestroy(bool LOG,int LOG_LEVEL){
+chunk.StopCoroutine(update);foregroundData.Dispose();backgroundData.Dispose();
+
+//...
+
+MapGroundRays.Dispose();
+MapGroundHits.Dispose();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
+}
+enum PathfindStep{idle,doRaycasts}[NonSerialized]PathfindStep step=PathfindStep.idle;
+[NonSerialized]WaitUntil waitUntil_backgroundData;
+public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
+[NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntil_backgroundData");
+yield return waitUntil_backgroundData;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
+yield return waitUntilDirty;Dirty=false;
+step=PathfindStep.doRaycasts;
+while(step==PathfindStep.doRaycasts){
+
+//...
+
+yield return waitUntil_backgroundData;
 
 //...
 
 }
-public void OnDestroy(){
 
 //...
 
-MapGround.Dispose();
-}
-public void Update(){
+goto _Loop;}}
 
 //...
 
-}
-
-//...
-
-}
 public class AStarPathfinderTask{
-[NonSerialized]static readonly ConcurrentQueue<TerrainChunk>queued=new ConcurrentQueue<TerrainChunk>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
-public static void StartNew(TerrainChunk state){queued.Enqueue(state);enqueued.Set();}
+[NonSerialized]static readonly ConcurrentQueue<AStarPathfinderData>queued=new ConcurrentQueue<AStarPathfinderData>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
+public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enqueued.Set();}
 
 //...
 
-TerrainChunk current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
-void RenewData(TerrainChunk next){
+#region current processing data
+AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+void RenewData(AStarPathfinderData next){
+current=next;
+
+//...
+
+foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 //...
 
@@ -777,22 +813,33 @@ foregroundData=null;backgroundData=null;
 
 current=null;
 }
+#endregion current processing data
 
 //...
 
 public static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){enqueued.Set();}}
-}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]readonly Task task;public void Wait(){try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}}
 public AStarPathfinderTask(bool LOG,int LOG_LEVEL){
 
 //...
 
+task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,},TaskCreationOptions.LongRunning);
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
 Heap<Node>OpenNodes=new Heap<Node>();Heap<Node>ClosedNodes=new Heap<Node>();
-while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out TerrainChunk dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
+while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out AStarPathfinderData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
+if(current.step==PathfindStep.doRaycasts){
+for(int x=0;x<Width;++x){
+for(int z=0;z<Depth;++z){
+}
+}
+
+//...
+
+}
 
 //...
 
@@ -801,6 +848,7 @@ backgroundData.Set();ReleaseData();
 }
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}
 }
 }
 }
