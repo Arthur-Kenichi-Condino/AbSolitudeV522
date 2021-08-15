@@ -1,6 +1,7 @@
 using AKCondinoO.Voxels;
 using MLAPI;
 using MLAPI.NetworkVariable;
+using SebastianLague;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -370,6 +371,20 @@ public class AStarPathfinder{
 
 //...
 
+public class Node:IHeapItem<Node>{
+public int HeapIndex{get;set;}
+public float F{get;private set;}//  heuristics
+public float G{get{return g;}set{g=value;F=g+h;}}float g;//  node dis to start
+public float H{get{return h;}set{h=value;F=g+h;}}float h;//  node dis to target
+public int CompareTo(Node toCompare){
+   int comparison=F.CompareTo(toCompare.F);if(comparison==0){
+       comparison=H.CompareTo(toCompare.H);}
+return-comparison;}
+public Vector3 Position{get;set;}
+
+//...
+
+}
 }
 }
 }

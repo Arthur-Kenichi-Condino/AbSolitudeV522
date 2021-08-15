@@ -2,6 +2,7 @@ using MessagePack;
 using MLAPI;
 using MLAPI.NetworkVariable;
 using paulbourke.MarchingCubes;
+using SebastianLague;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -17,6 +18,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering;
 using static AKCondinoO.Voxels.World;
+using static AKCondinoO.Actors.SimActor.AStarPathfinder;
 namespace AKCondinoO.Voxels{public class TerrainChunk:NetworkBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;public bool DEBUG_MODE=true;
 public const ushort Height=(256);
 public const ushort Width=(16);
@@ -732,6 +734,76 @@ new VertexAttributeDescriptor(VertexAttribute.TexCoord1,VertexAttributeFormat.Fl
 new VertexAttributeDescriptor(VertexAttribute.TexCoord2,VertexAttributeFormat.Float32,2),
 new VertexAttributeDescriptor(VertexAttribute.TexCoord3,VertexAttributeFormat.Float32,2),
 };
+[NonSerialized]readonly AStarPathfinderData aStar=new AStarPathfinderData();
+public class AStarPathfinderData{
+[NonSerialized]NativeList<RaycastCommand>MapGround;
+public void Awake(){
+MapGround=new NativeList<RaycastCommand>(Allocator.Persistent);
+
+//...
+
+}
+public void OnDestroy(){
+
+//...
+
+MapGround.Dispose();
+}
+public void Update(){
+
+//...
+
+}
+
+//...
+
+}
+public class AStarPathfinderTask{
+[NonSerialized]static readonly ConcurrentQueue<TerrainChunk>queued=new ConcurrentQueue<TerrainChunk>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
+public static void StartNew(TerrainChunk state){queued.Enqueue(state);enqueued.Set();}
+
+//...
+
+TerrainChunk current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+void RenewData(TerrainChunk next){
+
+//...
+
+}
+void ReleaseData(){
+foregroundData=null;backgroundData=null;
+
+//...
+
+current=null;
+}
+
+//...
+
+public static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){enqueued.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;
+public AStarPathfinderTask(bool LOG,int LOG_LEVEL){
+
+//...
+
+void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
+Heap<Node>OpenNodes=new Heap<Node>();Heap<Node>ClosedNodes=new Heap<Node>();
+while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out TerrainChunk dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
+
+//...
+
+backgroundData.Set();ReleaseData();
+}_Stop:{
+}
+}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}
+}
+}
 public static class Editor{
 static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
