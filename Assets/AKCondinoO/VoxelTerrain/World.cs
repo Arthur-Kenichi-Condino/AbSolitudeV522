@@ -34,6 +34,7 @@ return new Vector2Int(coord.x*Width,coord.y*Depth);
 public GameObject ChunkPrefab;
 public static Vector2Int expropriationDistance{get;}=new Vector2Int(5,5);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=121;
 public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
+[NonSerialized]static readonly AStarPathfinderData.AStarPathfinderTask[]aStar=new AStarPathfinderData.AStarPathfinderTask[aStarCount];const int aStarCount=121;
 [NonSerialized]public static Bounds bounds;
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
@@ -57,7 +58,7 @@ if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"
 ThreadPool.GetAvailableThreads(out int worker ,out int io         );if(LOG&&LOG_LEVEL<=100){Debug.Log("Thread pool threads available at startup: Worker threads: "+worker+" Asynchronous I/O threads: "+io);}
 ThreadPool.GetMaxThreads(out int workerThreads,out int portThreads);if(LOG&&LOG_LEVEL<=100){Debug.Log("Maximum worker threads: "+workerThreads+" Maximum completion port threads: "+portThreads);           }
 ThreadPool.GetMinThreads(out int minWorker    ,out int minIOC     );if(LOG&&LOG_LEVEL<=100){Debug.Log("minimum number of worker threads: "+minWorker+" minimum asynchronous I/O: "+minIOC);                 }
-var idealMin=(tasksCount+Buildings.Buildings.tasksCount+2);if(minWorker!=idealMin){
+var idealMin=(tasksCount+1+aStarCount+Buildings.Buildings.tasksCount+Actors.Actors.tasksCount+2);if(minWorker!=idealMin){
 if(ThreadPool.SetMinThreads(idealMin,minIOC)){if(LOG&&LOG_LEVEL<=100){Debug.Log("changed minimum number of worker threads to:"+(idealMin));}
 }else{                                        if(LOG&&LOG_LEVEL<=100){Debug.Log("SetMinThreads failed");                                   }
 }
@@ -107,7 +108,8 @@ foreach(var s in navMeshValidation){Debug.LogError(s);}
 //...
 
 Editor.Awake(LOG,LOG_LEVEL);
-for(int i=0;i<tasks.Length;++i){tasks[i]=new TerrainChunkTask(LOG,LOG_LEVEL);}
+for(int i=0;i<tasks.Length;++i){tasks[i]=new                        TerrainChunkTask(LOG,LOG_LEVEL);}
+for(int i=0;i<aStar.Length;++i){aStar[i]=new AStarPathfinderData.AStarPathfinderTask(LOG,LOG_LEVEL);}
 
 //...
 
@@ -167,7 +169,8 @@ void OnDestroy(){
 //...
 
 Editor.OnDestroy(LOG,LOG_LEVEL);
-TerrainChunkTask.Stop=true;for(int i=0;i<tasks.Length;++i){tasks[i].Wait();}
+                       TerrainChunkTask.Stop=true;for(int i=0;i<tasks.Length;++i){tasks[i].Wait();}
+AStarPathfinderData.AStarPathfinderTask.Stop=true;for(int i=0;i<aStar.Length;++i){aStar[i].Wait();}
 
 //...to do: biome dispose
 

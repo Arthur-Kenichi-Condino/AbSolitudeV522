@@ -663,6 +663,7 @@ collider.sharedMesh=null;
 collider.sharedMesh=mesh;
 if(DEBUG_MODE)Debug.Assert(collider.sharedMesh!=null);
 navMeshDirty=true;
+aStar.Dirty=true;
 }else{
 renderer.enabled=false;
 collider.enabled=false;
@@ -742,13 +743,14 @@ public class AStarPathfinderData{
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
-[NonSerialized]readonly List<RaycastHit>GroundMap=new List<RaycastHit>();
+[NonSerialized]readonly Dictionary<int,Dictionary<int,RaycastHit>>GroundMap=new Dictionary<int,Dictionary<int,RaycastHit>>();
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
 MapGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
 MapGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
 
 //...
 
+waitUntil_doRaycastsHandle=new WaitUntil(()=>doRaycastsHandle.IsCompleted);
 waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
 waitUntilDirty=new WaitUntil(()=>Dirty);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("construção completa");
@@ -764,19 +766,29 @@ MapGroundHits.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
 enum PathfindStep{idle,doRaycasts}[NonSerialized]PathfindStep step=PathfindStep.idle;
+[NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
-public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
+[NonSerialized]public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
+[NonSerialized]Vector3 position;
 [NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntil_backgroundData");
 yield return waitUntil_backgroundData;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
+position=chunk.transform.position;
 step=PathfindStep.doRaycasts;
 while(step==PathfindStep.doRaycasts){
+MapGroundRays.Clear();
+MapGroundHits.Clear();
 
 //...
 
+backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
+//Debug.LogWarning(MapGroundRays.Length);
+//foreach(var command in MapGroundRays){Debug.DrawRay(command.from,command.direction*1f,Color.blue,1f);}
+doRaycastsHandle=RaycastCommand.ScheduleBatch(MapGroundRays,MapGroundHits,1,default(JobHandle));
+yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 
 //...
 
@@ -795,9 +807,14 @@ public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enq
 //...
 
 #region current processing data
+[NonSerialized]NativeList<RaycastCommand>MapGroundRays;
+[NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+Vector3 position{get;set;}
 void RenewData(AStarPathfinderData next){
 current=next;
+MapGroundRays=current.MapGroundRays;
+MapGroundHits=current.MapGroundHits;
 
 //...
 
@@ -805,6 +822,7 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 //...
 
+position=next.position;
 }
 void ReleaseData(){
 foregroundData=null;backgroundData=null;
@@ -829,11 +847,19 @@ task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,},TaskCreationOptions.L
 void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para A Star Pathfind");
+var watch=new System.Diagnostics.Stopwatch();
 Heap<Node>OpenNodes=new Heap<Node>();Heap<Node>ClosedNodes=new Heap<Node>();
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out AStarPathfinderData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
 if(current.step==PathfindStep.doRaycasts){
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
+int index=z+x*Depth;
+
+//...
+MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,Height/2f+1f,Depth/2f+z),Vector3.down));
+MapGroundHits.AddNoResize(new RaycastHit    ()                                                                      );
+
 }
 }
 
@@ -846,6 +872,7 @@ for(int z=0;z<Depth;++z){
 backgroundData.Set();ReleaseData();
 }_Stop:{
 }
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para A Star Pathfind graciosamente");
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
 }
