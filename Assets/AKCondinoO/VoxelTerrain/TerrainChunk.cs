@@ -1,3 +1,4 @@
+using AKCondinoO.Buildings;
 using MessagePack;
 using MLAPI;
 using MLAPI.NetworkVariable;
@@ -728,6 +729,10 @@ public void OnEdited(){
 rebuild=true;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("OnEdited();cnkRgn.."+cnkRgn+"..;cnkIdx.."+cnkIdx);
 }
+public void OnSimObjectAdded(SimObject simObject){
+aStar.Dirty=true;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("OnSimObjectAdded(SimObject simObject.."+simObject+"..)");
+}
 [NonSerialized]static readonly VertexAttributeDescriptor[]layout=new[]{
 new VertexAttributeDescriptor(VertexAttribute.Position ,VertexAttributeFormat.Float32,3),
 new VertexAttributeDescriptor(VertexAttribute.Normal   ,VertexAttributeFormat.Float32,3),
@@ -743,7 +748,7 @@ public class AStarPathfinderData{
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
-[NonSerialized]readonly Dictionary<int,Dictionary<int,RaycastHit>>GroundMap=new Dictionary<int,Dictionary<int,RaycastHit>>();
+[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
 MapGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
 MapGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
@@ -775,6 +780,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntil_backgroundData");
 yield return waitUntil_backgroundData;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
+GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();
 position=chunk.transform.position;
 step=PathfindStep.doRaycasts;
 while(step==PathfindStep.doRaycasts){
@@ -785,13 +791,64 @@ MapGroundHits.Clear();
 
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
-//Debug.LogWarning(MapGroundRays.Length);
-//foreach(var command in MapGroundRays){Debug.DrawRay(command.from,command.direction*1f,Color.blue,1f);}
+
+//...
+Debug.LogWarning("MapGroundRays.Length:"+MapGroundRays.Length);
+//foreach(var command in MapGroundRays){Debug.DrawRay(command.from,command.direction*1f,Color.blue,10f);}
+
 doRaycastsHandle=RaycastCommand.ScheduleBatch(MapGroundRays,MapGroundHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 
 //...
 
+if(!GroundMap.ContainsKey(GroundMapDepth))GroundMap[GroundMapDepth]=new ConcurrentDictionary<int,RaycastHit>();
+
+//...
+
+var groundFound=false;
+if(GroundMapDepth==0){
+for(int x=0,i=0;x<Width;++x    ){
+for(int z=0    ;z<Depth;++z,++i){var result=MapGroundHits[i];
+int index=z+x*Depth;
+//for(int i=0;i<MapGroundHits.Length;++i){
+if(result.collider!=null){
+groundFound=true;
+//Debug.LogWarning(i);
+GroundMap[GroundMapDepth][index]=result;
+}
+}
+}
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]GroundMapDepth.."+GroundMapDepth+"..,MapGroundHits.Length:"+MapGroundHits.Length);
+for(int x=0,i=0;x<Width;++x    ){
+for(int z=0    ;z<Depth;++z    ){var result=MapGroundHits[i];
+int index=z+x*Depth;
+if(GroundMap[GroundMapDepth-1].ContainsKey(index)){
+if(result.collider!=null){
+groundFound=true;
+if(LOG&&LOG_LEVEL<=-50)Debug.Log("[GroundMap]groundFound==true;z+x*Depth.."+index+"..;i.."+i);
+GroundMap[GroundMapDepth][index]=result;
+}
+++i;if(i>=MapGroundHits.Length)goto _LengthReached;}
+}
+}
+_LengthReached:{}
+}
+
+//...
+
+GroundMapDepth++;
+Debug.LogWarning(GroundMapDepth);
+
+//...
+
+if(!groundFound){
+
+//...
+step=PathfindStep.idle;
+Debug.LogWarning("!groundFound");
+
+}
 }
 
 //...
@@ -810,6 +867,7 @@ public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enq
 [NonSerialized]NativeList<RaycastCommand>MapGroundRays;
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}
 Vector3 position{get;set;}
 void RenewData(AStarPathfinderData next){
 current=next;
@@ -822,6 +880,7 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 //...
 
+GroundMap=next.GroundMap;
 position=next.position;
 }
 void ReleaseData(){
@@ -829,6 +888,7 @@ foregroundData=null;backgroundData=null;
 
 //...
 
+GroundMap=null;
 current=null;
 }
 #endregion current processing data
@@ -854,12 +914,23 @@ while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.Tr
 if(current.step==PathfindStep.doRaycasts){
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
+if(current.GroundMapDepth==0){
+MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,Height/2f+1f,-Depth/2f+z),Vector3.down));
+MapGroundHits.AddNoResize(new RaycastHit    ()                                                                       );
+}else{
 int index=z+x*Depth;
 
-//...
-MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,Height/2f+1f,Depth/2f+z),Vector3.down));
-MapGroundHits.AddNoResize(new RaycastHit    ()                                                                      );
+//... if GroundMapDepth-1 contains index
+if(GroundMap[current.GroundMapDepth-1].TryGetValue(index,out RaycastHit groundHit)){
 
+//...
+Debug.LogWarning("if GroundMapDepth-1 contains index "+index);
+MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,groundHit.point.y-.1f,-Depth/2f+z),Vector3.down));
+MapGroundHits.AddNoResize(new RaycastHit    ()                                                                                );
+
+}
+
+}
 }
 }
 
@@ -1114,6 +1185,9 @@ FG_editData.Add((at,mode,size,density,materialId,smoothness));
 void OnDrawGizmos(){
 if(backgroundData.WaitOne(0)){
 if(GIZMOS_ENABLED<=-100){for(int i=0;i<TempVer.Length;i++){Debug.DrawRay(transform.position+TempVer[i].pos,TempVer[i].normal,Color.white);}}
+if(GIZMOS_ENABLED<=-50){
+foreach(var mapDepth in aStar.GroundMap)foreach(var raycastHit in mapDepth.Value){Debug.DrawRay(raycastHit.Value.point,raycastHit.Value.normal,Color.gray);}
+}
 if(GIZMOS_ENABLED<=1){
 
 //...
