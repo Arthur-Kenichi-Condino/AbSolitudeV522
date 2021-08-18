@@ -748,7 +748,7 @@ public class AStarPathfinderData{
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
-[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;[NonSerialized]readonly ConcurrentDictionary<(int index,int depth),Node>Nodes=new ConcurrentDictionary<(int,int),Node>();[NonSerialized]readonly Queue<Node>NodePool=new Queue<Node>();
+[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;[NonSerialized]public readonly ConcurrentDictionary<(int index,int depth),Node>Nodes=new ConcurrentDictionary<(int,int),Node>();[NonSerialized]readonly Queue<Node>NodePool=new Queue<Node>();
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
 MapGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
 MapGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
@@ -958,8 +958,8 @@ for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
 for(int i=0;i<current.GroundMapDepth;++i){
 if(GroundMap[i].TryGetValue(index,out RaycastHit groundHit)){
-Node node;if(NodePool.Count>0){node=NodePool.Dequeue();}else{node=new Node();}
-node.Position=groundHit.point+new Vector3(0f,Node.Height/2f,0f);
+Node node;if(NodePool.Count>0){node=NodePool.Dequeue();Array.Clear(node.Neighbors,0,node.Neighbors.Length);}else{node=new Node();}
+node.Position=groundHit.point+new Vector3(0f,Node.Size.y/2f,0f);
 
 //... Debug.LogWarning(i);
 
@@ -968,17 +968,23 @@ Nodes[(index,i)]=node;
 }
 }
 }
-Node GetNeighbor(int index,int depthRef){
-if(depthRef==0){
+(Node node,int depthReferent)?GetNeighbor(Node toNode,int index,int depthReferent){
+float closestSqrDistance=Mathf.Infinity;Node best=null;int bestDepth=-1;(Node node,int depthReferent)?result=null;
+if(depthReferent==0){
 for(int i=0;i<current.GroundMapDepth;++i){
-if(Nodes.TryGetValue((index,i),out Node node)){
+if(Nodes.TryGetValue((index,i),out Node neighbor)&&neighbor!=toNode){
+Vector3 delta=neighbor.Position-toNode.Position;float sqrDistance=delta.sqrMagnitude;
+if(sqrDistance<closestSqrDistance){closestSqrDistance=sqrDistance;
 
 //...
+best=neighbor;bestDepth=i;
 
 }
 }
 }
-return null;}
+}
+if(best!=null)result=(best,bestDepth);
+return result;}
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
@@ -989,7 +995,7 @@ for(int i=0;i<current.GroundMapDepth;++i){
 if(Nodes.TryGetValue((index,i),out Node node)){
 
 //...
-if(z<Depth-1)node.Neighbors[0]=GetNeighbor((z+1)+(x  )*Depth,0);
+if(z<Depth-1)node.Neighbors[0]=GetNeighbor(node,(z+1)+(x  )*Depth,0);
 
 }
 }
@@ -1242,11 +1248,16 @@ FG_editData.Add((at,mode,size,density,materialId,smoothness));
 }
 }
 #if UNITY_EDITOR
+[NonSerialized]Color node_emptyColor=new Color(1,1,1,.25f);
 void OnDrawGizmos(){
 if(backgroundData.WaitOne(0)){
 if(GIZMOS_ENABLED<=-100){for(int i=0;i<TempVer.Length;i++){Debug.DrawRay(transform.position+TempVer[i].pos,TempVer[i].normal,Color.white);}}
 if(GIZMOS_ENABLED<=-50){
 foreach(var mapDepth in aStar.GroundMap)foreach(var raycastHit in mapDepth.Value){Debug.DrawRay(raycastHit.Value.point,raycastHit.Value.normal,Color.gray);}
+}
+if(GIZMOS_ENABLED<=-50){
+Gizmos.color=node_emptyColor;
+foreach(var node in aStar.Nodes){Gizmos.DrawCube(node.Value.Position,Node.Size);}
 }
 if(GIZMOS_ENABLED<=1){
 
