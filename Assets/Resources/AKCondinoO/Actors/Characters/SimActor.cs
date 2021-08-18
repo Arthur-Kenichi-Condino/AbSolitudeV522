@@ -381,9 +381,11 @@ public int CompareTo(Node toCompare){
        comparison=H.CompareTo(toCompare.H);}
 return-comparison;}
 public Vector3 Position{get;set;}
+public readonly Node[]Neighbors=new Node[26];
 
 //...
 
+public static float Height=1.75f;
 }
 }
 }

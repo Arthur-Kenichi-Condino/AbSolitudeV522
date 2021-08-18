@@ -748,7 +748,7 @@ public class AStarPathfinderData{
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
-[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;
+[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;[NonSerialized]readonly ConcurrentDictionary<(int index,int depth),Node>Nodes=new ConcurrentDictionary<(int,int),Node>();[NonSerialized]readonly Queue<Node>NodePool=new Queue<Node>();
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
 MapGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
 MapGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
@@ -770,7 +770,7 @@ MapGroundRays.Dispose();
 MapGroundHits.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-enum PathfindStep{idle,doRaycasts}[NonSerialized]PathfindStep step=PathfindStep.idle;
+enum PathfindStep{idle,doRaycasts,setNodes}[NonSerialized]PathfindStep step=PathfindStep.idle;
 [NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
@@ -780,7 +780,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntil_backgroundData");
 yield return waitUntil_backgroundData;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
-GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();
+GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();foreach(var node in Nodes.Values)NodePool.Enqueue(node);Nodes.Clear();
 position=chunk.transform.position;
 step=PathfindStep.doRaycasts;
 while(step==PathfindStep.doRaycasts){
@@ -792,10 +792,10 @@ MapGroundHits.Clear();
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
 
-//...
-Debug.LogWarning("MapGroundRays.Length:"+MapGroundRays.Length);
+//... Debug.LogWarning("MapGroundRays.Length:"+MapGroundRays.Length);
 //foreach(var command in MapGroundRays){Debug.DrawRay(command.from,command.direction*1f,Color.blue,10f);}
 
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]MapGroundRays.Length:"+MapGroundRays.Length);
 doRaycastsHandle=RaycastCommand.ScheduleBatch(MapGroundRays,MapGroundHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 
@@ -810,10 +810,9 @@ if(GroundMapDepth==0){
 for(int x=0,i=0;x<Width;++x    ){
 for(int z=0    ;z<Depth;++z,++i){var result=MapGroundHits[i];
 int index=z+x*Depth;
-//for(int i=0;i<MapGroundHits.Length;++i){
 if(result.collider!=null){
 groundFound=true;
-//Debug.LogWarning(i);
+if(LOG&&LOG_LEVEL<=-50)Debug.Log("[GroundMap]groundFound==true;z+x*Depth.."+index+"..;i.."+i);
 GroundMap[GroundMapDepth][index]=result;
 }
 }
@@ -838,21 +837,34 @@ _LengthReached:{}
 //...
 
 GroundMapDepth++;
-Debug.LogWarning(GroundMapDepth);
 
-//...
+//... Debug.LogWarning(GroundMapDepth);
 
 if(!groundFound){
 
+//... Debug.LogWarning("!groundFound");
+
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]!groundFound at GroundMapDepth:"+(GroundMapDepth-1));
+step=PathfindStep.setNodes;
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]next GroundMapDepth:"+GroundMapDepth);
+}
+}
+while(step==PathfindStep.setNodes){
+
+//... Debug.LogWarning("setNodes");
+
+backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
+yield return waitUntil_backgroundData;
+
 //...
+
 step=PathfindStep.idle;
-Debug.LogWarning("!groundFound");
-
-}
 }
 
 //...
 
+if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
 goto _Loop;}}
 
 //...
@@ -867,7 +879,7 @@ public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enq
 [NonSerialized]NativeList<RaycastCommand>MapGroundRays;
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
-ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}
+ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}ConcurrentDictionary<(int index,int depth),Node>Nodes{get;set;}Queue<Node>NodePool{get;set;}
 Vector3 position{get;set;}
 void RenewData(AStarPathfinderData next){
 current=next;
@@ -880,7 +892,7 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 //...
 
-GroundMap=next.GroundMap;
+GroundMap=next.GroundMap;Nodes=next.Nodes;NodePool=next.NodePool;
 position=next.position;
 }
 void ReleaseData(){
@@ -888,7 +900,7 @@ foregroundData=null;backgroundData=null;
 
 //...
 
-GroundMap=null;
+GroundMap=null;Nodes=null;NodePool=null;
 current=null;
 }
 #endregion current processing data
@@ -919,23 +931,71 @@ MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,He
 MapGroundHits.AddNoResize(new RaycastHit    ()                                                                       );
 }else{
 int index=z+x*Depth;
-
-//... if GroundMapDepth-1 contains index
 if(GroundMap[current.GroundMapDepth-1].TryGetValue(index,out RaycastHit groundHit)){
 
 //...
-Debug.LogWarning("if GroundMapDepth-1 contains index "+index);
+
+if(LOG&&LOG_LEVEL<=-50)Debug.Log("[GroundMap]current.GroundMapDepth-1.."+(current.GroundMapDepth-1)+"..contains index.."+index);
 MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,groundHit.point.y-.1f,-Depth/2f+z),Vector3.down));
 MapGroundHits.AddNoResize(new RaycastHit    ()                                                                                );
-
 }
-
 }
 }
 }
 
 //...
 
+}else
+if(current.step==PathfindStep.setNodes){
+if(LOG&&LOG_LEVEL<=1){Debug.Log("[GroundMap]começar PathfindStep.setNodes");watch.Restart();}
+
+//... Debug.LogWarning("setNodes");
+//foreach(var hitsDictionary in GroundMap){
+//}
+
+for(int x=0;x<Width;++x){
+for(int z=0;z<Depth;++z){
+int index=z+x*Depth;
+for(int i=0;i<current.GroundMapDepth;++i){
+if(GroundMap[i].TryGetValue(index,out RaycastHit groundHit)){
+Node node;if(NodePool.Count>0){node=NodePool.Dequeue();}else{node=new Node();}
+node.Position=groundHit.point+new Vector3(0f,Node.Height/2f,0f);
+
+//... Debug.LogWarning(i);
+
+Nodes[(index,i)]=node;
+}
+}
+}
+}
+Node GetNeighbor(int index,int depthRef){
+if(depthRef==0){
+for(int i=0;i<current.GroundMapDepth;++i){
+if(Nodes.TryGetValue((index,i),out Node node)){
+
+//...
+
+}
+}
+}
+return null;}
+for(int x=0;x<Width;++x){
+for(int z=0;z<Depth;++z){
+int index=z+x*Depth;
+for(int i=0;i<current.GroundMapDepth;++i){
+
+//...
+
+if(Nodes.TryGetValue((index,i),out Node node)){
+
+//...
+if(z<Depth-1)node.Neighbors[0]=GetNeighbor((z+1)+(x  )*Depth,0);
+
+}
+}
+}
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]terminado PathfindStep.setNodes, levou:"+watch.ElapsedMilliseconds+"ms");
 }
 
 //...
