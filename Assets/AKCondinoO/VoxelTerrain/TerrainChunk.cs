@@ -1003,7 +1003,7 @@ if(nx==1&&x>=Depth-1)continue;if(nx==-1&&x<=0)continue;
 (Node node,int depth)?neighbor;int neighborIndex=(z+nz)+(x+nx)*Depth;
 
 //...
-if((neighbor=GetNeighbor(node,index,neighborIndex,ni))!=null){node.Neighbors.Add((neighborIndex,ni),neighbor);}
+if((neighbor=GetNeighbor(node,index,neighborIndex,ni))!=null){node.Neighbors.[(neighborIndex,ni)]=neighbor;}
 //Debug.LogWarning(ni);
 //if(z<Depth-1&&(neighbor=GetNeighbor(node,(z+1)+(x  )*Depth,0))!=null)node.Neighbors.Add(neighbor);
 
