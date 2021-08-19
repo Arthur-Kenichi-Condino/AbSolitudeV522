@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 656939520501539933}
   - component: {fileID: -3860347435406505245}
   - component: {fileID: 6636455796538502035}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TerrainChunk
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -67,6 +67,10 @@ QualitySettings.vSyncCount=0;Application.targetFrameRate=targetFrameRate;
 
 //...
 
+PhysHelper.Awake();
+
+//...
+
 AtlasHelper.GetAtlasData(ChunkPrefab.GetComponent<MeshRenderer>().sharedMaterial);
 Vector3 fadeEnd,fadeStart;
 AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[1],fadeEnd=new Vector3((instantiationDistance.x+.5f)*Width,Height/2f,(instantiationDistance.y+.5f)*Depth));
@@ -370,7 +374,7 @@ if(navMeshAsyncOperation==null||navMeshAsyncOperation.isDone){
 navMeshDirty=false;DEBUG_BAKE_NAV_MESH=false;
 sources.Clear();sources.AddRange(navMeshSources.Values);
 markups.Clear();markups.AddRange(navMeshMarkups.Values);
-NavMeshBuilder.CollectSources(transform,LayerMask.GetMask("Default"),NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
+NavMeshBuilder.CollectSources(transform,PhysHelper.AllInteractableLayers,NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
 }

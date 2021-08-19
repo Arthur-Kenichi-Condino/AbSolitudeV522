@@ -381,7 +381,7 @@ public int CompareTo(Node toCompare){
        comparison=H.CompareTo(toCompare.H);}
 return-comparison;}
 public Vector3 Position{get;set;}
-public readonly(Node node,int depthReferent)?[]Neighbors=new(Node,int)?[26];
+public readonly Dictionary<(int index,int depthReferent),(Node node,int depth)?>Neighbors=new Dictionary<(int,int),(Node,int)?>(26);
 
 //...
 

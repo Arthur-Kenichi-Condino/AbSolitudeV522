@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2504931625255729057}
   - component: {fileID: 5029025489257026271}
   - component: {fileID: 3533884388447253177}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: SimActor
   m_TagString: Untagged
   m_Icon: {fileID: 0}

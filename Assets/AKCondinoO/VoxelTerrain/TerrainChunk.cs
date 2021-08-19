@@ -927,8 +927,8 @@ if(current.step==PathfindStep.doRaycasts){
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
 if(current.GroundMapDepth==0){
-MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,Height/2f+1f,-Depth/2f+z),Vector3.down));
-MapGroundHits.AddNoResize(new RaycastHit    ()                                                                       );
+MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,Height/2f+1f,-Depth/2f+z),Vector3.down,257,PhysHelper.NoCharacterLayer));
+MapGroundHits.AddNoResize(new RaycastHit    ()                                                                                                       );
 }else{
 int index=z+x*Depth;
 if(GroundMap[current.GroundMapDepth-1].TryGetValue(index,out RaycastHit groundHit)){
@@ -936,8 +936,8 @@ if(GroundMap[current.GroundMapDepth-1].TryGetValue(index,out RaycastHit groundHi
 //...
 
 if(LOG&&LOG_LEVEL<=-50)Debug.Log("[GroundMap]current.GroundMapDepth-1.."+(current.GroundMapDepth-1)+"..contains index.."+index);
-MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,groundHit.point.y-.1f,-Depth/2f+z),Vector3.down));
-MapGroundHits.AddNoResize(new RaycastHit    ()                                                                                );
+MapGroundRays.AddNoResize(new RaycastCommand(position+new Vector3(-Width/2f+x,groundHit.point.y-.1f,-Depth/2f+z),Vector3.down,257,PhysHelper.NoCharacterLayer));
+MapGroundHits.AddNoResize(new RaycastHit    ()                                                                                                                );
 }
 }
 }
@@ -958,7 +958,7 @@ for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
 for(int i=0;i<current.GroundMapDepth;++i){
 if(GroundMap[i].TryGetValue(index,out RaycastHit groundHit)){
-Node node;if(NodePool.Count>0){node=NodePool.Dequeue();Array.Clear(node.Neighbors,0,node.Neighbors.Length);}else{node=new Node();}
+Node node;if(NodePool.Count>0){node=NodePool.Dequeue();node.Neighbors.Clear();}else{node=new Node();}
 node.Position=groundHit.point+new Vector3(0f,Node.Size.y/2f,0f);
 
 //... Debug.LogWarning(i);
@@ -968,12 +968,12 @@ Nodes[(index,i)]=node;
 }
 }
 }
-(Node node,int depthReferent)?GetNeighbor(Node toNode,int index,int depthReferent){
-float closestSqrDistance=Mathf.Infinity;Node best=null;int bestDepth=-1;(Node node,int depthReferent)?result=null;
+(Node node,int depth)?GetNeighbor(Node node,int nodeIndex,int index,int depthReferent){
+float closestSqrDistance=Mathf.Infinity;Node best=null;int bestDepth=-1;(Node node,int depth)?result=null;
 if(depthReferent==0){
 for(int i=0;i<current.GroundMapDepth;++i){
-if(Nodes.TryGetValue((index,i),out Node neighbor)&&neighbor!=toNode){
-Vector3 delta=neighbor.Position-toNode.Position;float sqrDistance=delta.sqrMagnitude;
+if(Nodes.TryGetValue((index,i),out Node neighbor)&&neighbor!=node){
+Vector3 delta=neighbor.Position-node.Position;float sqrDistance=delta.sqrMagnitude;
 if(sqrDistance<closestSqrDistance){closestSqrDistance=sqrDistance;
 
 //...
@@ -994,8 +994,22 @@ for(int i=0;i<current.GroundMapDepth;++i){
 
 if(Nodes.TryGetValue((index,i),out Node node)){
 
+for(int nx=-1;nx<=1;++nx){
+for(int nz=-1;nz<=1;++nz){
+for(int ni=0;ni!=2;ni=(ni==0?1:(ni==1?-1:2))){
+if(nx==0&&nz==0&&ni==0)continue;
+if(nz==1&&z>=Depth-1)continue;if(nz==-1&&z<=0)continue;
+if(nx==1&&x>=Depth-1)continue;if(nx==-1&&x<=0)continue;
+(Node node,int depth)?neighbor;int neighborIndex=(z+nz)+(x+nx)*Depth;
+
 //...
-if(z<Depth-1)node.Neighbors[0]=GetNeighbor(node,(z+1)+(x  )*Depth,0);
+if((neighbor=GetNeighbor(node,index,neighborIndex,ni))!=null){node.Neighbors.Add((neighborIndex,ni),neighbor);}
+//Debug.LogWarning(ni);
+//if(z<Depth-1&&(neighbor=GetNeighbor(node,(z+1)+(x  )*Depth,0))!=null)node.Neighbors.Add(neighbor);
+
+}
+}
+}
 
 }
 }
