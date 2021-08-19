@@ -748,7 +748,7 @@ public class AStarPathfinderData{
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
-[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;[NonSerialized]public readonly ConcurrentDictionary<(int index,int depth),Node>Nodes=new ConcurrentDictionary<(int,int),Node>();[NonSerialized]readonly Queue<Node>NodePool=new Queue<Node>();
+[NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;[NonSerialized]readonly ConcurrentDictionary<(int index,int depth),Node>processingNodes=new ConcurrentDictionary<(int,int),Node>();public ConcurrentDictionary<(int index,int depth),Node>Nodes{get;private set;}[NonSerialized]readonly Queue<Node>NodePool=new Queue<Node>();
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
 MapGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
 MapGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
@@ -780,7 +780,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntil_backgroundData");
 yield return waitUntil_backgroundData;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
-GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();foreach(var node in Nodes.Values)NodePool.Enqueue(node);Nodes.Clear();
+GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();Nodes=null;foreach(var node in processingNodes.Values)NodePool.Enqueue(node);processingNodes.Clear();
 position=chunk.transform.position;
 step=PathfindStep.doRaycasts;
 while(step==PathfindStep.doRaycasts){
@@ -864,6 +864,10 @@ step=PathfindStep.idle;
 
 //...
 
+Nodes=processingNodes;
+
+//...
+
 if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
 goto _Loop;}}
 
@@ -879,7 +883,7 @@ public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enq
 [NonSerialized]NativeList<RaycastCommand>MapGroundRays;
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
 AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
-ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}ConcurrentDictionary<(int index,int depth),Node>Nodes{get;set;}Queue<Node>NodePool{get;set;}
+ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}ConcurrentDictionary<(int index,int depth),Node>processingNodes{get;set;}Queue<Node>NodePool{get;set;}
 Vector3 position{get;set;}
 void RenewData(AStarPathfinderData next){
 current=next;
@@ -892,7 +896,7 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 //...
 
-GroundMap=next.GroundMap;Nodes=next.Nodes;NodePool=next.NodePool;
+GroundMap=next.GroundMap;processingNodes=next.processingNodes;NodePool=next.NodePool;
 position=next.position;
 }
 void ReleaseData(){
@@ -900,7 +904,7 @@ foregroundData=null;backgroundData=null;
 
 //...
 
-GroundMap=null;Nodes=null;NodePool=null;
+GroundMap=null;processingNodes=null;NodePool=null;
 current=null;
 }
 #endregion current processing data
@@ -963,17 +967,17 @@ node.Position=groundHit.point+new Vector3(0f,Node.Size.y/2f,0f);
 
 //... Debug.LogWarning(i);
 
-Nodes[(index,i)]=node;
+processingNodes[(index,i)]=node;
 }
 }
 }
 }
-(Node node,int depth)?GetNeighbor(Node node,int nodeIndex,int index,int depthReferent){
+(Node node,int depth)?GetNeighbor(Node ofNode,int ofNodeIndex,int ofNodeDepth,int index,int depthReferent){
 float closestSqrDistance=Mathf.Infinity;Node best=null;int bestDepth=-1;(Node node,int depth)?result=null;
 if(depthReferent==0){
 for(int i=0;i<current.GroundMapDepth;++i){
-if(Nodes.TryGetValue((index,i),out Node neighbor)&&neighbor!=node){
-Vector3 delta=neighbor.Position-node.Position;float sqrDistance=delta.sqrMagnitude;
+if(processingNodes.TryGetValue((index,i),out Node neighbor)&&neighbor!=ofNode){
+Vector3 delta=neighbor.Position-ofNode.Position;float sqrDistance=delta.sqrMagnitude;
 if(sqrDistance<closestSqrDistance){closestSqrDistance=sqrDistance;
 
 //...
@@ -982,6 +986,16 @@ best=neighbor;bestDepth=i;
 }
 }
 }
+}else{
+
+//... 
+(Node node,int depth)?depthReferentZeroNeighbor=null;if(index==ofNodeIndex){depthReferentZeroNeighbor=(ofNode,ofNodeDepth);}else if(ofNode.Neighbors.TryGetValue((index,0),out(Node node,int depth)neighborAtZero)){depthReferentZeroNeighbor=neighborAtZero;}
+if(depthReferentZeroNeighbor!=null){int i=depthReferentZeroNeighbor.Value.depth+depthReferent;
+if(i>=0&&i<current.GroundMapDepth){
+if(processingNodes.TryGetValue((index,i),out Node neighbor)){best=neighbor;bestDepth=i;}
+}
+}
+
 }
 if(best!=null)result=(best,bestDepth);
 return result;}
@@ -992,7 +1006,7 @@ for(int i=0;i<current.GroundMapDepth;++i){
 
 //...
 
-if(Nodes.TryGetValue((index,i),out Node node)){
+if(processingNodes.TryGetValue((index,i),out Node node)){
 
 for(int nx=-1;nx<=1;++nx){
 for(int nz=-1;nz<=1;++nz){
@@ -1003,7 +1017,7 @@ if(nx==1&&x>=Depth-1)continue;if(nx==-1&&x<=0)continue;
 (Node node,int depth)?neighbor;int neighborIndex=(z+nz)+(x+nx)*Depth;
 
 //...
-if((neighbor=GetNeighbor(node,index,neighborIndex,ni))!=null){node.Neighbors[(neighborIndex,ni)]=neighbor;}
+if((neighbor=GetNeighbor(node,index,i,neighborIndex,ni))!=null){node.Neighbors[(neighborIndex,ni)]=neighbor.Value;}
 //Debug.LogWarning(ni);
 //if(z<Depth-1&&(neighbor=GetNeighbor(node,(z+1)+(x  )*Depth,0))!=null)node.Neighbors.Add(neighbor);
 
@@ -1262,7 +1276,7 @@ FG_editData.Add((at,mode,size,density,materialId,smoothness));
 }
 }
 #if UNITY_EDITOR
-[NonSerialized]Color node_emptyColor=new Color(1,1,1,.25f);
+[NonSerialized]Color node_emptyColor=new Color(1f,1f,1f,.25f);
 void OnDrawGizmos(){
 if(backgroundData.WaitOne(0)){
 if(GIZMOS_ENABLED<=-100){for(int i=0;i<TempVer.Length;i++){Debug.DrawRay(transform.position+TempVer[i].pos,TempVer[i].normal,Color.white);}}
@@ -1271,7 +1285,16 @@ foreach(var mapDepth in aStar.GroundMap)foreach(var raycastHit in mapDepth.Value
 }
 if(GIZMOS_ENABLED<=-50){
 Gizmos.color=node_emptyColor;
-foreach(var node in aStar.Nodes){Gizmos.DrawCube(node.Value.Position,Node.Size);}
+if(aStar.Nodes!=null)foreach(var node in aStar.Nodes){Gizmos.DrawCube(node.Value.Position,Node.Size);
+
+//...
+if(GIZMOS_ENABLED<=-55){
+foreach(var neighbour in node.Value.Neighbors){
+Debug.DrawLine(node.Value.Position,neighbour.Value.node.Position,Color.gray);
+}
+}
+
+}
 }
 if(GIZMOS_ENABLED<=1){
 

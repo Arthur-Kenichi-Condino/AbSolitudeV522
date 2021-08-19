@@ -60,12 +60,12 @@ MonoBehaviour:
   LOG: 1
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
-  DEBUG_MODE: 1
+  DEBUG_MODE: 0
   UI_FPS: {fileID: 6392957710868812963}
   ChunkPrefab: {fileID: 691516936545703101, guid: 1bf1030aa1d826f41a3ecea1210331d0, type: 3}
   targetFrameRate: 60
   DEBUG_EDIT: 0
-  DEBUG_EDIT_AT: {x: 0, y: 40, z: 0}
+  DEBUG_EDIT_AT: {x: 0, y: 25, z: 0}
   DEBUG_EDIT_MODE: 0
   DEBUG_EDIT_SIZE: {x: 2, y: 2, z: 2}
   DEBUG_EDIT_DENSITY: 100
@@ -84,7 +84,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6940eb832927ba4ea057e82d7382e9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 1
+  LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
 --- !u!114 &4816931177634341524
@@ -779,18 +779,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: MainCamera
       objectReference: {fileID: 0}
-    - target: {fileID: 4660232739150520187, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
-      propertyPath: m_Depth
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4660232739150520187, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
-      propertyPath: m_ClearFlags
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 4660232739150520187, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
-      propertyPath: m_CullingMask.m_Bits
-      value: 55
-      objectReference: {fileID: 0}
     - target: {fileID: 4660232739150520188, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
       propertyPath: m_RootOrder
       value: 4
@@ -834,10 +822,6 @@ PrefabInstance:
     - target: {fileID: 4660232739150520188, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4703390639836107538, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
-      propertyPath: LOG_LEVEL
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 27ab21e5d0f0ca442af227b215605a94, type: 3}
