@@ -382,6 +382,7 @@ public int CompareTo(Node toCompare){
 return-comparison;}
 public Vector3 Position{get;set;}
 public readonly ConcurrentDictionary<(int index,int depthReferent),(Node node,int depth)>Neighbors=new ConcurrentDictionary<(int,int),(Node,int)>(2,26);
+public RaycastHit ObstructedBy{get;set;}
 
 //...
 
