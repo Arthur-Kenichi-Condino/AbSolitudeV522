@@ -760,9 +760,6 @@ CheckObstructionRays=new NativeList<BoxcastCommand>(Allocator.Persistent);
 CheckObstructionHits=new NativeList<RaycastHit    >(Allocator.Persistent);
 ValidateNeighborRays=new NativeList<BoxcastCommand>(Width*Depth*26,Allocator.Persistent);
 ValidateNeighborHits=new NativeList<RaycastHit    >(Width*Depth*26,Allocator.Persistent);ValidateNeighborResults.Capacity=Width*Depth*26;
-
-//...
-
 waitUntil_doRaycastsHandle=new WaitUntil(()=>doRaycastsHandle.IsCompleted);
 waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
 waitUntilIdle=new WaitUntil(()=>step==PathfindStep.idle);
@@ -773,9 +770,6 @@ update=chunk.StartCoroutine(Update(LOG,LOG_LEVEL));buildPaths=chunk.StartCorouti
 }
 public void OnDestroy(bool LOG,int LOG_LEVEL){
 chunk.StopCoroutine(update);chunk.StopCoroutine(buildPaths);foregroundData.Dispose();backgroundData.Dispose();
-
-//...
-
 MapGroundRays.Dispose();
 MapGroundHits.Dispose();
 CheckObstructionRays.Dispose();
@@ -801,25 +795,12 @@ int nodeCount=0;
 while(step==PathfindStep.doRaycasts){
 MapGroundRays.Clear();
 MapGroundHits.Clear();
-
-//...
-
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
-
-//... Debug.LogWarning("MapGroundRays.Length:"+MapGroundRays.Length);
-//foreach(var command in MapGroundRays){Debug.DrawRay(command.from,command.direction*1f,Color.blue,10f);}
-
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]MapGroundRays.Length:"+MapGroundRays.Length);
 doRaycastsHandle=RaycastCommand.ScheduleBatch(MapGroundRays,MapGroundHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
-
-//...
-
 if(!GroundMap.ContainsKey(GroundMapDepth))GroundMap[GroundMapDepth]=new ConcurrentDictionary<int,RaycastHit>();
-
-//...
-
 var groundFound=false;
 if(GroundMapDepth==0){
 for(int x=0,i=0;x<Width;++x    ){
@@ -848,59 +829,33 @@ GroundMap[GroundMapDepth][index]=result;
 }
 _LengthReached:{}
 }
-
-//... Debug.LogWarning(GroundMapDepth);
-
 if(!groundFound){
-
-//... Debug.LogWarning("!groundFound");
-
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]!groundFound at GroundMapDepth:"+GroundMapDepth);
 step=PathfindStep.setNodes;
 }else{
-
-//...
-
 GroundMapDepth++;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]next GroundMapDepth:"+GroundMapDepth);
 }
 }
 ValidatingNeighbors=false;
 if(step==PathfindStep.setNodes){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]setNodes");
 CheckObstructionRays.Clear();if(CheckObstructionRays.Capacity<nodeCount)CheckObstructionRays.Capacity=nodeCount;
 CheckObstructionHits.Clear();if(CheckObstructionHits.Capacity<nodeCount)CheckObstructionHits.Capacity=nodeCount;CheckObstructionResults.Clear();if(CheckObstructionResults.Capacity<nodeCount)CheckObstructionResults.Capacity=nodeCount;
-
-//... Debug.LogWarning("setNodes");
-
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
-
-//...
-
 if(CheckObstructionRays.Length>0){
-
-//...
-//foreach(var command in CheckObstructionRays){Debug.DrawRay(command.center,command.direction*1f,Color.red,10f);}
-
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]CheckObstructionRays.Length:"+CheckObstructionRays.Length);
 doRaycastsHandle=BoxcastCommand.ScheduleBatch(CheckObstructionRays,CheckObstructionHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
-
-//...
 CheckObstructionResults.AddRange(CheckObstructionHits.AsArray());
-//for(int i=0;i<CheckObstructionHits.Length;i++){CheckObstructionResults.Add(CheckObstructionHits[i]);}
-
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
-
-//...
 ValidatingNeighbors=true;ValidatingNeighborsDepth=0;
 ValidateNeighborResults.Clear();
 while(ValidatingNeighborsDepth<=GroundMapDepth){
 ValidateNeighborRays.Clear();
 ValidateNeighborHits.Clear();
-
-//...
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
 if(ValidatingNeighborsDepth<GroundMapDepth){
@@ -910,7 +865,6 @@ yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 ValidateNeighborResults.Clear();
 ValidateNeighborResults.AddRange(ValidateNeighborHits.AsArray());
 }
-
 ++ValidatingNeighborsDepth;}
 }
 }
@@ -1022,12 +976,7 @@ MapGroundHits.AddNoResize(new RaycastHit    ()                                  
 }else
 if(current.step==PathfindStep.setNodes){
 if(CheckObstructionResults.Count==0){
-if(LOG&&LOG_LEVEL<=1){Debug.Log("[GroundMap]começar PathfindStep.setNodes");watch.Restart();}
-
-//... Debug.LogWarning("setNodes");
-//foreach(var hitsDictionary in GroundMap){
-//}
-
+if(LOG&&LOG_LEVEL<=1){Debug.Log("[GroundMap]começar PathfindStep.setNodes and CheckObstructionRays");watch.Restart();}
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
@@ -1036,14 +985,11 @@ if(GroundMap[i].TryGetValue(index,out RaycastHit groundHit)){
 Node node;if(NodePool.Count>0){node=NodePool.Dequeue();node.ObstructedBy=default(RaycastHit);node.Neighbors.Clear();node.ObstructionToNeighbor.Clear();}else{node=new Node();}
 node.Position=groundHit.point+new Vector3(0f,Node.Size.y/2f,0f);
 
-//...Debug.LogWarning(i);
+//...
 
 processingNodes[(index,i)]=node;
-
-//...
 CheckObstructionRays.AddNoResize(new BoxcastCommand(groundHit.point-(Vector3.up*(Node.Size.y/2f))-(Vector3.up*.1f),Node.Size/2f,Quaternion.identity,Vector3.up,Node.Size.y+.1f,PhysHelper.NoCharacterLayer));
 CheckObstructionHits.AddNoResize(new RaycastHit    ()                                                                                                                                                      );
-
 }
 }
 }
@@ -1055,23 +1001,17 @@ for(int i=0;i<current.GroundMapDepth;++i){
 if(processingNodes.TryGetValue((index,i),out Node neighbor)&&neighbor!=ofNode){
 Vector3 delta=neighbor.Position-ofNode.Position;float sqrDistance=delta.sqrMagnitude;
 if(sqrDistance<closestSqrDistance){closestSqrDistance=sqrDistance;
-
-//...
 best=neighbor;bestDepth=i;
-
 }
 }
 }
 }else{
-
-//... 
 (Node node,int depth)?depthReferentZeroNeighbor=null;if(index==ofNodeIndex){depthReferentZeroNeighbor=(ofNode,ofNodeDepth);}else if(ofNode.Neighbors.TryGetValue((index,0),out(Node node,int depth)neighborAtZero)){depthReferentZeroNeighbor=neighborAtZero;}
 if(depthReferentZeroNeighbor!=null){int i=depthReferentZeroNeighbor.Value.depth+depthReferent;
 if(i>=0&&i<current.GroundMapDepth){
 if(processingNodes.TryGetValue((index,i),out Node neighbor)){best=neighbor;bestDepth=i;}
 }
 }
-
 }
 if(best!=null)result=(best,bestDepth);
 return result;}
@@ -1079,11 +1019,7 @@ for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
 for(int i=0;i<current.GroundMapDepth;++i){
-
-//...
-
 if(processingNodes.TryGetValue((index,i),out Node node)){
-
 for(int nx=-1;nx<=1;++nx){
 for(int nz=-1;nz<=1;++nz){
 for(int ni=0;ni!=2;ni=(ni==0?1:(ni==1?-1:2))){
@@ -1091,25 +1027,17 @@ if(nx==0&&nz==0&&ni==0)continue;
 if(nz==1&&z>=Depth-1)continue;if(nz==-1&&z<=0)continue;
 if(nx==1&&x>=Width-1)continue;if(nx==-1&&x<=0)continue;
 (Node node,int depth)?neighbor;int neighborIndex=(z+nz)+(x+nx)*Depth;
-
-//...
 if((neighbor=GetNeighbor(node,index,i,neighborIndex,ni))!=null){node.Neighbors[(neighborIndex,ni)]=neighbor.Value;}
-//Debug.LogWarning(ni);
-//if(z<Depth-1&&(neighbor=GetNeighbor(node,(z+1)+(x  )*Depth,0))!=null)node.Neighbors.Add(neighbor);
-
-}
-}
-}
-
 }
 }
 }
 }
-if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]terminado PathfindStep.setNodes, levou:"+watch.ElapsedMilliseconds+"ms");
+}
+}
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]terminado PathfindStep.setNodes and CheckObstructionRays, levou:"+watch.ElapsedMilliseconds+"ms");
 }else if(!current.ValidatingNeighbors){
-
-//...
-//Debug.LogWarning(CheckObstructionResults.Count);
+if(LOG&&LOG_LEVEL<=1){Debug.Log("[GroundMap]set CheckObstructionResults.Count:"+CheckObstructionResults.Count);watch.Restart();}
 int ri=0;
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
@@ -1124,16 +1052,12 @@ node.ObstructedBy=CheckObstructionResults[ri];
 }
 }
 }
-//Debug.LogWarning(current.GroundMapDepth);
-
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]terminado set CheckObstructionResults, levou:"+watch.ElapsedMilliseconds+"ms");
 }else{
 
 //...
 
 if(ValidateNeighborResults.Count>0){
-
-//...
-//Debug.LogWarning(current.ValidatingNeighborsDepth);
 int ri=0;
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
@@ -1148,9 +1072,7 @@ if(nz==1&&z>=Depth-1)continue;if(nz==-1&&z<=0)continue;
 if(nx==1&&x>=Width-1)continue;if(nx==-1&&x<=0)continue;
 int neighborIndex=(z+nz)+(x+nx)*Depth;
 if(node.Neighbors.TryGetValue((neighborIndex,ni),out(Node node,int depth)neighbor)){
-
 node.ObstructionToNeighbor[(neighborIndex,ni)]=(ValidateNeighborResults[ri],neighbor.depth);
-
 ++ri;}
 }
 }
@@ -1158,12 +1080,9 @@ node.ObstructionToNeighbor[(neighborIndex,ni)]=(ValidateNeighborResults[ri],neig
 }
 }
 }
-
 }
 if(current.ValidatingNeighborsDepth<current.GroundMapDepth){
-
-//Debug.LogWarning(current.ValidatingNeighborsDepth+"..of.."+current.GroundMapDepth);
-//...
+if(LOG&&LOG_LEVEL<=1)Debug.Log("current.ValidatingNeighborsDepth:"+current.ValidatingNeighborsDepth+"../.."+(current.GroundMapDepth-1));
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
@@ -1179,27 +1098,18 @@ if(nx==0&&nz==0&&ni==0)continue;
 if(nz==1&&z>=Depth-1)continue;if(nz==-1&&z<=0)continue;
 if(nx==1&&x>=Width-1)continue;if(nx==-1&&x<=0)continue;
 int neighborIndex=(z+nz)+(x+nx)*Depth;
-
 if(node.Neighbors.TryGetValue((neighborIndex,ni),out(Node node,int depth)neighbor)){
-
-//...
 var forward=(neighbor.node.Position-node.Position).normalized;var lookRotation=Quaternion.LookRotation(forward);var dis=Vector3.Distance(neighbor.node.Position,node.Position);
 ValidateNeighborRays.AddNoResize(new BoxcastCommand(((neighbor.node.Position+node.Position)/2f)-(Vector3.up*(Node.Size.y/2f))-(Vector3.up*.1f)-(Vector3.up*Mathf.Abs(neighbor.node.Position.y-node.Position.y)),new Vector3(Node.Size.x,.1f,dis)/2f,lookRotation,Vector3.up,Node.Size.y+.1f+Mathf.Abs(neighbor.node.Position.y-node.Position.y),PhysHelper.NoCharacterLayer));
 ValidateNeighborHits.AddNoResize(new RaycastHit    ()                                                                                                                                                                                                                                                                                                                       );
-
-}
-
 }
 }
 }
-
-}
-
 }
 }
-
 }
-
+}
+}
 }
 }else 
 if(current.step==PathfindStep.buildPath){
