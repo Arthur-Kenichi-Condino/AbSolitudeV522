@@ -381,8 +381,8 @@ public int CompareTo(Node toCompare){
        comparison=H.CompareTo(toCompare.H);}
 return-comparison;}
 public Vector3 Position{get;set;}
-public readonly ConcurrentDictionary<(int index,int depthReferent),(Node node,int depth)>Neighbors=new ConcurrentDictionary<(int,int),(Node,int)>(2,26);
 public RaycastHit ObstructedBy{get;set;}
+public readonly ConcurrentDictionary<(int index,int depthReferent),(Node node,int depth)>Neighbors=new ConcurrentDictionary<(int,int),(Node,int)>(2,26);public readonly ConcurrentDictionary<(int index,int depthReferent),(RaycastHit collision,int depth)>ObstructionToNeighbor=new ConcurrentDictionary<(int,int),(RaycastHit,int)>(2,26);
 
 //...
 

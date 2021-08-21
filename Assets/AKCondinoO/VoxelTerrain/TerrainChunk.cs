@@ -765,12 +765,14 @@ ValidateNeighborHits=new NativeList<RaycastHit    >(Width*Depth*26,Allocator.Per
 
 waitUntil_doRaycastsHandle=new WaitUntil(()=>doRaycastsHandle.IsCompleted);
 waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
+waitUntilIdle=new WaitUntil(()=>step==PathfindStep.idle);
 waitUntilDirty=new WaitUntil(()=>Dirty);
+waitUntilReady=new WaitUntil(()=>Nodes!=null);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("construção completa");
-update=chunk.StartCoroutine(Update(LOG,LOG_LEVEL));
+update=chunk.StartCoroutine(Update(LOG,LOG_LEVEL));buildPaths=chunk.StartCoroutine(BuildPaths(LOG,LOG_LEVEL));
 }
 public void OnDestroy(bool LOG,int LOG_LEVEL){
-chunk.StopCoroutine(update);foregroundData.Dispose();backgroundData.Dispose();
+chunk.StopCoroutine(update);chunk.StopCoroutine(buildPaths);foregroundData.Dispose();backgroundData.Dispose();
 
 //...
 
@@ -782,16 +784,16 @@ ValidateNeighborRays.Dispose();
 ValidateNeighborHits.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-enum PathfindStep{idle,doRaycasts,setNodes,buildPath}[NonSerialized]PathfindStep step=PathfindStep.idle;
+enum PathfindStep{idle,doRaycasts,setNodes,buildPath}[NonSerialized]PathfindStep step=PathfindStep.idle;[NonSerialized]WaitUntil waitUntilIdle;
 [NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
 [NonSerialized]Vector3 position;
 [NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
-if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntil_backgroundData");
-yield return waitUntil_backgroundData;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilIdle for any buildPath task to end, and then set Nodes=null so no new tasks start");
+yield return waitUntilIdle;
 GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();Nodes=null;foreach(var node in processingNodes.Values)NodePool.Enqueue(node);processingNodes.Clear();
 position=chunk.transform.position;
 step=PathfindStep.doRaycasts;
@@ -910,21 +912,22 @@ ValidateNeighborResults.AddRange(ValidateNeighborHits.AsArray());
 }
 
 ++ValidatingNeighborsDepth;}
-
-//...
-step=PathfindStep.idle;
-
-}else{
-step=PathfindStep.idle;
 }
 }
-
-//...
-
 Nodes=processingNodes;
+step=PathfindStep.idle;
+yield return null;
+if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
+goto _Loop;}}
+[NonSerialized]WaitUntil waitUntilReady;
+[NonSerialized]Coroutine buildPaths;public IEnumerator BuildPaths(bool LOG,int LOG_LEVEL){_Loop:{
 
 //...
+if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilReady");
+yield return waitUntilReady;
 
+step=PathfindStep.idle;
+yield return null;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
 goto _Loop;}}
 
@@ -1030,7 +1033,7 @@ for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
 for(int i=0;i<current.GroundMapDepth;++i){
 if(GroundMap[i].TryGetValue(index,out RaycastHit groundHit)){
-Node node;if(NodePool.Count>0){node=NodePool.Dequeue();node.Neighbors.Clear();}else{node=new Node();}
+Node node;if(NodePool.Count>0){node=NodePool.Dequeue();node.ObstructedBy=default(RaycastHit);node.Neighbors.Clear();node.ObstructionToNeighbor.Clear();}else{node=new Node();}
 node.Position=groundHit.point+new Vector3(0f,Node.Size.y/2f,0f);
 
 //...Debug.LogWarning(i);
@@ -1130,14 +1133,29 @@ node.ObstructedBy=CheckObstructionResults[ri];
 if(ValidateNeighborResults.Count>0){
 
 //...
-Debug.LogWarning(current.ValidatingNeighborsDepth);
+//Debug.LogWarning(current.ValidatingNeighborsDepth);
+int ri=0;
 for(int x=0;x<Width;++x){
 for(int z=0;z<Depth;++z){
 int index=z+x*Depth;
-int i=current.ValidatingNeighborsDepth;
+int i=current.ValidatingNeighborsDepth-1;
+if(processingNodes.TryGetValue((index,i),out Node node)){
+for(int nx=-1;nx<=1;++nx){
+for(int nz=-1;nz<=1;++nz){
+for(int ni=0;ni!=2;ni=(ni==0?1:(ni==1?-1:2))){
+if(nx==0&&nz==0&&ni==0)continue;
+if(nz==1&&z>=Depth-1)continue;if(nz==-1&&z<=0)continue;
+if(nx==1&&x>=Width-1)continue;if(nx==-1&&x<=0)continue;
+int neighborIndex=(z+nz)+(x+nx)*Depth;
+if(node.Neighbors.TryGetValue((neighborIndex,ni),out(Node node,int depth)neighbor)){
 
+node.ObstructionToNeighbor[(neighborIndex,ni)]=(ValidateNeighborResults[ri],neighbor.depth);
 
-
+++ri;}
+}
+}
+}
+}
 }
 }
 
@@ -1166,8 +1184,8 @@ if(node.Neighbors.TryGetValue((neighborIndex,ni),out(Node node,int depth)neighbo
 
 //...
 var forward=(neighbor.node.Position-node.Position).normalized;var lookRotation=Quaternion.LookRotation(forward);var dis=Vector3.Distance(neighbor.node.Position,node.Position);
-ValidateNeighborRays.AddNoResize(new BoxcastCommand(((neighbor.node.Position+node.Position)/2f)-(Vector3.up*(Node.Size.y/2f))-(Vector3.up*.1f),new Vector3(Node.Size.x,.1f,dis)/2f,lookRotation,Vector3.up,Node.Size.y+.1f,PhysHelper.NoCharacterLayer));
-ValidateNeighborHits.AddNoResize(new RaycastHit    ()                                                                                                                                                                                                  );
+ValidateNeighborRays.AddNoResize(new BoxcastCommand(((neighbor.node.Position+node.Position)/2f)-(Vector3.up*(Node.Size.y/2f))-(Vector3.up*.1f)-(Vector3.up*Mathf.Abs(neighbor.node.Position.y-node.Position.y)),new Vector3(Node.Size.x,.1f,dis)/2f,lookRotation,Vector3.up,Node.Size.y+.1f+Mathf.Abs(neighbor.node.Position.y-node.Position.y),PhysHelper.NoCharacterLayer));
+ValidateNeighborHits.AddNoResize(new RaycastHit    ()                                                                                                                                                                                                                                                                                                                       );
 
 }
 
@@ -1443,8 +1461,13 @@ if(aStar.Nodes!=null)foreach(var node in aStar.Nodes){Gizmos.color=node_emptyCol
 
 //...
 if(GIZMOS_ENABLED<=-55){
-foreach(var neighbour in node.Value.Neighbors){
-Debug.DrawLine(node.Value.Position,neighbour.Value.node.Position,Color.gray);
+foreach(var neighbour in node.Value.Neighbors){var obstructed=node.Value.ObstructionToNeighbor[neighbour.Key];
+Debug.DrawLine(node.Value.Position,neighbour.Value.node.Position,obstructed.collision.collider==null?Color.white:Color.red);
+}
+}else 
+if(GIZMOS_ENABLED<=-54){
+foreach(var neighbour in node.Value.Neighbors){var obstructed=node.Value.ObstructionToNeighbor[neighbour.Key];
+if(obstructed.collision.collider!=null)Debug.DrawLine(node.Value.Position,neighbour.Value.node.Position,Color.red);
 }
 }
 
