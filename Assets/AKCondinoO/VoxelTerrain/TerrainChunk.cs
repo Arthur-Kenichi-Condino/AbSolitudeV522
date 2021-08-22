@@ -899,11 +899,24 @@ yield return null;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
 goto _Loop;}}
 [NonSerialized]WaitUntil waitUntilReady;
+[NonSerialized]readonly List<AStarPath>pathsToBuild=new List<AStarPath>();
+public void Build(AStarPath path,bool LOG,int LOG_LEVEL){
+if(!pathsToBuild.Contains(path)){pathsToBuild.Add(path);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("path added to pathsToBuild;pathsToBuild.Count:.."+pathsToBuild.Count);
+}else{
+if(LOG&&LOG_LEVEL<=1)Debug.Log("path already added to pathsToBuild;ignore");
+}
+}
+public void Cancel(AStarPath path,bool LOG,int LOG_LEVEL){
+pathsToBuild.Remove(path);
+}
 [NonSerialized]Coroutine buildPaths;public IEnumerator BuildPaths(bool LOG,int LOG_LEVEL){_Loop:{
 
 //...
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilReady");
 yield return waitUntilReady;
+
+//...if pathsToBuild>0
 
 step=PathfindStep.idle;
 yield return null;

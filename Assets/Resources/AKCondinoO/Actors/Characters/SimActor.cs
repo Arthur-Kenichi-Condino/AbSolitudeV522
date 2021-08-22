@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
-using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;
+using static AKCondinoO.Util;using static AKCondinoO.Voxels.TerrainChunk;using static AKCondinoO.Voxels.World;using static AKCondinoO.Actors.Actors;using static AKCondinoO.Actors.SimActor.AStarPathfinder;
 namespace AKCondinoO.Actors{public class SimActor:NetworkBehaviour{public bool LOG=true;public int LOG_LEVEL=1;public int GIZMOS_ENABLED=1;
 [NonSerialized]public LinkedListNode<SimActor>DisabledNode=null;
 bool Stop{
@@ -34,7 +34,7 @@ public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]public NetworkObject network;[NonSerialized]bool networkHidden;[NonSerialized]bool atServer;
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public new CharacterControllerPhys collider;
-[NonSerialized]public NavMeshAgent navMeshAgent;[NonSerialized]public bool useAI=true;
+[NonSerialized]public NavMeshAgent navMeshAgent;[NonSerialized]public bool useAI=true;[NonSerialized]public readonly AStarPath aStarPath=new AStarPath();
 protected virtual void Awake(){if(transform.parent!=Actors.staticScript.transform){transform.parent=Actors.staticScript.transform;}
 type=GetType();id=-1;
 saveTransform.type=type.FullName;
@@ -368,6 +368,12 @@ transform.position=networkPosition.Value;
 }
 }
 public class AStarPathfinder{
+
+//...
+
+public class AStarPath{
+[NonSerialized]public readonly List<(Vector3 target,Collider obstacle)>Dests=new List<(Vector3,Collider)>();
+}
 
 //...
 
