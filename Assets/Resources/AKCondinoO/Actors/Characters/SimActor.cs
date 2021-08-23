@@ -391,7 +391,7 @@ public class AStarPath{
 [NonSerialized]public bool Building;
 [NonSerialized]public Vector3 OriginPosition;[NonSerialized]public Vector2Int OrigincCoord;[NonSerialized]public int OrigincnkIdx;[NonSerialized]public Vector3Int OriginvCoord;[NonSerialized]public int OriginvxlIdx;
 [NonSerialized]public Vector3 TargetPosition;[NonSerialized]public Vector2Int TargetcCoord;[NonSerialized]public int TargetcnkIdx;[NonSerialized]public Vector3Int TargetvCoord;[NonSerialized]public int TargetvxlIdx;
-[NonSerialized]public readonly List<(Vector3 target,Collider obstacle)>Dests=new List<(Vector3,Collider)>();
+[NonSerialized]public readonly List<(Vector3 target,RaycastHit obstacle)>Dests=new List<(Vector3,RaycastHit)>();
 }
 
 //...
@@ -414,5 +414,20 @@ public readonly ConcurrentDictionary<(int index,int depthReferent),(Node node,in
 public static Vector3 Size=new Vector3(0.28125f*2f,1.75f,0.28125f*2f);
 }
 }
+#if UNITY_EDITOR
+[NonSerialized]Color node_pathColor=new Color(0,0,1,.25f);
+void OnDrawGizmos(){
+if(!aStarPath.Building){
+for(int i=0;i<aStarPath.Dests.Count;i++){
+if(GIZMOS_ENABLED<=-50){
+Gizmos.color=node_pathColor;Gizmos.DrawCube(aStarPath.Dests[i].target,Node.Size);
+
+//...
+
+}
+}
+}
+}
+#endif
 }
 }

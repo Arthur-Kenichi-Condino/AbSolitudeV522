@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LOG: 0
   LOG_LEVEL: -50
-  GIZMOS_ENABLED: 1
+  GIZMOS_ENABLED: 2
   DEBUG_MODE: 1
 --- !u!114 &-4593410616765136462
 MonoBehaviour:
