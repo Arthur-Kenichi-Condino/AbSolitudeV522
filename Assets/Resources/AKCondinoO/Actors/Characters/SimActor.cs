@@ -224,6 +224,8 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id
 [NonSerialized]protected Vector2Int cCoord_Pre;
 [NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
 [SerializeField]protected float savingInterval=120f;[NonSerialized]protected float nextSaveTimer=0f;
+[SerializeField]protected Vector3 DEBUG_A_STAR_GO_TO=Vector3.zero;
+[SerializeField]protected bool    DEBUG_A_STAR_DO_PATH=false;
 protected virtual void Update(){
 if(NetworkManager.Singleton.IsServer||atServer){atServer=true;
 if(nextSaveTimer>0){nextSaveTimer-=Time.deltaTime;}
@@ -276,6 +278,20 @@ networkHidden=false;
 }
 firstLoop=false;enabling=false;}
 if(acting){
+
+//...
+
+if(DEBUG_A_STAR_DO_PATH){DEBUG_A_STAR_DO_PATH=false;if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_A_STAR_DO_PATH");
+
+//...
+aStarPath.OriginPosition=transform.position;
+aStarPath.TargetPosition=DEBUG_A_STAR_GO_TO;
+cnk.aStar.Build(aStarPath,LOG,LOG_LEVEL);
+
+}
+
+//...
+
 collider.isUsingAI=useAI;
 if(useAI){
 
@@ -372,6 +388,9 @@ public class AStarPathfinder{
 //...
 
 public class AStarPath{
+[NonSerialized]public bool Building;
+[NonSerialized]public Vector3 OriginPosition;[NonSerialized]public Vector2Int OrigincCoord;[NonSerialized]public int OrigincnkIdx;[NonSerialized]public Vector3Int OriginvCoord;[NonSerialized]public int OriginvxlIdx;
+[NonSerialized]public Vector3 TargetPosition;[NonSerialized]public Vector2Int TargetcCoord;[NonSerialized]public int TargetcnkIdx;[NonSerialized]public Vector3Int TargetvCoord;[NonSerialized]public int TargetvxlIdx;
 [NonSerialized]public readonly List<(Vector3 target,Collider obstacle)>Dests=new List<(Vector3,Collider)>();
 }
 

@@ -140,7 +140,7 @@ GC.WaitForPendingFinalizers();
 }
 if(collectTimer>0){collectTimer-=Time.deltaTime;}
 static void nonBlockingGC(){
-GarbageCollector.CollectIncremental();//  Thank you, dlich! //GC.Collect(0,GCCollectionMode.Optimized,false,false);
+GarbageCollector.CollectIncremental();//  Thank you, dlich!
 }
 if(currentFrameMemory<lastFrameMemory){//  GC happened.
 nextCollectAt=currentFrameMemory+collectAfterAllocating;

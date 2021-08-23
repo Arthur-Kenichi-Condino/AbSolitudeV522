@@ -754,7 +754,7 @@ new VertexAttributeDescriptor(VertexAttribute.TexCoord1,VertexAttributeFormat.Fl
 new VertexAttributeDescriptor(VertexAttribute.TexCoord2,VertexAttributeFormat.Float32,2),
 new VertexAttributeDescriptor(VertexAttribute.TexCoord3,VertexAttributeFormat.Float32,2),
 };
-[NonSerialized]readonly AStarPathfinderData aStar=new AStarPathfinderData();
+[NonSerialized]public readonly AStarPathfinderData aStar=new AStarPathfinderData();
 public class AStarPathfinderData{
 [NonSerialized]NativeList<RaycastCommand>MapGroundRays;
 [NonSerialized]NativeList<RaycastHit    >MapGroundHits;
@@ -899,7 +899,7 @@ yield return null;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
 goto _Loop;}}
 [NonSerialized]WaitUntil waitUntilReady;
-[NonSerialized]readonly List<AStarPath>pathsToBuild=new List<AStarPath>();
+[NonSerialized]readonly List<AStarPath>pathsToBuild=new List<AStarPath>();[NonSerialized]AStarPath pathToBuild;
 public void Build(AStarPath path,bool LOG,int LOG_LEVEL){
 if(!pathsToBuild.Contains(path)){pathsToBuild.Add(path);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("path added to pathsToBuild;pathsToBuild.Count:.."+pathsToBuild.Count);
@@ -907,20 +907,31 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("path added to pathsToBuild;pathsToBuild.Count:..
 if(LOG&&LOG_LEVEL<=1)Debug.Log("path already added to pathsToBuild;ignore");
 }
 }
-public void Cancel(AStarPath path,bool LOG,int LOG_LEVEL){
-pathsToBuild.Remove(path);
+public bool Cancel(AStarPath path,bool LOG,int LOG_LEVEL){
+return pathsToBuild.Remove(path);
 }
 [NonSerialized]Coroutine buildPaths;public IEnumerator BuildPaths(bool LOG,int LOG_LEVEL){_Loop:{
 
 //...
-if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilReady");
+if(LOG&&LOG_LEVEL<=-10)Debug.Log("waitUntilReady");
 yield return waitUntilReady;
 
-//...if pathsToBuild>0
+//...
+if(pathsToBuild.Count>0){pathToBuild=pathsToBuild[0];pathsToBuild.RemoveAt(0);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("dequeued pathToBuild");
+step=PathfindStep.buildPath;
+pathToBuild.Building=true;
+backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
+yield return waitUntil_backgroundData;
 
+//...
+
+if(LOG&&LOG_LEVEL<=1)Debug.Log("pathToBuild built");
+pathToBuild.Building=false;
+pathToBuild=null;}
 step=PathfindStep.idle;
 yield return null;
-if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
+if(LOG&&LOG_LEVEL<=-10)Debug.Log("_Loop");
 goto _Loop;}}
 
 //...
@@ -941,6 +952,7 @@ public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enq
 AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}ConcurrentDictionary<(int index,int depth),Node>processingNodes{get;set;}Queue<Node>NodePool{get;set;}
 Vector3 position{get;set;}
+AStarPath pathToBuild{get;set;}
 void RenewData(AStarPathfinderData next){
 current=next;
 MapGroundRays=current.MapGroundRays;
@@ -958,6 +970,7 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 GroundMap=next.GroundMap;processingNodes=next.processingNodes;NodePool=next.NodePool;
 position=next.position;
+pathToBuild=current.pathToBuild;
 }
 void ReleaseData(){
 CheckObstructionResults=null;
@@ -967,6 +980,7 @@ foregroundData=null;backgroundData=null;
 //...
 
 GroundMap=null;processingNodes=null;NodePool=null;
+pathToBuild=null;
 current=null;
 }
 #endregion current processing data
@@ -1151,8 +1165,19 @@ ValidateNeighborHits.AddNoResize(new RaycastHit    ()                           
 }
 }else 
 if(current.step==PathfindStep.buildPath){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("PathfindStep.buildPath");
+pathToBuild.Dests.Clear();
+pathToBuild.OrigincCoord=vecPosTocCoord(pathToBuild.OriginPosition);pathToBuild.OrigincnkIdx=GetcnkIdx(pathToBuild.OrigincCoord.x,pathToBuild.OrigincCoord.y);pathToBuild.OriginvCoord=vecPosTovCoord(pathToBuild.OriginPosition);pathToBuild.OriginvxlIdx=GetvxlIdx(pathToBuild.OriginvCoord.x,pathToBuild.OriginvCoord.y,pathToBuild.OriginvCoord.z);
+pathToBuild.TargetcCoord=vecPosTocCoord(pathToBuild.TargetPosition);pathToBuild.TargetcnkIdx=GetcnkIdx(pathToBuild.TargetcCoord.x,pathToBuild.TargetcCoord.y);pathToBuild.TargetvCoord=vecPosTovCoord(pathToBuild.TargetPosition);pathToBuild.TargetvxlIdx=GetvxlIdx(pathToBuild.TargetvCoord.x,pathToBuild.TargetvCoord.y,pathToBuild.TargetvCoord.z);
 
 //...
+Node GetClosestNodeTo(Vector3Int vCoord){
+
+//...
+Debug.LogWarning(vCoord);
+
+return null;}
+Node OriginNode=GetClosestNodeTo(pathToBuild.OriginvCoord);
 
 }
 backgroundData.Set();ReleaseData();
