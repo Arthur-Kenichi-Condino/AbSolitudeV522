@@ -761,7 +761,7 @@ public class AStarPathfinderData{
 [NonSerialized]NativeList<BoxcastCommand>CheckObstructionRays;
 [NonSerialized]NativeList<RaycastHit    >CheckObstructionHits;[NonSerialized]readonly List<RaycastHit>CheckObstructionResults=new List<RaycastHit>();
 [NonSerialized]NativeList<BoxcastCommand>ValidateNeighborRays;
-[NonSerialized]NativeList<RaycastHit    >ValidateNeighborHits;[NonSerialized]readonly List<RaycastHit>ValidateNeighborResults=new List<RaycastHit>();[NonSerialized]bool ValidatingNeighbors;[NonSerialized]int ValidatingNeighborsDepth=0;
+[NonSerialized]NativeList<RaycastHit    >ValidateNeighborHits;[NonSerialized]readonly List<RaycastHit>ValidateNeighborResults=new List<RaycastHit>();[NonSerialized]int ValidatingNeighborsDepth=0;
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
 [NonSerialized]public readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();[NonSerialized]int GroundMapDepth;[NonSerialized]readonly ConcurrentDictionary<(int index,int depth),Node>processingNodes=new ConcurrentDictionary<(int,int),Node>();public ConcurrentDictionary<(int index,int depth),Node>Nodes{get;private set;}[NonSerialized]readonly Queue<Node>NodePool=new Queue<Node>();
@@ -803,7 +803,7 @@ ValidateNeighborRays.Dispose();
 ValidateNeighborHits.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-enum PathfindStep{idle,doRaycasts,setNodes,buildPath}[NonSerialized]PathfindStep step=PathfindStep.idle;[NonSerialized]WaitUntil waitUntilIdle;
+enum PathfindStep{idle,doRaycasts,setNodes,setNeighbors,buildPath}[NonSerialized]PathfindStep step=PathfindStep.idle;[NonSerialized]WaitUntil waitUntilIdle;
 [NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
@@ -862,7 +862,6 @@ GroundMapDepth++;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]next GroundMapDepth:"+GroundMapDepth);
 }
 }
-ValidatingNeighbors=false;
 if(step==PathfindStep.setNodes){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]setNodes");
 CheckObstructionRays.Clear();if(CheckObstructionRays.Capacity<nodeCount)CheckObstructionRays.Capacity=nodeCount;
@@ -876,7 +875,8 @@ yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 CheckObstructionResults.AddRange(CheckObstructionHits.AsArray());
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
-ValidatingNeighbors=true;ValidatingNeighborsDepth=0;
+step=PathfindStep.setNeighbors;
+ValidatingNeighborsDepth=0;
 ValidateNeighborResults.Clear();
 while(ValidatingNeighborsDepth<=GroundMapDepth){
 ValidateNeighborRays.Clear();
@@ -1091,7 +1091,7 @@ if((neighbor=GetNeighbor(node,index,i,neighborIndex,ni))!=null){node.Neighbors[(
 }
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]terminado PathfindStep.setNodes and CheckObstructionRays, levou:"+watch.ElapsedMilliseconds+"ms");
-}else if(!current.ValidatingNeighbors){
+}else{
 if(LOG&&LOG_LEVEL<=1){Debug.Log("[GroundMap]set CheckObstructionResults.Count:"+CheckObstructionResults.Count);watch.Restart();}
 int ri=0;
 for(int x=0;x<(Width+4);++x){
@@ -1108,7 +1108,9 @@ node.ObstructedBy=CheckObstructionResults[ri];
 }
 }
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]terminado set CheckObstructionResults, levou:"+watch.ElapsedMilliseconds+"ms");
-}else{
+}
+}else 
+if(current.step==PathfindStep.setNeighbors){
 
 //...
 
@@ -1157,7 +1159,6 @@ if(node.Neighbors.TryGetValue((neighborIndex,ni),out(Node node,int depth)neighbo
 var forward=(neighbor.node.Position-node.Position).normalized;var lookRotation=Quaternion.LookRotation(forward);var dis=Vector3.Distance(neighbor.node.Position,node.Position);
 ValidateNeighborRays.AddNoResize(new BoxcastCommand(((neighbor.node.Position+node.Position)/2f)-(Vector3.up*(Node.Size.y/2f))-(Vector3.up*.1f)-(Vector3.up*Mathf.Abs(neighbor.node.Position.y-node.Position.y)),new Vector3(Node.Size.x,.1f,dis)/2f,lookRotation,Vector3.up,Node.Size.y+.1f+Mathf.Abs(neighbor.node.Position.y-node.Position.y),PhysHelper.NoCharacterLayer));
 ValidateNeighborHits.AddNoResize(new RaycastHit    ()                                                                                                                                                                                                                                                                                                                       );
-}
 }
 }
 }
@@ -1455,11 +1456,11 @@ Color orange{get;}=new Color(0.2f,0.3f,0.4f);
 void OnDrawGizmos(){
 if(backgroundData.WaitOne(0)){
 if(GIZMOS_ENABLED<=-100){for(int i=0;i<TempVer.Length;i++){Debug.DrawRay(transform.position+TempVer[i].pos,TempVer[i].normal,Color.white);}}
-if(GIZMOS_ENABLED<=-50){
+if(GIZMOS_ENABLED<=-55){
 foreach(var mapDepth in aStar.GroundMap)foreach(var raycastHit in mapDepth.Value){Debug.DrawRay(raycastHit.Value.point,raycastHit.Value.normal,Color.gray);}
 }
 if(GIZMOS_ENABLED<=-50){
-if(aStar.Nodes!=null)foreach(var node in aStar.Nodes){Gizmos.color=node_emptyColor;if(node.Value.ObstructedBy.collider!=null){Gizmos.color=node_obstructedColor;if(GIZMOS_ENABLED<=-55){Debug.DrawLine(node.Value.Position,node.Value.ObstructedBy.point,orange);}}Gizmos.DrawCube(node.Value.Position,Node.Size);
+if(aStar.Nodes!=null)foreach(var node in aStar.Nodes){Gizmos.color=node_emptyColor;if(node.Value.ObstructedBy.collider!=null){Gizmos.color=node_obstructedColor;if(GIZMOS_ENABLED==-51){Debug.DrawLine(node.Value.Position,node.Value.ObstructedBy.point,orange);}}Gizmos.DrawCube(node.Value.Position,Node.Size);
 
 //...
 if(GIZMOS_ENABLED<=-55){
@@ -1467,7 +1468,7 @@ foreach(var neighbour in node.Value.Neighbors){var obstructed=node.Value.Obstruc
 Debug.DrawLine(node.Value.Position,neighbour.Value.node.Position,obstructed.collision.collider==null?Color.white:Color.red);
 }
 }else 
-if(GIZMOS_ENABLED<=-54){
+if(GIZMOS_ENABLED==-52){
 foreach(var neighbour in node.Value.Neighbors){var obstructed=node.Value.ObstructionToNeighbor[neighbour.Key];
 if(obstructed.collision.collider!=null)Debug.DrawLine(node.Value.Position,neighbour.Value.node.Position,Color.red);
 }
