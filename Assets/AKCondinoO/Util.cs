@@ -52,7 +52,7 @@ return new Vector3(rValue.x,rValue.y,rValue.z);
 /// <param name="rValue"></param>
 /// <returns></returns>
 public static implicit operator SerializableVector3(Vector3 rValue){
-return new SerializableVector3(rValue.x, rValue.y, rValue.z);
+return new SerializableVector3(rValue.x,rValue.y,rValue.z);
 }
 }
  /// <summary>

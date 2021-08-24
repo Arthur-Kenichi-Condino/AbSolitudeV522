@@ -808,6 +808,7 @@ enum PathfindStep{idle,doRaycasts,setNodes,setNeighbors,buildPath}[NonSerialized
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
 [NonSerialized]Vector3 position;
+[NonSerialized]readonly List<(int layer,string tag,string name)>colliders=new List<(int,string,string)>();
 [NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
@@ -873,6 +874,11 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]CheckObstructionRays.Length:"+CheckOb
 doRaycastsHandle=BoxcastCommand.ScheduleBatch(CheckObstructionRays,CheckObstructionHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 CheckObstructionResults.AddRange(CheckObstructionHits.AsArray());
+
+//...
+colliders.Clear();
+colliders.AddRange(CheckObstructionResults.ConvertAll(h=>h.collider==null?(-1,null,null):(h.collider.gameObject.layer,h.collider.tag,h.collider.name)));
+
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
 step=PathfindStep.setNeighbors;
@@ -889,11 +895,13 @@ doRaycastsHandle=BoxcastCommand.ScheduleBatch(ValidateNeighborRays,ValidateNeigh
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 ValidateNeighborResults.Clear();
 ValidateNeighborResults.AddRange(ValidateNeighborHits.AsArray());
-}
-++ValidatingNeighborsDepth;}
 
 //...
+colliders.Clear();
+colliders.AddRange(ValidateNeighborResults.ConvertAll(h=>h.collider==null?(-1,null,null):(h.collider.gameObject.layer,h.collider.tag,h.collider.name)));
 
+}
+++ValidatingNeighborsDepth;}
 }
 }
 Nodes=processingNodes;
