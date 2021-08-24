@@ -774,7 +774,6 @@ ValidateNeighborRays=new NativeList<BoxcastCommand>((Width+4)*(Depth+4)*26,Alloc
 ValidateNeighborHits=new NativeList<RaycastHit    >((Width+4)*(Depth+4)*26,Allocator.Persistent);ValidateNeighborResults.Capacity=(Width+4)*(Depth+4)*26;
 waitUntil_doRaycastsHandle=new WaitUntil(()=>doRaycastsHandle.IsCompleted);
 waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
-waitUntilIdle=new WaitUntil(()=>step==PathfindStep.idle);
 waitUntilDirty=new WaitUntil(()=>{
 for(int x=-1;x<=1;++x){
 for(int z=-1;z<=1;++z){
@@ -788,8 +787,10 @@ return false;
 }
 }
 }
-return Dirty;});
+return chunk.Built&&Dirty;});
 waitUntilReady=new WaitUntil(()=>Nodes!=null);
+waitUntilIdle_update    =new WaitUntil(()=>{if(step==PathfindStep.idle){step=PathfindStep.doRaycasts;        return true;}return false;});
+waitUntilIdle_buildPaths=new WaitUntil(()=>{if(step==PathfindStep.idle){step=PathfindStep.dequeuePendingPath;return true;}return false;});
 if(LOG&&LOG_LEVEL<=1)Debug.Log("construção completa");
 update=chunk.StartCoroutine(Update(LOG,LOG_LEVEL));buildPaths=chunk.StartCoroutine(BuildPaths(LOG,LOG_LEVEL));
 }
@@ -803,32 +804,32 @@ ValidateNeighborRays.Dispose();
 ValidateNeighborHits.Dispose();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
-enum PathfindStep{idle,doRaycasts,setNodes,setNeighbors,buildPath}[NonSerialized]PathfindStep step=PathfindStep.idle;[NonSerialized]WaitUntil waitUntilIdle;
+enum PathfindStep{idle,doRaycasts,setNodes,setNeighbors,dequeuePendingPath,buildPath}[NonSerialized]PathfindStep step=PathfindStep.idle;
 [NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Dirty;[NonSerialized]WaitUntil waitUntilDirty;
 [NonSerialized]Vector3 position;
 [NonSerialized]readonly List<(int layer,string tag,string name)>colliders=new List<(int,string,string)>();
-[NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
+[NonSerialized]WaitUntil waitUntilIdle_update;[NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilDirty");
 yield return waitUntilDirty;Dirty=false;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("waitUntilIdle for any buildPath task to end, and then set Nodes=null so no new tasks start");
-yield return waitUntilIdle;
+yield return waitUntilIdle_update;
 GroundMapDepth=0;foreach(var hitsDictionary in GroundMap)hitsDictionary.Value.Clear();Nodes=null;foreach(var node in processingNodes.Values)NodePool.Enqueue(node);processingNodes.Clear();
 position=chunk.transform.position;
-step=PathfindStep.doRaycasts;
 int nodeCount=0;
 while(step==PathfindStep.doRaycasts){
 MapGroundRays.Clear();
 MapGroundHits.Clear();
 backgroundData.Reset();foregroundData.Set();AStarPathfinderTask.StartNew(this);
 yield return waitUntil_backgroundData;
-if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]MapGroundRays.Length:"+MapGroundRays.Length);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]MapGroundRays.Length:"+MapGroundRays.Length+"/"+MapGroundRays.Capacity);
 doRaycastsHandle=RaycastCommand.ScheduleBatch(MapGroundRays,MapGroundHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 if(!GroundMap.ContainsKey(GroundMapDepth))GroundMap[GroundMapDepth]=new ConcurrentDictionary<int,RaycastHit>();
 var groundFound=false;
 if(GroundMapDepth==0){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]GroundMapDepth==0;MapGroundRays.Length:"+MapGroundRays.Length+";chunk.cCoord:"+chunk.cCoord);
 for(int x=0,i=0;x<(Width+4);++x    ){
 for(int z=0    ;z<(Depth+4);++z,++i){var result=MapGroundHits[i];
 int index=z+x*(Depth+4);
@@ -909,7 +910,6 @@ step=PathfindStep.idle;
 yield return null;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("_Loop");
 goto _Loop;}}
-[NonSerialized]WaitUntil waitUntilReady;
 [NonSerialized]readonly List<AStarPath>pathsToBuild=new List<AStarPath>();[NonSerialized]AStarPath pathToBuild;
 public void Build(AStarPath path,bool LOG,int LOG_LEVEL){
 if(!pathsToBuild.Contains(path)){pathsToBuild.Add(path);
@@ -921,11 +921,16 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("path already added to pathsToBuild;ignore");
 public bool Cancel(AStarPath path,bool LOG,int LOG_LEVEL){
 return pathsToBuild.Remove(path);
 }
-[NonSerialized]Coroutine buildPaths;public IEnumerator BuildPaths(bool LOG,int LOG_LEVEL){_Loop:{
+[NonSerialized]WaitUntil waitUntilReady;
+[NonSerialized]WaitUntil waitUntilIdle_buildPaths;[NonSerialized]Coroutine buildPaths;public IEnumerator BuildPaths(bool LOG,int LOG_LEVEL){_Loop:{
 
 //...
+
 if(LOG&&LOG_LEVEL<=-10)Debug.Log("waitUntilReady");
 yield return waitUntilReady;
+
+//...
+yield return waitUntilIdle_buildPaths;
 
 //...
 if(pathsToBuild.Count>0){pathToBuild=pathsToBuild[0];pathsToBuild.RemoveAt(0);

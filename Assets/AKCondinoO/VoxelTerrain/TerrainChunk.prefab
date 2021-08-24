@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a237862aadc9b42bb95404338c9aa3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 0
+  LOG: 1
   LOG_LEVEL: -50
   GIZMOS_ENABLED: 2
   DEBUG_MODE: 1
