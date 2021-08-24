@@ -1337,6 +1337,12 @@ Vector3 noiseInput=vCoord3;noiseInput.x+=cnkRgn3.x;
 biome.result(vCoord3,noiseInput,null,null,0,vCoord3.z+vCoord3.x*Depth,ref currentVoxel);
 }
 resultDensity=Math.Max(resultDensity,currentVoxel.Density);
+
+//...
+if(materialId==MaterialId.Air&&!(-resultDensity>=50d)){
+resultDensity=-resultDensity;
+}
+
 if(!saveData.ContainsKey(cnkIdx3))saveData.Add(cnkIdx3,new Dictionary<Vector3Int,(double density,MaterialId materialId)>());
 saveData[cnkIdx3][vCoord3]=(resultDensity,-resultDensity>=50d?MaterialId.Air:materialId);
 
