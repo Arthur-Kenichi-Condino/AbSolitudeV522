@@ -374,7 +374,7 @@ if(navMeshAsyncOperation==null||navMeshAsyncOperation.isDone){
 navMeshDirty=false;DEBUG_BAKE_NAV_MESH=false;
 sources.Clear();sources.AddRange(navMeshSources.Values);
 markups.Clear();markups.AddRange(navMeshMarkups.Values);
-NavMeshBuilder.CollectSources(transform,PhysHelper.AllInteractableLayers,NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
+NavMeshBuilder.CollectSources(transform,PhysHelper.NoPlantsLayer,NavMeshCollectGeometry.RenderMeshes,0,markups,sources);
 navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshBuildSettings,sources,bounds);
 }
 }

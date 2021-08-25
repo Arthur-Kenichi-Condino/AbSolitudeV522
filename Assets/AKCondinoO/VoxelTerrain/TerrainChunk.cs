@@ -968,6 +968,7 @@ public static void StartNew(AStarPathfinderData state){queued.Enqueue(state);enq
 AStarPathfinderData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundMap{get;set;}ConcurrentDictionary<(int index,int depth),Node>processingNodes{get;set;}Queue<Node>NodePool{get;set;}
 Vector3 position{get;set;}
+List<(int layer,string tag,string name)>colliders{get;set;}
 AStarPath pathToBuild{get;set;}
 void RenewData(AStarPathfinderData next){
 current=next;
@@ -986,6 +987,7 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 
 GroundMap=next.GroundMap;processingNodes=next.processingNodes;NodePool=next.NodePool;
 position=next.position;
+colliders=next.colliders;
 pathToBuild=current.pathToBuild;
 }
 void ReleaseData(){
@@ -996,6 +998,7 @@ foregroundData=null;backgroundData=null;
 //...
 
 GroundMap=null;processingNodes=null;NodePool=null;
+colliders=null;
 pathToBuild=null;
 current=null;
 }
@@ -1115,6 +1118,7 @@ if(processingNodes.TryGetValue((index,i),out Node node)){
 node.ObstructedBy=CheckObstructionResults[ri];
 
 //...
+//colliders.Count;
 
 ++ri;}
 }
