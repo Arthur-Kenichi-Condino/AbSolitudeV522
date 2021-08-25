@@ -1,4 +1,5 @@
 using AKCondinoO.Networking;
+using AKCondinoO.Voxels;
 using MessagePack;
 using MLAPI;
 using System;
@@ -133,6 +134,9 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo 2 para gere
 while(!Stop){if(!backgroundData2.WaitOne(0))backgroundData2.Set();Thread.Sleep(1);}
 }
 }
+
+//...
+
 }
 [NonSerialized]static bool disposed;
 void OnDestroy(){
@@ -241,6 +245,12 @@ backgroundData2.Reset();foregroundData2.Set();
 }
 }
 }
+}
+public static void OnTerrainReadyForTrees(TerrainChunk chunk,string path){
+
+//...
+Debug.LogWarning(chunk.cnkIdx);
+
 }
 public static void OnSimObjectDestroyed(SimObject simObject){//  sim objects should not be destroyed if the game is running, but added to the pool, by design
 if(!disposed){Debug.LogWarning("sim objects should not be destroyed if the game is running, but added to the pool, by design");

@@ -1,5 +1,22 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &5934061626873009051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8961572608293186448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b0c55bb0a8f4184196b74a573d2fbc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LOG: 1
+  LOG_LEVEL: 1
+  GIZMOS_ENABLED: 1
+  savingInterval: 120
+  DEBUG_UNPLACE: 0
 --- !u!1001 &5971843018143490281
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -120,8 +137,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cnidoscolus_quercifolius
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -8102841849855636299, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
+--- !u!1 &8961572608293186448 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2960643002684480966, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
+  m_PrefabInstance: {fileID: 6146208226832463446}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4758155129970421367 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1676442081997379617, guid: 6fa857b312587cb4a8e7dc9294c5c15c, type: 3}
