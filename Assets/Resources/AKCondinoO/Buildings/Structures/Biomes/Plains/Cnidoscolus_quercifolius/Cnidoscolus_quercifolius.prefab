@@ -1,5 +1,60 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!135 &3509351442866892673
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9193737482343031621}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 13.701237
+  m_Center: {x: 0.444129, y: 7.4606614, z: 0.09979439}
+--- !u!65 &8389156466857473783
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8961572608293186448}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.1, y: 1, z: 1.2}
+  m_Center: {x: -0.04, y: 0.5, z: 0.13475}
+--- !u!65 &8615281142721920547
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8961572608293186448}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 2.64, z: 1.07}
+  m_Center: {x: 0.002, y: 2.32, z: 0.28}
+--- !u!208 &1984032170026482198
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8961572608293186448}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.55, y: 1.82, z: 0.6395}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.04, y: 1.82, z: 0.17425}
+  m_TimeToStationary: 0.5
 --- !u!114 &5934061626873009051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -82,6 +137,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: be9f18942997bc74eb560a1fdcaff71a, type: 3}
+--- !u!1 &9193737482343031621 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3275955390647813036, guid: be9f18942997bc74eb560a1fdcaff71a, type: 3}
+  m_PrefabInstance: {fileID: 5971843018143490281}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6146208226832463446
 PrefabInstance:
   m_ObjectHideFlags: 0

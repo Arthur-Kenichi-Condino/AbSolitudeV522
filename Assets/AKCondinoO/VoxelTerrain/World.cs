@@ -36,10 +36,14 @@ return new Vector2Int((pos.x>0)?(pos.x-(int)pos.x==0.5f?Mathf.FloorToInt(pos.x):
 public static Vector2Int vecPosTocnkRgn(Vector3 pos){Vector2Int coord=vecPosTocCoord(pos);
 return new Vector2Int(coord.x*Width,coord.y*Depth);
 }
+static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
 public GameObject ChunkPrefab;
-public static Vector2Int expropriationDistance{get;}=new Vector2Int(5,5);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=4;
+public static Vector2Int expropriationDistance{get;}=new Vector2Int(5,5);[NonSerialized]public static readonly LinkedList<TerrainChunk>TerrainChunkPool=new LinkedList<TerrainChunk>();[NonSerialized]public static readonly Dictionary<int,TerrainChunk>ActiveTerrain=new Dictionary<int,TerrainChunk>();[NonSerialized]static readonly TerrainChunkTask[]tasks=new TerrainChunkTask[tasksCount];const int tasksCount=8;[NonSerialized]static readonly NatureData.NatureTask[]nature=new NatureData.NatureTask[natureCount];const int natureCount=8;
 public static Vector2Int instantiationDistance{get;}=new Vector2Int(4,4);
-[NonSerialized]static readonly AStarPathfinderData.AStarPathfinderTask[]aStar=new AStarPathfinderData.AStarPathfinderTask[aStarCount];const int aStarCount=4;
+[NonSerialized]static readonly AStarPathfinderData.AStarPathfinderTask[]aStar=new AStarPathfinderData.AStarPathfinderTask[aStarCount];const int aStarCount=8;
 [NonSerialized]public static Bounds bounds;
 [NonSerialized]public static NavMeshDataInstance navMesh;[NonSerialized]public static NavMeshData navMeshData;[NonSerialized]public static NavMeshBuildSettings navMeshBuildSettings;
 [NonSerialized]public static readonly Dictionary<GameObject,NavMeshBuildSource>navMeshSources=new Dictionary<GameObject,NavMeshBuildSource>();[NonSerialized]public static readonly List<NavMeshBuildSource>sources=new List<NavMeshBuildSource>();
@@ -65,7 +69,7 @@ if(LOG&&LOG_LEVEL<=100)Debug.Log("The number of processors on this computer is:"
 ThreadPool.GetAvailableThreads(out int worker ,out int io         );if(LOG&&LOG_LEVEL<=100){Debug.Log("Thread pool threads available at startup: Worker threads: "+worker+" Asynchronous I/O threads: "+io);}
 ThreadPool.GetMaxThreads(out int workerThreads,out int portThreads);if(LOG&&LOG_LEVEL<=100){Debug.Log("Maximum worker threads: "+workerThreads+" Maximum completion port threads: "+portThreads);           }
 ThreadPool.GetMinThreads(out int minWorker    ,out int minIOC     );if(LOG&&LOG_LEVEL<=100){Debug.Log("minimum number of worker threads: "+minWorker+" minimum asynchronous I/O: "+minIOC);                 }
-var idealMin=(tasksCount+aStarCount+Buildings.Buildings.tasksCount+Actors.Actors.tasksCount);if(minWorker!=idealMin){
+var idealMin=(tasksCount+1+natureCount+aStarCount+Buildings.Buildings.tasksCount+2+Actors.Actors.tasksCount+2);if(minWorker!=idealMin){
 if(ThreadPool.SetMinThreads(idealMin,minIOC)){if(LOG&&LOG_LEVEL<=100){Debug.Log("changed minimum number of worker threads to:"+(idealMin));}
 }else{                                        if(LOG&&LOG_LEVEL<=100){Debug.Log("SetMinThreads failed");                                   }
 }
@@ -119,30 +123,39 @@ foreach(var s in navMeshValidation){Debug.LogError(s);}
 //...
 
 Editor.Awake(LOG,LOG_LEVEL);
-for(int i=0;i<tasks.Length;++i){tasks[i]=new                        TerrainChunkTask(LOG,LOG_LEVEL);}
-for(int i=0;i<aStar.Length;++i){aStar[i]=new AStarPathfinderData.AStarPathfinderTask(LOG,LOG_LEVEL);}
+for(int i=0;i< tasks.Length;++i){ tasks[i]=new                        TerrainChunkTask(LOG,LOG_LEVEL);}
+for(int i=0;i<nature.Length;++i){nature[i]=new          NatureData.         NatureTask(LOG,LOG_LEVEL);}
+for(int i=0;i< aStar.Length;++i){ aStar[i]=new AStarPathfinderData.AStarPathfinderTask(LOG,LOG_LEVEL);}
 
 //...
 task1=Task.Factory.StartNew(BG1,new object[]{LOG,LOG_LEVEL,savePath,},TaskCreationOptions.LongRunning);
 static void BG1(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
-if(LOG&&LOG_LEVEL<=1){Debug.Log("iniciar tarefa de calcular posições de objetos em terreno novo");}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("iniciar tarefa de salvar dados gerais do mundo");}
+var watch=new System.Diagnostics.Stopwatch();
+while(!Stop){foregroundData1.WaitOne();if(Stop)goto _Stop;
+if(LOG&&LOG_LEVEL<=1){Debug.Log("começar a salvar dados gerais do mundo");watch.Restart();}
 
 //...
 Debug.LogWarning("task1");
+                            
+if(LOG&&LOG_LEVEL<=1)Debug.Log("terminou de salvar dados gerais do mundo..levou:"+watch.ElapsedMilliseconds+"ms");
+backgroundData1.Set();
 
-if(LOG&&LOG_LEVEL<=1){Debug.Log("finalização da tarefa de calcular posições de objetos em terreno novo ocorreu graciosamente");}
+//...
+
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1){Debug.Log("finalizou a tarefa de salvar dados gerais do mundo graciosamente");}
 }
 }catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
 }
 
+//...
+
 MemoryManagement.Run(LOG,LOG_LEVEL);//  After init cleaning
 }
-static bool Stop{
-get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
-set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();}}
-}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]static readonly AutoResetEvent foregroundData1=new AutoResetEvent(false);[NonSerialized]static readonly ManualResetEvent backgroundData1=new ManualResetEvent(true);[NonSerialized]static Task task1=null;
 void Start(){
 MemoryManagement.Run(LOG,LOG_LEVEL);//  After other objects init cleaning
 }
@@ -196,12 +209,13 @@ void OnDestroy(){
             
 //...
 
-Editor.OnDestroy(LOG,LOG_LEVEL);
-                       TerrainChunkTask.Stop=true;for(int i=0;i<tasks.Length;++i){tasks[i].Wait();}
-AStarPathfinderData.AStarPathfinderTask.Stop=true;for(int i=0;i<aStar.Length;++i){aStar[i].Wait();}
-
 //...
 Stop=true;try{task1.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}foregroundData1.Dispose();backgroundData1.Dispose();
+            
+AStarPathfinderData.AStarPathfinderTask.Stop=true;for(int i=0;i< aStar.Length;++i){ aStar[i].Wait();}
+         NatureData.         NatureTask.Stop=true;for(int i=0;i<nature.Length;++i){nature[i].Wait();}
+                       TerrainChunkTask.Stop=true;for(int i=0;i< tasks.Length;++i){ tasks[i].Wait();}
+Editor.OnDestroy(LOG,LOG_LEVEL);
 
 //...to do: biome dispose
 
@@ -462,6 +476,13 @@ if(iCoord.y==0){break;}}}
 //...
 
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
+
+//...
+public static readonly Dictionary<Type,List<Type>>PlantsByBiome=new Dictionary<Type,List<Type>>();
+public BiomeBase(){
+PlantsByBiome[GetType()]=new List<Type>();
+}
+
 #region Initialize
 protected readonly System.Random[]Random=new System.Random[2];
 public virtual int IdxForRnd{get{return 0;}}
@@ -523,6 +544,12 @@ v=new Voxel(d=density(100,input,noiseValue1),Vector3.zero,material(d,input,mCach
 v=Voxel.Air;}
 }
 public class Plains:BiomeBase{
+
+//...
+public Plains():base(){
+PlantsByBiome[GetType()]=new List<Type>();
+}
+
 public override int IdxForRnd{get{return 1;}}
 public override int IdxForHgt{get{return 5;}}//  Base Height Result Module
 protected override void SetModules(){

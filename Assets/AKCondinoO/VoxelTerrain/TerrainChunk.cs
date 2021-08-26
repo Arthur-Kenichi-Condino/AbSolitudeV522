@@ -162,7 +162,8 @@ ignoreFromBuild=false,
 bakeJob=new BakerJob(){meshId=mesh.GetInstanceID(),};
 TempVer=new NativeList<Vertex>(Allocator.Persistent);
 TempTri=new NativeList<UInt32>(Allocator.Persistent);
-aStar.Awake(this,LOG,LOG_LEVEL);
+nature.Awake(this,LOG,LOG_LEVEL);
+ aStar.Awake(this,LOG,LOG_LEVEL);
 }
 public class TerrainChunkTask{
 [NonSerialized]static readonly ConcurrentQueue<TerrainChunk>queued=new ConcurrentQueue<TerrainChunk>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
@@ -648,7 +649,8 @@ void OnDestroy(){
 Stop=true;foregroundData.Dispose();backgroundData.Dispose();
 TempVer.Dispose();
 TempTri.Dispose();
-aStar.OnDestroy(LOG,LOG_LEVEL);
+ aStar.OnDestroy(LOG,LOG_LEVEL);
+nature.OnDestroy(LOG,LOG_LEVEL);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("destruição completa");
 }
 public bool Built{
@@ -694,6 +696,62 @@ collider.enabled=false;
 }
 }
 }[NonSerialized]protected bool Built_v;
+public readonly NatureData nature=new NatureData();
+public class NatureData{
+[NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
+[NonSerialized]TerrainChunk chunk;
+public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
+}
+public void OnDestroy(bool LOG,int LOG_LEVEL){
+foregroundData.Dispose();backgroundData.Dispose();
+}
+
+//...
+
+public class NatureTask{
+[NonSerialized]static readonly ConcurrentQueue<NatureData>queued=new ConcurrentQueue<NatureData>();[NonSerialized]static readonly AutoResetEvent enqueued=new AutoResetEvent(false);
+public static void StartNew(NatureData state){queued.Enqueue(state);enqueued.Set();}
+
+//...
+
+#region current processing data
+NatureData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
+void RenewData(NatureData next){
+}
+void ReleaseData(){
+}
+#endregion current processing data
+
+//...
+
+public static bool Stop{
+get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
+set{         lock(Stop_Syn){    Stop_v=value;}if(value){enqueued.Set();}}
+}[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]readonly Task task;public void Wait(){try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}}
+public NatureTask(bool LOG,int LOG_LEVEL){
+
+//...
+
+task=Task.Factory.StartNew(BG,new object[]{LOG,LOG_LEVEL,},TaskCreationOptions.LongRunning);
+void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThread.Priority=System.Threading.ThreadPriority.BelowNormal;
+try{
+if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para posicionar vegetação no terreno");
+while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out NatureData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
+
+//...
+Debug.LogWarning("NatureTask");
+
+backgroundData.Set();ReleaseData();
+}_Stop:{
+}
+if(LOG&&LOG_LEVEL<=1)Debug.Log("finalizar trabalho em plano de fundo para posicionar vegetação no terreno graciosamente");
+}
+}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}
+}
+}
+}
+}
 [NonSerialized]bool rebuild=false;[NonSerialized]bool bake=false;[NonSerialized]BakerJob bakeJob;[NonSerialized]bool baking=false;[NonSerialized]JobHandle bakingHandle;struct BakerJob:IJob{public int meshId;public void Execute(){Physics.BakeMesh(meshId,false);}}
 void Update(){
 if(NetworkManager.Singleton.IsServer){

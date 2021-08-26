@@ -5,7 +5,9 @@ using MLAPI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -20,7 +22,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData1.Set();fo
 [NonSerialized]public static string buildingsPath;[NonSerialized]public static string buildingsFolder;
 [NonSerialized]public static string unplacedsPath;[NonSerialized]public static string unplacedsFolder;
 [NonSerialized]public static readonly List<object>load_Syn_All=new List<object>();
-[NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimObject>>SimObjectPool=new Dictionary<Type,LinkedList<SimObject>>();[NonSerialized]public static readonly Dictionary<Type,List<SimObject>>Loaded=new Dictionary<Type,List<SimObject>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();[NonSerialized]static readonly SimObjectTask[]tasks=new SimObjectTask[tasksCount];public const int tasksCount=4;
+[NonSerialized]static readonly Dictionary<Type,GameObject>Prefabs=new Dictionary<Type,GameObject>();[NonSerialized]public static readonly Dictionary<Type,LinkedList<SimObject>>SimObjectPool=new Dictionary<Type,LinkedList<SimObject>>();[NonSerialized]public static readonly Dictionary<Type,List<SimObject>>Loaded=new Dictionary<Type,List<SimObject>>();[NonSerialized]static readonly Dictionary<Type,List<(Type type,int id,int cnkIdx)>>Loading=new Dictionary<Type,List<(Type type,int id,int cnkIdx)>>();[NonSerialized]static readonly SimObjectTask[]tasks=new SimObjectTask[tasksCount];public const int tasksCount=8;
 [NonSerialized]static Dictionary<Type,int>Count;[NonSerialized]public static Dictionary<Type,List<int>>Unplaced;
 [NonSerialized]public static readonly List<SimObject>Enabled=new List<SimObject>();[NonSerialized]public static readonly List<SimObject>Disabled=new List<SimObject>();
 [NonSerialized]public static Buildings staticScript;
@@ -32,6 +34,20 @@ Directory.CreateDirectory(unplacedsPath=string.Format("{0}/",unplacedsFolder));
 var objects=Resources.LoadAll("AKCondinoO/Buildings/Structures",typeof(GameObject));
 foreach(var o in objects){var p=o as GameObject;var sO=p.GetComponent<SimObject>();if(sO==null)continue;var t=sO.GetType();
 Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<SimObject>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
+
+//...
+if(sO is Plant plant){
+
+//...
+Type plantType;var biomes=(ReadOnlyCollection<Type>)(plantType=plant.GetType()).GetField("Biomes").GetValue(null);
+Debug.LogWarning(biomes.Count);
+foreach(var biome in biomes){
+Debug.LogWarning(biome);
+BiomeBase.PlantsByBiome[biome].Add(plantType);
+}
+
+}
+
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }
 
