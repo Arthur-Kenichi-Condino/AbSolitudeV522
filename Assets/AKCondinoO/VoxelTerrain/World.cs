@@ -426,7 +426,7 @@ navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshB
 var keys=players.Keys.ToList();for(int i=0;i<keys.Count;++i){players[keys[i]]=null;}
 firstLoop=false;
 }
-if(NetworkManager.Singleton.IsClient){
+if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 
 //...
 
@@ -437,7 +437,7 @@ firstLoop=false;
 public static void OnTerrainReadyForNature(TerrainChunk chunk,string path){
 
 //...
-Debug.LogWarning(chunk.cnkIdx);
+chunk.nature.Start=true;
 
 }
 public static void OnPlayerRemoved(UNetDefaultPrefab player,bool LOG,int LOG_LEVEL){
@@ -542,6 +542,12 @@ if(input.y<=noiseValue1){double d;
 v=new Voxel(d=density(100,input,noiseValue1),Vector3.zero,material(d,input,mCache,nbrIdx,inputIndex));return;
 }
 v=Voxel.Air;}
+
+//...
+protected Select[]PlantsSelectors=new Select[1];
+protected virtual void plants(Vector3 input){
+}
+
 }
 public class Plains:BiomeBase{
 
@@ -582,6 +588,7 @@ ModuleBase module4c=new Multiply(lhs:module4b,rhs:module1);
 #endregion
 Modules.Add(module4c);
 MaterialIdSelectors[0]=(Select)module4b;
+    PlantsSelectors[0]=(Select)module4b;
 }
 protected override MaterialId material(double density,Vector3 input,MaterialId[][][]mCache,int nbrIdx,int inputIndex){if(-density>=IsoLevel){return MaterialId.Air;}MaterialId m;
 if(mCache!=null&&mCache[0][nbrIdx][inputIndex]!=0){return mCache[0][nbrIdx][inputIndex];}
@@ -595,6 +602,16 @@ m=MaterialIdPicking[0].Item2;
 m=MaterialIdPicking[0].Item1;
 }
 return mCache!=null?mCache[0][nbrIdx][inputIndex]=m:m;}
+
+//...
+protected override void plants(Vector3 input){
+double min=PlantsSelectors[0].Minimum;
+double max=PlantsSelectors[0].Maximum;
+double fallOff=PlantsSelectors[0].FallOff*.5;
+var selectValue=PlantsSelectors[0].Controller.GetValue(input.z,input.x,0);
+                   base.plants(input);
+}
+
 }
 #if UNITY_EDITOR
 public static void DrawBounds(Bounds b,Color color,float duration=0){//[https://gist.github.com/unitycoder/58f4b5d80f423d29e35c814a9556f9d9]

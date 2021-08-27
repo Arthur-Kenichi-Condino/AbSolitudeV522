@@ -249,6 +249,7 @@ disabling=true;
 if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do mundo em outras condições) se estiver abaixo da altura mínima permitida.
 if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
 Disable();
+unplace=true;
 }else if(atServer&&!NetworkManager.Singleton.IsServer){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("deactivate myself because the server shutdown",this);
 Disable();
@@ -260,9 +261,6 @@ Disable();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_UNPLACE");
 Disable();
 unplace=true;
-
-//...
-
 DEBUG_UNPLACE=false;
 }else if(enabling){
 foreach(var col in collider){col.enabled=true;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.None;}
@@ -345,7 +343,7 @@ if(!networkHidden){
 networkPosition.Value=transform.position;
 }
 }
-if(NetworkManager.Singleton.IsClient){
+if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 transform.position=networkPosition.Value;
 }
 }

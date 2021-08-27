@@ -37,15 +37,12 @@ Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<Sim
 
 //...
 if(sO is Plant plant){
-
-//...
 Type plantType;var biomes=(ReadOnlyCollection<Type>)(plantType=plant.GetType()).GetField("Biomes").GetValue(null);
-Debug.LogWarning(biomes.Count);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("biomes count for "+plantType+":.."+biomes.Count);
 foreach(var biome in biomes){
-Debug.LogWarning(biome);
+if(LOG&&LOG_LEVEL<=1)Debug.Log(plantType+"..is in biome.."+biome);
 BiomeBase.PlantsByBiome[biome].Add(plantType);
 }
-
 }
 
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
@@ -188,6 +185,7 @@ tasks[i].Wait();
 [NonSerialized]static Vector2Int actRgn;
 [NonSerialized]public static readonly Dictionary<UNetDefaultPrefab,(Vector2Int cCoord,Vector2Int cCoord_Pre)?>playersChangedCoord=new Dictionary<UNetDefaultPrefab,(Vector2Int,Vector2Int)?>(maxPlayers);[NonSerialized]static readonly List<(Vector2Int cCoord,Vector2Int cCoord_Pre)>playerCoordsToReload=new List<(Vector2Int,Vector2Int)>(maxPlayers);
 [SerializeField]protected float reloadInterval=1f;[NonSerialized]protected float reloadTimer=0f;
+[NonSerialized]public static Queue<NatureData.PlantsData>plantsToCreate=new Queue<NatureData.PlantsData>();
 [SerializeField]protected Vector3   DEBUG_CREATE_SIM_OBJECT_ROTATION;
 [SerializeField]protected Vector3   DEBUG_CREATE_SIM_OBJECT_POSITION;
 [SerializeField]protected SimObject DEBUG_CREATE_SIM_OBJECT=null;
@@ -221,13 +219,13 @@ _next:{}
 }loading.Value.Clear();
 }
 #endregion   
-if(DEBUG_CREATE_SIM_OBJECT){
-if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_OBJECT of prefab:.."+DEBUG_CREATE_SIM_OBJECT);
+bool createdAnything=false;void Creation(SimObject simObject,Vector3 at,Vector3 rotated){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("Creation after prefab of:.."+simObject);
 
 //...
 
-Type type=DEBUG_CREATE_SIM_OBJECT.GetComponent<SimObject>().GetType();
-if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_OBJECT of type:.."+type);
+Type type=simObject.GetType();
+if(LOG&&LOG_LEVEL<=1)Debug.Log("simObject of type:.."+type);
 int id=0;if(!Count.ContainsKey(type)){Count.Add(type,1);}else{
                     
 //...                            
@@ -238,9 +236,48 @@ id=unplacedIds[unplacedIds.Count-1];unplacedIds.RemoveAt(unplacedIds.Count-1);
 id=Count[type]++;
 }                            
 }
-SimObject simObjectToLoad=Create(type,DEBUG_CREATE_SIM_OBJECT_POSITION,DEBUG_CREATE_SIM_OBJECT_ROTATION);
+SimObject simObjectToLoad=Create(type,at,rotated);
+
+//...
+
 simObjectToLoad.loadTuple=(type,id,null);Loaded[type].Add(simObjectToLoad);
+
+createdAnything=true;
+}
+while(plantsToCreate.Count>0){var plantsData=plantsToCreate.Dequeue();
+
+Debug.LogWarning("plantsData:"+plantsData.plantAt.Count);
+foreach(var plant in plantsData.plantAt){
+
+Creation(Prefabs[plant.type].GetComponent<SimObject>(),plant.position,Vector3.zero);
+
+}
+
+plantsData.dequeued=true;}
+if(DEBUG_CREATE_SIM_OBJECT){
+if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_OBJECT of prefab:.."+DEBUG_CREATE_SIM_OBJECT);
+
+////...
+
+//Type type=DEBUG_CREATE_SIM_OBJECT.GetComponent<SimObject>().GetType();
+//if(LOG&&LOG_LEVEL<=1)Debug.Log("DEBUG_CREATE_SIM_OBJECT of type:.."+type);
+//int id=0;if(!Count.ContainsKey(type)){Count.Add(type,1);}else{
+                    
+////...                            
+
+//if(Unplaced.ContainsKey(type)&&Unplaced[type].Count>0){var unplacedIds=Unplaced[type];
+//id=unplacedIds[unplacedIds.Count-1];unplacedIds.RemoveAt(unplacedIds.Count-1);
+//}else{
+//id=Count[type]++;
+//}                            
+//}
+//SimObject simObjectToLoad=Create(type,DEBUG_CREATE_SIM_OBJECT_POSITION,DEBUG_CREATE_SIM_OBJECT_ROTATION);
+//simObjectToLoad.loadTuple=(type,id,null);Loaded[type].Add(simObjectToLoad);
+Creation(DEBUG_CREATE_SIM_OBJECT,DEBUG_CREATE_SIM_OBJECT_POSITION,DEBUG_CREATE_SIM_OBJECT_ROTATION);
 DEBUG_CREATE_SIM_OBJECT=null;
+//backgroundData1.Reset();foregroundData1.Set();
+}
+if(createdAnything){
 backgroundData1.Reset();foregroundData1.Set();
 }
 

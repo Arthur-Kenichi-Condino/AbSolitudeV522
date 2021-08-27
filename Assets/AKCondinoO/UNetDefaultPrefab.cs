@@ -26,7 +26,7 @@ hideFlags=HideFlags.None,
 navMesh=NavMesh.AddNavMeshData(navMeshData);
 }
 }
-if(NetworkManager.Singleton.IsClient){
+if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 bounds=new Bounds(Vector3.zero,World.bounds.size);
 }
 }
@@ -78,7 +78,7 @@ pos_Pre=pos;}
 firstLoop=false;
 }
 }
-if(NetworkManager.Singleton.IsClient){
+if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 if(!players.ContainsKey(this)||players[this]==null){
 pos=transform.position;
 if(firstLoop||pos!=pos_Pre){//  sempre que eu mudar de posição...
@@ -118,7 +118,7 @@ if(!IsLocalPlayer){
 DrawBounds(bounds,Color.yellow);
 }
 }
-if(NetworkManager.Singleton.IsClient){
+if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 DrawBounds(bounds,Color.yellow);
 }
 }

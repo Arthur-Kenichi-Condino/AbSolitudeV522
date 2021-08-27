@@ -379,7 +379,7 @@ if(!networkHidden){
 networkPosition.Value=transform.position;
 }
 }
-if(NetworkManager.Singleton.IsClient){
+if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 transform.position=networkPosition.Value;
 }
 }
