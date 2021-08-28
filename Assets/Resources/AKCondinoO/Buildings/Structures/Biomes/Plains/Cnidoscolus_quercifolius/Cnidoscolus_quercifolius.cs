@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 namespace AKCondinoO.Buildings.Biomes.Plains{public class Cnidoscolus_quercifolius:Plant{
-public static readonly ReadOnlyCollection<Type>Biomes=new ReadOnlyCollection<Type>(new Type[1]{typeof(World.Plains),});
+[NonSerialized]public const int maxDepth=1;
+[NonSerialized]public static readonly ReadOnlyCollection<Type>Biomes=new ReadOnlyCollection<Type>(new Type[1]{typeof(World.Plains),});
 
 //...
 

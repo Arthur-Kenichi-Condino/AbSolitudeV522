@@ -712,7 +712,7 @@ chunk.StopCoroutine(update);foregroundData.Dispose();backgroundData.Dispose();
 
 }
 enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[NonSerialized]NatureStep step=NatureStep.idle;
-[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int[]pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]int[]dValuesDone;
+[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int b;[NonSerialized]Dictionary<Type,int>pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]Dictionary<(Type,Type),int>dValuesDone;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
 [NonSerialized]WaitUntil waitUntilDequeued;
@@ -730,9 +730,10 @@ Debug.LogWarning("load file to get pValuesDone steps/plants and dValuesDone dept
 step=NatureStep.load_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
+bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){b=0;foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
 plants.plantAt.Clear();
-for(p=0;p<this.biomePlants.Value.Count;++p){
+for(p=0;p<this.biomePlants.Value.Count;++p){var plantType=this.biomePlants.Value[p];
+maxDepth=(int)plantType.GetField("maxDepth").GetValue(null);
 
 //...
 for(int d=0;d<maxDepth;++d){
@@ -753,6 +754,7 @@ yield return waitUntil_backgroundData;
 }
 if(!validate())break;}
 if(!validate())break;}
+++b;
 if(!validate())break;}}this.biomePlants=default(KeyValuePair<Type,List<Type>>);
 if(!validate()){
 Debug.LogWarning("cnk moved, cancel");
@@ -833,8 +835,17 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para posi
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out NatureData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
 
 //...
-if(current.step==NatureStep.calc_plants){
+if(current.step==NatureStep.load_plants_done){
+
+//...
 Debug.LogWarning("NatureTask step 1");
+current.pValuesDone=new Dictionary<Type       ,int>();
+current.dValuesDone=new Dictionary<(Type,Type),int>();
+
+}
+else
+if(current.step==NatureStep.calc_plants){
+Debug.LogWarning("NatureTask step 2");
 Debug.LogWarning(current.biomePlants.Value.Count);
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
@@ -857,7 +868,7 @@ Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
 
 }else
 if(current.step==NatureStep.save_plants){
-Debug.LogWarning("NatureTask step 2");
+Debug.LogWarning("NatureTask step 3");
 }
 
 backgroundData.Set();ReleaseData();
