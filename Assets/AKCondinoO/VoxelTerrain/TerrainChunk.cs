@@ -711,7 +711,8 @@ chunk.StopCoroutine(update);foregroundData.Dispose();backgroundData.Dispose();
 //...
 
 }
-enum NatureStep{idle,calc_plants,save_plants}[NonSerialized]NatureStep step=NatureStep.idle;[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;
+enum NatureStep{idle,load_file,calc_plants,save_plants,save_file}[NonSerialized]NatureStep step=NatureStep.idle;
+[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int[]pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]int[]dValuesDone;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
 [NonSerialized]WaitUntil waitUntilDequeued;
@@ -725,8 +726,17 @@ plants.cnkRgn=chunk.cnkRgn;
 
 //...
 Debug.LogWarning("nature makes its move...plants!");
-bool validate(){return plants.cnkIdx==chunk.cnkIdx;}foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
+Debug.LogWarning("load file to get pValuesDone steps/plants and dValuesDone depths already done for each biome");
+step=NatureStep.load_file;
+backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
+yield return waitUntil_backgroundData;
+bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
 plants.plantAt.Clear();
+for(p=0;p<this.biomePlants.Value.Count;++p){
+
+//...
+for(int d=0;d<maxDepth;++d){
+
 step=NatureStep.calc_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
@@ -736,16 +746,24 @@ Debug.LogWarning("enqueue and wait");
 plants.dequeued=false;
 plantsToCreate.Enqueue(plants);
 yield return waitUntilDequeued;
-Debug.LogWarning("save file that step/plant p is done");
+Debug.LogWarning("save file that step/plant p and d depth is done for this biome");
 step=NatureStep.save_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 }
-if(!validate())break;}this.biomePlants=default(KeyValuePair<Type,List<Type>>);if(!validate()){
+if(!validate())break;}
+if(!validate())break;}
+if(!validate())break;}}this.biomePlants=default(KeyValuePair<Type,List<Type>>);
+if(!validate()){
 Debug.LogWarning("cnk moved, cancel");
+step=NatureStep.idle;
 goto _Loop;
 }else{
 Debug.LogWarning("save file that it's all done");
+step=NatureStep.save_file;
+backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
+yield return waitUntil_backgroundData;
+step=NatureStep.idle;
 }
 // nvidia water / but create planes / do the same as plants (?)
 
@@ -828,7 +846,7 @@ for(vCoord1.z=0             ;vCoord1.z<Depth ;vCoord1.z++){
 //...
 Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
                            noiseInput.z+=cnkRgn1.y;
-if(current.biomePlants.Value.Count>0&&vCoord1.x==0&&vCoord1.z==0){plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));}
+//if(current.biomePlants.Value.Count>0&&vCoord1.x==0&&vCoord1.z==0){plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));}
 
 }
 }
