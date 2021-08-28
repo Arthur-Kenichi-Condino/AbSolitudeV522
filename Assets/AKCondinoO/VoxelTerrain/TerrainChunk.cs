@@ -711,7 +711,7 @@ chunk.StopCoroutine(update);foregroundData.Dispose();backgroundData.Dispose();
 //...
 
 }
-enum NatureStep{idle,load_file,calc_plants,save_plants,save_file}[NonSerialized]NatureStep step=NatureStep.idle;
+enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[NonSerialized]NatureStep step=NatureStep.idle;
 [NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int[]pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]int[]dValuesDone;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
@@ -727,7 +727,7 @@ plants.cnkRgn=chunk.cnkRgn;
 //...
 Debug.LogWarning("nature makes its move...plants!");
 Debug.LogWarning("load file to get pValuesDone steps/plants and dValuesDone depths already done for each biome");
-step=NatureStep.load_file;
+step=NatureStep.load_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
@@ -760,7 +760,7 @@ step=NatureStep.idle;
 goto _Loop;
 }else{
 Debug.LogWarning("save file that it's all done");
-step=NatureStep.save_file;
+step=NatureStep.save_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 step=NatureStep.idle;
