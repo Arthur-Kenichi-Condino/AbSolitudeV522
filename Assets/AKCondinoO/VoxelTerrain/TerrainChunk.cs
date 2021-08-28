@@ -694,9 +694,13 @@ collider.enabled=false;
 }[NonSerialized]protected bool Built_v;
 public readonly NatureData nature=new NatureData();
 public class NatureData{
+[NonSerialized]NativeList<RaycastCommand>GetGroundRays;[NonSerialized]readonly List<(int x,int z)>castsvCoords=new List<(int,int)>();
+[NonSerialized]NativeList<RaycastHit    >GetGroundHits;[NonSerialized]readonly ConcurrentDictionary<int,ConcurrentDictionary<(int x,int z),RaycastHit>>GroundHits=new ConcurrentDictionary<int,ConcurrentDictionary<(int,int),RaycastHit>>();
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
+GetGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
+GetGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
 
 //...
 waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
@@ -707,12 +711,14 @@ update=chunk.StartCoroutine(Update(LOG,LOG_LEVEL));
 }
 public void OnDestroy(bool LOG,int LOG_LEVEL){
 chunk.StopCoroutine(update);foregroundData.Dispose();backgroundData.Dispose();
+GetGroundRays.Dispose();
+GetGroundHits.Dispose();
 
 //...
 
 }
 enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[NonSerialized]NatureStep step=NatureStep.idle;
-[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int b;[NonSerialized]Dictionary<Type,int>pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]Dictionary<(Type,Type),int>dValuesDone;
+[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int b;[NonSerialized]Dictionary<Type,int>pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]Dictionary<(Type,Type),int>dValuesDone;[NonSerialized]int d=0;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
 [NonSerialized]WaitUntil waitUntilDequeued;
@@ -731,17 +737,23 @@ step=NatureStep.load_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){b=0;foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
-plants.plantAt.Clear();
 for(p=0;p<this.biomePlants.Value.Count;++p){var plantType=this.biomePlants.Value[p];
 maxDepth=(int)plantType.GetField("maxDepth").GetValue(null);
+foreach(var hitsDictionary in GroundHits)hitsDictionary.Value.Clear();
 
 //...
-for(int d=0;d<maxDepth;++d){
-
+for(d=0;d<maxDepth;++d){
+if(!GroundHits.ContainsKey(d))GroundHits[d]=new ConcurrentDictionary<(int,int),RaycastHit>();
+GetGroundRays.Clear();castsvCoords.Clear();
+GetGroundHits.Clear();
 step=NatureStep.calc_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 Debug.LogWarning("do raycasts and wait results");
+if(validate()){
+plants.plantAt.Clear();
+backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
+yield return waitUntil_backgroundData;
 if(validate()){
 Debug.LogWarning("enqueue and wait");
 plants.dequeued=false;
@@ -751,7 +763,7 @@ Debug.LogWarning("save file that step/plant p and d depth is done for this biome
 step=NatureStep.save_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-}
+}}
 if(!validate())break;}
 if(!validate())break;}
 ++b;
@@ -796,10 +808,14 @@ public static void StartNew(NatureData state){queued.Enqueue(state);enqueued.Set
 //...
 
 #region current processing data
+[NonSerialized]NativeList<RaycastCommand>GetGroundRays;List<(int x,int z)>castsvCoords{get;set;}
+[NonSerialized]NativeList<RaycastHit    >GetGroundHits;ConcurrentDictionary<int,ConcurrentDictionary<(int x,int z),RaycastHit>>GroundHits{get;set;}
 NatureData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 PlantsData plants{get;set;}
 void RenewData(NatureData next){
 current=next;
+GetGroundRays=next.GetGroundRays;castsvCoords=next.castsvCoords;
+GetGroundHits=next.GetGroundHits;GroundHits=next.GroundHits;
 
 //...
 
@@ -807,7 +823,8 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 plants=next.plants;
 }
 void ReleaseData(){
-                    
+castsvCoords=null;                    
+GroundHits=null;
 foregroundData=null;backgroundData=null;
 
 //...
@@ -845,7 +862,8 @@ current.dValuesDone=new Dictionary<(Type,Type),int>();
 }
 else
 if(current.step==NatureStep.calc_plants){
-Debug.LogWarning("NatureTask step 2");
+if(castsvCoords.Count==0){
+Debug.LogWarning("NatureTask step 2.1.");
 Debug.LogWarning(current.biomePlants.Value.Count);
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
@@ -857,7 +875,11 @@ for(vCoord1.z=0             ;vCoord1.z<Depth ;vCoord1.z++){
 //...
 Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
                            noiseInput.z+=cnkRgn1.y;
-//if(current.biomePlants.Value.Count>0&&vCoord1.x==0&&vCoord1.z==0){plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));}
+if(vCoord1.x==0&&vCoord1.z==0){/*plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));*/
+castsvCoords.Add((vCoord1.x,vCoord1.z));
+GetGroundRays.AddNoResize(new RaycastCommand());
+GetGroundHits.AddNoResize(new RaycastHit    ());
+}
 
 }
 }
@@ -865,7 +887,12 @@ Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
 //...
 //Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
 //                           noiseInput.z+=cnkRgn2.y;
+}else{
+Debug.LogWarning("NatureTask step 2.2.");
 
+//...
+
+}
 }else
 if(current.step==NatureStep.save_plants){
 Debug.LogWarning("NatureTask step 3");
