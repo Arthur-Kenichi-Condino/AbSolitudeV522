@@ -695,7 +695,7 @@ collider.enabled=false;
 public readonly NatureData nature=new NatureData();
 public class NatureData{
 [NonSerialized]NativeList<RaycastCommand>GetGroundRays;[NonSerialized]readonly List<(int x,int z)>castsvCoords=new List<(int,int)>();
-[NonSerialized]NativeList<RaycastHit    >GetGroundHits;[NonSerialized]readonly ConcurrentDictionary<int,ConcurrentDictionary<(int x,int z),RaycastHit>>GroundHits=new ConcurrentDictionary<int,ConcurrentDictionary<(int,int),RaycastHit>>();
+[NonSerialized]NativeList<RaycastHit    >GetGroundHits;[NonSerialized]readonly ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundHits=new ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>();
 [NonSerialized]readonly AutoResetEvent foregroundData=new AutoResetEvent(false);[NonSerialized]readonly ManualResetEvent backgroundData=new ManualResetEvent(true);
 [NonSerialized]TerrainChunk chunk;
 public void Awake(TerrainChunk forChunk,bool LOG,int LOG_LEVEL){chunk=forChunk;
@@ -703,6 +703,7 @@ GetGroundRays=new NativeList<RaycastCommand>(Width*Depth,Allocator.Persistent);
 GetGroundHits=new NativeList<RaycastHit    >(Width*Depth,Allocator.Persistent);
 
 //...
+waitUntil_doRaycastsHandle=new WaitUntil(()=>doRaycastsHandle.IsCompleted);
 waitUntil_backgroundData=new WaitUntil(()=>backgroundData.WaitOne(0));
 waitTerrain=new WaitUntil(()=>Start);
 waitUntilDequeued=new WaitUntil(()=>plants.dequeued);
@@ -719,6 +720,7 @@ GetGroundHits.Dispose();
 }
 enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[NonSerialized]NatureStep step=NatureStep.idle;
 [NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int b;[NonSerialized]Dictionary<Type,int>pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]Dictionary<(Type,Type),int>dValuesDone;[NonSerialized]int d=0;
+[NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
 [NonSerialized]WaitUntil waitUntilDequeued;
@@ -743,14 +745,28 @@ foreach(var hitsDictionary in GroundHits)hitsDictionary.Value.Clear();
 
 //...
 for(d=0;d<maxDepth;++d){
-if(!GroundHits.ContainsKey(d))GroundHits[d]=new ConcurrentDictionary<(int,int),RaycastHit>();
 GetGroundRays.Clear();castsvCoords.Clear();
-GetGroundHits.Clear();
+GetGroundHits.Clear();if(!GroundHits.ContainsKey(d))GroundHits[d]=new ConcurrentDictionary<int,RaycastHit>();
 step=NatureStep.calc_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-Debug.LogWarning("do raycasts and wait results");
 if(validate()){
+Debug.LogWarning("do raycasts and wait results");
+doRaycastsHandle=RaycastCommand.ScheduleBatch(GetGroundRays,GetGroundHits,1,default(JobHandle));
+yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
+
+//...
+Vector3Int vCoord1=new Vector3Int(0,0,0);int i=0;
+for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
+for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
+if(castsvCoords.Contains((vCoord1.x,vCoord1.z))){var result=GetGroundHits[i];
+int index=vCoord1.z+vCoord1.x*Depth;
+GroundHits[d][index]=result;
+++i;}
+}
+}
+
+if(validate()&&GroundHits[d].Count>0){
 plants.plantAt.Clear();
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
@@ -763,15 +779,15 @@ Debug.LogWarning("save file that step/plant p and d depth is done for this biome
 step=NatureStep.save_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-}}
-if(!validate())break;}
+}}}
+if(!validate()||GroundHits[d].Count==0)break;}
 if(!validate())break;}
 ++b;
 if(!validate())break;}}this.biomePlants=default(KeyValuePair<Type,List<Type>>);
 if(!validate()){
 Debug.LogWarning("cnk moved, cancel");
 step=NatureStep.idle;
-goto _Loop;
+goto _End;
 }else{
 Debug.LogWarning("save file that it's all done");
 step=NatureStep.save_plants_done;
@@ -780,6 +796,7 @@ yield return waitUntil_backgroundData;
 step=NatureStep.idle;
 }
 // nvidia water / but create planes / do the same as plants (?)
+_End:{}
 
 //...
 Debug.LogWarning("looping");
@@ -809,13 +826,13 @@ public static void StartNew(NatureData state){queued.Enqueue(state);enqueued.Set
 
 #region current processing data
 [NonSerialized]NativeList<RaycastCommand>GetGroundRays;List<(int x,int z)>castsvCoords{get;set;}
-[NonSerialized]NativeList<RaycastHit    >GetGroundHits;ConcurrentDictionary<int,ConcurrentDictionary<(int x,int z),RaycastHit>>GroundHits{get;set;}
+[NonSerialized]NativeList<RaycastHit    >GetGroundHits;ConcurrentDictionary<int,ConcurrentDictionary<int,RaycastHit>>GroundHits{get;set;}
 NatureData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 PlantsData plants{get;set;}
 void RenewData(NatureData next){
 current=next;
 GetGroundRays=next.GetGroundRays;castsvCoords=next.castsvCoords;
-GetGroundHits=next.GetGroundHits;GroundHits=next.GroundHits;
+GetGroundHits=next.GetGroundHits;  GroundHits=next.GroundHits;
 
 //...
 
@@ -823,8 +840,8 @@ foregroundData=next.foregroundData;backgroundData=next.backgroundData;
 plants=next.plants;
 }
 void ReleaseData(){
-castsvCoords=null;                    
-GroundHits=null;
+castsvCoords=null;
+ GroundHits=null;
 foregroundData=null;backgroundData=null;
 
 //...
@@ -862,35 +879,50 @@ current.dValuesDone=new Dictionary<(Type,Type),int>();
 }
 else
 if(current.step==NatureStep.calc_plants){
-if(castsvCoords.Count==0){
+if(GroundHits[current.d].Count==0){
 Debug.LogWarning("NatureTask step 2.1.");
 Debug.LogWarning(current.biomePlants.Value.Count);
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
 Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
-for(vCoord1.x=0             ;vCoord1.x<Width ;vCoord1.x++){
-for(vCoord1.z=0             ;vCoord1.z<Depth ;vCoord1.z++){
+for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
+for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
 
 //...
 Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
                            noiseInput.z+=cnkRgn1.y;
-if(vCoord1.x==0&&vCoord1.z==0){/*plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));*/
+if(vCoord1.x==0&&vCoord1.z==0){
+GetGroundRays.AddNoResize(new RaycastCommand(noiseInput,Vector3.down,128f+1f));
+GetGroundHits.AddNoResize(new RaycastHit    ()                               );
 castsvCoords.Add((vCoord1.x,vCoord1.z));
-GetGroundRays.AddNoResize(new RaycastCommand());
-GetGroundHits.AddNoResize(new RaycastHit    ());
 }
 
 }
 }
 
 //...
-//Vector3 noiseInput=vCoord2;noiseInput.x+=cnkRgn2.x;
-//                           noiseInput.z+=cnkRgn2.y;
+
 }else{
 Debug.LogWarning("NatureTask step 2.2.");
 
+//.../*plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));*/
+var cCoord1=plants.cCoord;
+var cnkRgn1=plants.cnkRgn;
+var cnkIdx1=plants.cnkIdx;
+Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
+for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
+for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
+int index=vCoord1.z+vCoord1.x*Depth;
+
 //...
+if(GroundHits[current.d].TryGetValue(index,out RaycastHit floor)){
+//Debug.LogWarning(floor.point);
+//plants.plantAt.Add((floor.point,current.biomePlants.Value[current.p]));
+}
+
+}
+}
 
 }
 }else
@@ -1081,7 +1113,7 @@ GroundMap[GroundMapDepth][index]=result;
 }
 _LengthReached:{}
 }
-if(!groundFound){
+if(!groundFound&&GroundMapDepth>0){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("[GroundMap]!groundFound at GroundMapDepth:"+GroundMapDepth);
 step=PathfindStep.setNodes;
 }else{

@@ -11,7 +11,7 @@ Camera.main.transparencySortMode=TransparencySortMode.Default;
 tgtRot=tgtRot_Pre=transform.eulerAngles;
 tgtPos=tgtPos_Pre=transform.position;
 }
-[NonSerialized]Vector3 inputViewRotationEuler;[NonSerialized]float ViewRotationSmoothValue=.025f;[NonSerialized]Vector3 tgtRot,tgtRot_Pre;[NonSerialized]float tgtRotLerpTime;[NonSerialized]float tgtRotLerpMaxTime=.05f;[NonSerialized]float tgtRotLerpVal;[NonSerialized]Quaternion tgtRotLerpA,tgtRotLerpB;[NonSerialized]float tgtRotLerpSpeed=18.75f;
+[NonSerialized]Vector3 inputViewRotationEuler;[NonSerialized]float ViewRotationSmoothValue=.025f;[NonSerialized]Vector3 tgtRot,tgtRot_Pre;[NonSerialized]float tgtRotLerpTime;[NonSerialized]float tgtRotLerpMaxTime=.025f;[NonSerialized]float tgtRotLerpVal;[NonSerialized]Quaternion tgtRotLerpA,tgtRotLerpB;[NonSerialized]float tgtRotLerpSpeed=18.75f;
 [NonSerialized]Vector3 inputMoveSpeed;[NonSerialized]Vector3 MoveAcceleration=new Vector3(.01f,.01f,.01f);[NonSerialized]Vector3 MaxMoveSpeed=new Vector3(.1f,.1f,.1f);[NonSerialized]Vector3 tgtPos,tgtPos_Pre;[NonSerialized]float tgtPosLerpTime;[NonSerialized]float tgtPosLerpMaxTime=.05f;[NonSerialized]float tgtPosLerpVal;[NonSerialized]Vector3 tgtPosLerpA,tgtPosLerpB;[NonSerialized]float tgtPosLerpSpeed=25f;
 void Update(){
 
