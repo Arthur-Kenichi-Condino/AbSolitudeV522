@@ -11,7 +11,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 13.701237
+  m_Radius: 7.5
   m_Center: {x: 0.444129, y: 7.4606614, z: 0.09979439}
 --- !u!65 &8389156466857473783
 BoxCollider:
@@ -72,6 +72,7 @@ MonoBehaviour:
   GIZMOS_ENABLED: 1
   savingInterval: 120
   DEBUG_UNPLACE: 0
+  radiusCollider: {fileID: 3509351442866892673}
 --- !u!1001 &5971843018143490281
 PrefabInstance:
   m_ObjectHideFlags: 0
