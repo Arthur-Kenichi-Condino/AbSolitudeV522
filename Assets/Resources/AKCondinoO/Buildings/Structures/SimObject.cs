@@ -215,6 +215,7 @@ if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id
 [NonSerialized]protected Vector2Int cCoord_Pre;
 [NonSerialized]protected int cnkIdx;[NonSerialized]protected TerrainChunk cnk=null;
 [SerializeField]protected float savingInterval=120f;[NonSerialized]protected float nextSaveTimer=0f;
+[NonSerialized]Collider[]isOverlappingNonAllocResults=new Collider[4];
 [SerializeField]protected bool DEBUG_UNPLACE=false;
 protected virtual void Update(){
 if(NetworkManager.Singleton.IsServer||atServer){atServer=true;
@@ -236,6 +237,22 @@ if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Deb
 if(!gotcnk){getcnk();}//  ...e a coordenada mudar (e houver recarregamento), cheque se o chunk em que estou existe.
 aCoord_Pre=aCoord;}
 }
+bool IsOverlappingNonAlloc(){if(rigidbody!=null){return false;}bool result=false;
+int resultsLength;for(int i=0;i<collider.Length;++i){var size=collider[i].bounds.size-(Vector3.one*.1f);
+if((resultsLength=Physics.OverlapBoxNonAlloc(collider[i].bounds.center,size/2f,isOverlappingNonAllocResults,transform.rotation,PhysHelper.NoTerrainLayer))>0){if(resultsLength>=isOverlappingNonAllocResults.Length){Array.Resize(ref isOverlappingNonAllocResults,Mathf.Max(resultsLength,isOverlappingNonAllocResults.Length*2));}
+
+//...
+for(int j=0;j<resultsLength;++j){var overlapping=isOverlappingNonAllocResults[j];if(overlapping==null)break;
+if(overlapping==collider[i])continue;if(overlapping.isTrigger)continue;if(overlapping.gameObject==this.gameObject)continue;if(overlapping.GetComponent<Rigidbody>()!=null)continue;
+
+Debug.LogWarning(overlapping.name,overlapping);
+
+result=true;break;
+}
+
+}
+}
+return result;}
 void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
 foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
@@ -250,6 +267,13 @@ if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do
 if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
 Disable();
 unplace=true;
+}else if(IsOverlappingNonAlloc()){
+
+//...
+Debug.LogWarning("IsOverlappingNonAlloc");
+Disable();
+unplace=true;
+
 }else if(atServer&&!NetworkManager.Singleton.IsServer){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("deactivate myself because the server shutdown",this);
 Disable();
