@@ -478,9 +478,9 @@ if(iCoord.y==0){break;}}}
 public class BiomeBase{public bool LOG=true;public int LOG_LEVEL=1;
 
 //...
-public static readonly Dictionary<Type,List<Type>>PlantsByBiome=new Dictionary<Type,List<Type>>();
+public static readonly Dictionary<Type,List<(Type type,float chance,Vector3 minScale,Vector3 maxScale)>>PlantsByBiome=new Dictionary<Type,List<(Type,float,Vector3,Vector3)>>();
 public BiomeBase(){
-PlantsByBiome[GetType()]=new List<Type>();
+PlantsByBiome[GetType()]=new List<(Type,float,Vector3,Vector3)>();
 }
 
 #region Initialize
@@ -547,15 +547,18 @@ v=Voxel.Air;}
 
 //...
 protected Select[]PlantsSelectors=new Select[1];
-public virtual bool plants(Vector3 input,Type plant,Perlin chancePerlin,float chance){
+public virtual bool plants(Vector3 input,Type plant,Perlin chancePerlin,float chance,out float result){result=0f;
 return false;}
+public virtual(float rotation,Vector3 scale)plantModifiers(Vector3 input,Type plant,Perlin scaleModifierPerlin,Vector3 minScale,Vector3 maxScale,Perlin rotationModifierPerlin){
+                                                                   input+=_deround;
+return((float)rotationModifierPerlin.GetValue(input.z,input.x,0)*270f,Vector3.Lerp(Vector3.one*.1f,Vector3.one*.5f,Mathf.Clamp01(((float)scaleModifierPerlin.GetValue(input.z,input.x,0)+1)/2f)));}
 
 }
 public class Plains:BiomeBase{
 
 //...
 public Plains():base(){
-PlantsByBiome[GetType()]=new List<Type>();
+PlantsByBiome[GetType()]=new List<(Type,float,Vector3,Vector3)>();
 }
 
 public override int IdxForRnd{get{return 1;}}
@@ -606,7 +609,7 @@ m=MaterialIdPicking[0].Item1;//  Rock
 return mCache!=null?mCache[0][nbrIdx][inputIndex]=m:m;}
 
 //...
-public override bool plants(Vector3 input,Type plant,Perlin chancePerlin,float chance){
+public override bool plants(Vector3 input,Type plant,Perlin chancePerlin,float chance,out float result){
                                     input+=_deround;
 double min=PlantsSelectors[0].Minimum;
 double max=PlantsSelectors[0].Maximum;
@@ -615,13 +618,13 @@ var selectValue=PlantsSelectors[0].Controller.GetValue(input.z,input.x,0);
 if(selectValue<=min-fallOff||selectValue>=max+fallOff){
 //...
 //Debug.LogWarning(((chancePerlin.GetValue(input.z,input.x,0)+1f)/2f));
-if((chancePerlin.GetValue(input.z,input.x,0)+1f)/2f<=chance){
+if((result=(float)((chancePerlin.GetValue(input.z,input.x,0)+1f)/2f))<=chance){
 return true;
 }
 }else{
 //...
 }
-return false;}
+result=0f;return false;}
 
 }
 #if UNITY_EDITOR

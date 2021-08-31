@@ -728,7 +728,7 @@ GetObstructionHits.Dispose();
 
 }
 enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[NonSerialized]NatureStep step=NatureStep.idle;
-[NonSerialized]KeyValuePair<Type,List<Type>>biomePlants;[NonSerialized]int b;[NonSerialized]Dictionary<Type,int>pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]Dictionary<(Type,Type),int>dValuesDone;[NonSerialized]int d=0;
+[NonSerialized]KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>biomePlants;[NonSerialized]int b;[NonSerialized]Dictionary<Type,int>pValuesDone;[NonSerialized]int p;[NonSerialized]int maxDepth;[NonSerialized]Dictionary<(Type,Type),int>dValuesDone;[NonSerialized]int d=0;
 [NonSerialized]JobHandle doRaycastsHandle;[NonSerialized]WaitUntil waitUntil_doRaycastsHandle;
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
@@ -747,8 +747,8 @@ Debug.LogWarning("load file to get pValuesDone steps/plants and dValuesDone dept
 step=NatureStep.load_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){b=0;foreach(KeyValuePair<Type,List<Type>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
-for(p=0;p<this.biomePlants.Value.Count;++p){var plantType=this.biomePlants.Value[p];
+bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){b=0;foreach(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
+for(p=0;p<this.biomePlants.Value.Count;++p){var plantType=this.biomePlants.Value[p].Item1;
 maxDepth=(int)plantType.GetField("maxDepth").GetValue(null);
 foreach(var hitsDictionary in GroundHits)hitsDictionary.Value.Clear();foreach(var hitsDictionary in ObstructionHits)hitsDictionary.Value.Clear();
 
@@ -824,7 +824,7 @@ yield return waitUntil_backgroundData;
 if(!validate()||GroundHits[d].Count==0)break;}
 if(!validate())break;}
 ++b;
-if(!validate())break;}}this.biomePlants=default(KeyValuePair<Type,List<Type>>);
+if(!validate())break;}}this.biomePlants=default(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>);
 if(!validate()){
 Debug.LogWarning("cnk moved, cancel");
 step=NatureStep.idle;
@@ -853,7 +853,7 @@ public class PlantsData{
 [NonSerialized]public bool ready;[NonSerialized]public bool dequeued;
 
 //...
-[NonSerialized]public readonly List<(Vector3 position,Type type)>plantAt=new List<(Vector3,Type)>();
+[NonSerialized]public readonly List<(Vector3 position,Vector3 rotation,Vector3 scale,Type type)>plantAt=new List<(Vector3,Vector3,Vector3,Type)>();
 
 }
 
@@ -912,9 +912,9 @@ void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThre
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para posicionar vegetação no terreno");
-Perlin           chancePerlin=new Perlin(frequency:Mathf.Pow(2,-6),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
-Perlin    scaleModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-6),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
-Perlin rotationModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-6),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
+Perlin           chancePerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
+Perlin    scaleModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
+Perlin rotationModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out NatureData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
 
 //...
@@ -931,14 +931,12 @@ if(current.step==NatureStep.calc_plants){
 if(GroundHits[current.d].Count==0){
 Debug.LogWarning("NatureTask step 2.1.");
 //Debug.LogWarning(current.biomePlants.Value.Count);
-float radius=(float)current.biomePlants.Value[current.p].GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+float radius=(float)current.biomePlants.Value[current.p].Item1.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);
 Vector2Int spacing=Vector2Int.zero;
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
           chancePerlin.Seed=cnkRgn1.x+cnkRgn1.y;
-   scaleModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
-rotationModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
 Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
 for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
 //if(spacing.x>0||spacing.y>0){
@@ -953,7 +951,7 @@ Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
 //if(spacing.x>0||spacing.y>0){
 //spacing.y--;
 //}else 
-if(vCoord1.x>spacing.x&&vCoord1.z>spacing.y&&biome.plants(noiseInput,current.biomePlants.Value[current.p],chancePerlin,.5f)){
+if(vCoord1.x>spacing.x&&vCoord1.z>spacing.y&&biome.plants(noiseInput,current.biomePlants.Value[current.p].Item1,chancePerlin,current.biomePlants.Value[current.p].Item2,out float result)){
 Vector3 from=vCoord1;
         from.x+=cnkRgn1.x-Width/2f;
         from.z+=cnkRgn1.y-Depth/2f;
@@ -961,10 +959,10 @@ Vector3 from=vCoord1;
 GetGroundRays.AddNoResize(new RaycastCommand(from,Vector3.down,128f+1f,PhysHelper.TerrainOnlyLayer));
 GetGroundHits.AddNoResize(new RaycastHit    ()                                                     );
 castsvCoords.Add((vCoord1.x,vCoord1.z));
-spacing.x=vCoord1.x+(int)radius+1;
-spacing.y=vCoord1.z+(int)radius+1;
+spacing.x=vCoord1.x+(int)(radius*(result+1f))+1;
+spacing.y=vCoord1.z+(int)(radius*(result+1f))+1;
 //...
-//Debug.LogWarning(spacing);
+Debug.LogWarning(spacing+" "+result);
 
 }
 //}
@@ -979,7 +977,7 @@ if(ObstructionHits[current.d].Count==0){
 
 //...
 Debug.LogWarning("NatureTask step 2.2.");
-float radius=(float)current.biomePlants.Value[current.p].GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+float radius=(float)current.biomePlants.Value[current.p].Item1.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
@@ -1002,9 +1000,12 @@ castsvCoords.Add((vCoord1.x,vCoord1.z));
 Debug.LogWarning("NatureTask step 2.3.");
 
 //.../*plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));*/
+float buryRootsDepth=(float)current.biomePlants.Value[current.p].Item1.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).GetValue(null);
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
+   scaleModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
+rotationModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
 Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
 for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
 for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
@@ -1013,8 +1014,14 @@ int index=vCoord1.z+vCoord1.x*Depth;
 //...
 if(GroundHits[current.d].TryGetValue(index,out RaycastHit floor)){
 if(ObstructionHits[current.d][index].normal==Vector3.zero){
-Debug.LogWarning(floor.point);
-plants.plantAt.Add((floor.point,current.biomePlants.Value[current.p]));
+//Debug.LogWarning(floor.point);
+Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
+                           noiseInput.z+=cnkRgn1.y;
+var modifiers=biome.plantModifiers(noiseInput,current.biomePlants.Value[current.p].Item1,scaleModifierPerlin,current.biomePlants.Value[current.p].Item3,current.biomePlants.Value[current.p].Item4,rotationModifierPerlin);
+
+var rotation=Quaternion.FromToRotation(Vector3.up,floor.normal)*Quaternion.Euler(new Vector3(0f,modifiers.rotation,0f));
+
+plants.plantAt.Add((floor.point-(floor.normal*buryRootsDepth*modifiers.scale.y),rotation.eulerAngles,modifiers.scale,current.biomePlants.Value[current.p].Item1));
 }
 }
 

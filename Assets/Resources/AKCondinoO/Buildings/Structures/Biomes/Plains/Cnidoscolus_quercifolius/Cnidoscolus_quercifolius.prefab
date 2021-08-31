@@ -73,6 +73,7 @@ MonoBehaviour:
   savingInterval: 120
   DEBUG_UNPLACE: 0
   radiusCollider: {fileID: 3509351442866892673}
+  rootsCollider: {fileID: 8389156466857473783}
 --- !u!1001 &5971843018143490281
 PrefabInstance:
   m_ObjectHideFlags: 0

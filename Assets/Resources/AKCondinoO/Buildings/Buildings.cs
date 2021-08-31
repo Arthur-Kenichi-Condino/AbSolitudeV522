@@ -37,17 +37,21 @@ Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<Sim
 
 //...
 if(sO is Plant plant){
-Type plantType;ReadOnlyCollection<Type>biomes=(ReadOnlyCollection<Type>)(plantType=plant.GetType()).GetField("Biomes").GetValue(null);
+Type plantType;ReadOnlyCollection<(Type type,float chance,Vector3 minScale,Vector3 maxScale)>biomes=(ReadOnlyCollection<(Type,float,Vector3,Vector3)>)(plantType=plant.GetType()).GetField("Biomes").GetValue(null);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("biomes count for "+plantType+":.."+biomes.Count);
 SphereCollider radiusCollider=(SphereCollider)plantType.GetField("radiusCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
 
 //...
 plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).SetValue(null,radiusCollider.radius*plant.transform.lossyScale.y);
 Debug.LogWarning(radiusCollider.radius+" "+plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null));
+                    
+BoxCollider rootsCollider=(BoxCollider)plantType.GetField("rootsCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
+plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).SetValue(null,rootsCollider.size.y/2f);
+Debug.LogWarning((rootsCollider.size.y/2f)+" "+plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).GetValue(null));
 
 foreach(var biome in biomes){
 if(LOG&&LOG_LEVEL<=1)Debug.Log(plantType+"..is in biome.."+biome);
-BiomeBase.PlantsByBiome[biome].Add(plantType);
+BiomeBase.PlantsByBiome[biome.type].Add((plantType,biome.chance,biome.minScale,biome.maxScale));
 }
 }
 
@@ -225,7 +229,7 @@ _next:{}
 }loading.Value.Clear();
 }
 #endregion   
-bool createdAnything=false;void Creation(SimObject simObject,Vector3 at,Vector3 rotated){
+bool createdAnything=false;SimObject Creation(SimObject simObject,Vector3 at,Vector3 rotated){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("Creation after prefab of:.."+simObject);
 
 //...
@@ -249,13 +253,13 @@ SimObject simObjectToLoad=Create(type,at,rotated);
 simObjectToLoad.loadTuple=(type,id,null);Loaded[type].Add(simObjectToLoad);
 
 createdAnything=true;
-}
+return simObjectToLoad;}
 while(plantsToCreate.Count>0){var plantsData=plantsToCreate.Dequeue();
 
 Debug.LogWarning("plantsData:"+plantsData.plantAt.Count);
 foreach(var plant in plantsData.plantAt){
 
-Creation(Prefabs[plant.type].GetComponent<SimObject>(),plant.position,Vector3.zero);
+Creation(Prefabs[plant.type].GetComponent<SimObject>(),plant.position,plant.rotation).transform.localScale=plant.scale;
 
 }
 
