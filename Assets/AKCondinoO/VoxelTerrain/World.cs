@@ -484,7 +484,7 @@ PlantsByBiome[GetType()]=new List<Type>();
 }
 
 #region Initialize
-protected readonly System.Random[]Random=new System.Random[2];
+protected readonly System.Random[]Random=new System.Random[2];protected readonly System.Random[]PlantsRandom=new System.Random[2];
 public virtual int IdxForRnd{get{return 0;}}
 public virtual int IdxForHgt{get{return 4;}}//  Base Height Result Module
 public int Seed{
@@ -493,6 +493,8 @@ set{       Seed_v=value;
 if(LOG&&LOG_LEVEL<=1)Debug.Log("Seed value.."+value);
 Random[0]=new System.Random(Seed_v);
 Random[1]=new System.Random(Random[0].Next());
+PlantsRandom[0]=new System.Random(Seed_v);
+PlantsRandom[1]=new System.Random(PlantsRandom[0].Next());
 
 //...
 
@@ -545,8 +547,8 @@ v=Voxel.Air;}
 
 //...
 protected Select[]PlantsSelectors=new Select[1];
-protected virtual void plants(Vector3 input){
-}
+public virtual bool plants(Vector3 input,Type plant,Perlin chancePerlin,float chance){
+return false;}
 
 }
 public class Plains:BiomeBase{
@@ -597,20 +599,29 @@ double max=MaterialIdSelectors[0].Maximum;
 double fallOff=MaterialIdSelectors[0].FallOff*.5;
 var selectValue=MaterialIdSelectors[0].Controller.GetValue(input.z,input.x,0);
 if(selectValue<=min-fallOff||selectValue>=max+fallOff){
-m=MaterialIdPicking[0].Item2;
+m=MaterialIdPicking[0].Item2;//  Dirt
 }else{
-m=MaterialIdPicking[0].Item1;
+m=MaterialIdPicking[0].Item1;//  Rock
 }
 return mCache!=null?mCache[0][nbrIdx][inputIndex]=m:m;}
 
 //...
-protected override void plants(Vector3 input){
+public override bool plants(Vector3 input,Type plant,Perlin chancePerlin,float chance){
+                                    input+=_deround;
 double min=PlantsSelectors[0].Minimum;
 double max=PlantsSelectors[0].Maximum;
 double fallOff=PlantsSelectors[0].FallOff*.5;
 var selectValue=PlantsSelectors[0].Controller.GetValue(input.z,input.x,0);
-                   base.plants(input);
+if(selectValue<=min-fallOff||selectValue>=max+fallOff){
+//...
+//Debug.LogWarning(((chancePerlin.GetValue(input.z,input.x,0)+1f)/2f));
+if((chancePerlin.GetValue(input.z,input.x,0)+1f)/2f<=chance){
+return true;
 }
+}else{
+//...
+}
+return false;}
 
 }
 #if UNITY_EDITOR

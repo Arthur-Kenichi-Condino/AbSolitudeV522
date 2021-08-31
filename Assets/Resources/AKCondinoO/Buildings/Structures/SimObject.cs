@@ -21,6 +21,7 @@ set{         lock(Stop_Syn){    Stop_v=value;}if(value){foregroundData.Set();}}
 public string type{get;set;}public int id{get;set;}
 public SerializableQuaternion rotation{get;set;}
 public SerializableVector3    position{get;set;}
+public SerializableVector3    scale{get;set;}
 }[NonSerialized]readonly SimObjectSaveTransform saveTransform=new SimObjectSaveTransform();[NonSerialized]string transformFolder;[NonSerialized]string transformFile;
 [Serializable]public class SimObjectSaveStateData{
 public string type{get;set;}public int id{get;set;}
@@ -124,6 +125,7 @@ using(StreamWriter writer=new StreamWriter(file)){
 writer.WriteLine(saveTransform.id);
 writer.WriteLine(saveTransform.position);
 writer.WriteLine(saveTransform.rotation);
+writer.WriteLine(saveTransform.scale);
 }
 }
 }else{
@@ -145,6 +147,7 @@ saveTransform.id=id;reader.ReadLine();
 string line;
 var positionValues=(line=reader.ReadLine()).Substring(1,line.Length-2).Split('_');saveTransform.position=new SerializableVector3(float.Parse(positionValues[0]),float.Parse(positionValues[1]),float.Parse(positionValues[2]));
 var rotationValues=(line=reader.ReadLine()).Substring(1,line.Length-2).Split('_');saveTransform.rotation=new SerializableQuaternion(float.Parse(rotationValues[0]),float.Parse(rotationValues[1]),float.Parse(rotationValues[2]),float.Parse(rotationValues[3]));
+   var scaleValues=(line=reader.ReadLine()).Substring(1,line.Length-2).Split('_');saveTransform.scale=new SerializableVector3(float.Parse(scaleValues[0]),float.Parse(scaleValues[1]),float.Parse(scaleValues[2]));
 }
 }
 loaded=true;
@@ -298,10 +301,12 @@ if(backgroundData.WaitOne(0)){
 if(id!=-1){
 #region get data if loaded or set if saving...
 if(loaded){loaded=false;
+transform.localScale=saveTransform.scale;
 transform.rotation=saveTransform.rotation;
 transform.position=saveTransform.position;
 }else{
 saveTransform.id=id;
+saveTransform.scale=transform.localScale;
 saveTransform.rotation=transform.rotation;
 saveTransform.position=transform.position;
 }

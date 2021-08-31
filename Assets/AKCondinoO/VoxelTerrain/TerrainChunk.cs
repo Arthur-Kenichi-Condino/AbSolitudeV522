@@ -1,4 +1,6 @@
 using AKCondinoO.Buildings;
+using LibNoise;
+using LibNoise.Generator;
 using MessagePack;
 using MLAPI;
 using MLAPI.NetworkVariable;
@@ -910,6 +912,9 @@ void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThre
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para posicionar vegetação no terreno");
+Perlin           chancePerlin=new Perlin(frequency:Mathf.Pow(2,-6),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
+Perlin    scaleModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-6),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
+Perlin rotationModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-6),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out NatureData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
 
 //...
@@ -926,21 +931,43 @@ if(current.step==NatureStep.calc_plants){
 if(GroundHits[current.d].Count==0){
 Debug.LogWarning("NatureTask step 2.1.");
 //Debug.LogWarning(current.biomePlants.Value.Count);
+float radius=(float)current.biomePlants.Value[current.p].GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+Vector2Int spacing=Vector2Int.zero;
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
+          chancePerlin.Seed=cnkRgn1.x+cnkRgn1.y;
+   scaleModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
+rotationModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
 Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
 for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
+//if(spacing.x>0||spacing.y>0){
+//spacing.x--;
+//}
 for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
 
 //...
 Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
                            noiseInput.z+=cnkRgn1.y;
-if(vCoord1.x==0&&vCoord1.z==0){
-GetGroundRays.AddNoResize(new RaycastCommand(noiseInput,Vector3.down,128f+1f,PhysHelper.TerrainOnlyLayer));
-GetGroundHits.AddNoResize(new RaycastHit    ()                                                           );
+//if(vCoord1.x==0&&vCoord1.z==0){
+//if(spacing.x>0||spacing.y>0){
+//spacing.y--;
+//}else 
+if(vCoord1.x>spacing.x&&vCoord1.z>spacing.y&&biome.plants(noiseInput,current.biomePlants.Value[current.p],chancePerlin,.5f)){
+Vector3 from=vCoord1;
+        from.x+=cnkRgn1.x-Width/2f;
+        from.z+=cnkRgn1.y-Depth/2f;
+
+GetGroundRays.AddNoResize(new RaycastCommand(from,Vector3.down,128f+1f,PhysHelper.TerrainOnlyLayer));
+GetGroundHits.AddNoResize(new RaycastHit    ()                                                     );
 castsvCoords.Add((vCoord1.x,vCoord1.z));
+spacing.x=vCoord1.x+(int)radius+1;
+spacing.y=vCoord1.z+(int)radius+1;
+//...
+//Debug.LogWarning(spacing);
+
 }
+//}
 
 }
 }
