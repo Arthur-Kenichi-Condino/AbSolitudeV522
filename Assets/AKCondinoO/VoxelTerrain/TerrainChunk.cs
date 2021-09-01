@@ -747,7 +747,7 @@ Debug.LogWarning("load file to get pValuesDone steps/plants and dValuesDone dept
 step=NatureStep.load_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-bool validate(){return plants.cnkIdx==chunk.cnkIdx;}if(validate()){b=0;foreach(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
+b=0;foreach(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
 for(p=0;p<this.biomePlants.Value.Count;++p){var plantType=this.biomePlants.Value[p].Item1;
 maxDepth=(int)plantType.GetField("maxDepth").GetValue(null);
 foreach(var hitsDictionary in GroundHits)hitsDictionary.Value.Clear();foreach(var hitsDictionary in ObstructionHits)hitsDictionary.Value.Clear();
@@ -761,13 +761,11 @@ GetObstructionHits.Clear();if(!ObstructionHits.ContainsKey(d))ObstructionHits[d]
 step=NatureStep.calc_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-if(validate()){
 Debug.LogWarning("do raycasts and wait results");
 doRaycastsHandle=RaycastCommand.ScheduleBatch(GetGroundRays,GetGroundHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
 
 //...
-if(validate()){
 Vector3Int vCoord1=new Vector3Int(0,0,0);int i=0;
 for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
 for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
@@ -785,11 +783,9 @@ castsvCoords.Clear();
 //...
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-if(validate()){
 Debug.LogWarning("do spherecasts and wait results");
 doRaycastsHandle=SpherecastCommand.ScheduleBatch(GetObstructionRays,GetObstructionHits,1,default(JobHandle));
 yield return waitUntil_doRaycastsHandle;doRaycastsHandle.Complete();
-if(validate()){
 
 //...
 vCoord1=new Vector3Int(0,0,0);i=0;
@@ -809,7 +805,6 @@ ObstructionHits[d][index]=default(RaycastHit);
 plants.plantAt.Clear();
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-if(validate()){
 Debug.LogWarning("enqueue and wait");
 plants.dequeued=false;
 plantsToCreate.Enqueue(plants);
@@ -818,28 +813,20 @@ Debug.LogWarning("save file that step/plant p and d depth is done for this biome
 step=NatureStep.save_plants;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
-}}}
 }
-}}
-if(!validate()||GroundHits[d].Count==0)break;}
-if(!validate())break;}
-++b;
-if(!validate())break;}}this.biomePlants=default(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>);
-if(!validate()){
-Debug.LogWarning("cnk moved, cancel");
-step=NatureStep.idle;
-goto _End;
-}else{
+if(GroundHits[d].Count==0)break;}
+}
+++b;}this.biomePlants=default(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>);
 Debug.LogWarning("save file that it's all done");
 step=NatureStep.save_plants_done;
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 step=NatureStep.idle;
-}
 // nvidia water / but create planes / do the same as plants (?)
 _End:{}
 
 //...
+OnTerrainNatureUpdate(chunk);
 Debug.LogWarning("looping");
 
 yield return null;

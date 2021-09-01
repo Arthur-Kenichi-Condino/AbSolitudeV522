@@ -234,6 +234,7 @@ private set{          lock(averageFramerate_Syn){    averageFramerate_v=value;} 
 [NonSerialized]static Vector3    actPos;
 [NonSerialized]static Vector2Int aCoord,aCoord_Pre;
 [NonSerialized]static Vector2Int actRgn;
+[NonSerialized]static Vector3    camPos;
 [SerializeField]protected bool       DEBUG_EDIT=false;
 [SerializeField]protected Vector3    DEBUG_EDIT_AT=Vector3.zero;
 [SerializeField]protected EditMode   DEBUG_EDIT_MODE=EditMode.cube;
@@ -273,6 +274,7 @@ if(LOG&&LOG_LEVEL<=-1000){if(chunkMemoryUsage>=0){chunkMemoryUsage=System.GC.Get
 
 //...
 
+if(AddingTrees.Count==0){
 if(firstLoop||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
               actPos=(Camera.main.transform.position);
 if(firstLoop |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
@@ -333,11 +335,16 @@ if(iCoord.y==0){break;}}}
 
 navMeshDirty=true;
 aCoord_Pre=aCoord;}
-AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[0],actPos);
+}
+}
+if(firstLoop||camPos!=Camera.main.transform.position){
+              camPos=(Camera.main.transform.position);
+AtlasHelper.Material.SetVector(AtlasHelper._Shader_Input[0],camPos);
 }
 
 //...
 
+if(AddingTrees.Count==0){
 foreach(var player in players){if(!player.Value.HasValue||player.Key.IsLocalPlayer){continue;}if(LOG&&LOG_LEVEL<=-100)Debug.Log("net player .."+player.Key.network.OwnerClientId+".. changed coord: .."+player.Value);
 var pCoord_Pre=player.Value.Value.cCoord_Pre;var pCoord=player.Value.Value.cCoord;
 
@@ -390,6 +397,7 @@ _skip:{}
 if(iCoord.x==0){break;}}}
 if(iCoord.y==0){break;}}}
 }
+}
 
 //...
 
@@ -423,8 +431,10 @@ navMeshAsyncOperation=NavMeshBuilder.UpdateNavMeshDataAsync(navMeshData,navMeshB
 
 //...
 
+if(AddingTrees.Count==0){
 var keys=players.Keys.ToList();for(int i=0;i<keys.Count;++i){players[keys[i]]=null;}
 firstLoop=false;
+}
 }
 if(NetworkManager.Singleton.IsClient&&!NetworkManager.Singleton.IsHost){
 
@@ -434,10 +444,18 @@ var keys=players.Keys.ToList();for(int i=0;i<keys.Count;++i){players[keys[i]]=nu
 firstLoop=false;
 }
 }
+[NonSerialized]public static readonly Dictionary<int,TerrainChunk>AddingTrees=new Dictionary<int,TerrainChunk>();
 public static void OnTerrainReadyForNature(TerrainChunk chunk,string path){
 
 //...
+AddingTrees.Add(chunk.cnkIdx,chunk);
 chunk.nature.Start=true;
+
+}
+public static void OnTerrainNatureUpdate(TerrainChunk chunk){
+
+//...
+AddingTrees.Remove(chunk.cnkIdx);
 
 }
 public static void OnPlayerRemoved(UNetDefaultPrefab player,bool LOG,int LOG_LEVEL){
