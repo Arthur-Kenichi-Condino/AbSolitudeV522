@@ -947,7 +947,7 @@ if(current.step==NatureStep.calc_plants){
 if(GroundHits[current.d].Count==0){
 Debug.LogWarning("NatureTask step 2.1.");
 //Debug.LogWarning(current.biomePlants.Value.Count);
-float radius=(float)current.biomePlants.Value[current.p].Item1.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+float radius=(float)current.biomePlants.Value[current.p].Item1.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);float spacingMultiplier=(float)current.biomePlants.Value[current.p].Item1.GetField("spacing",BindingFlags.Public|BindingFlags.Static).GetValue(null);
 Vector2Int spacing=Vector2Int.zero;
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
@@ -958,6 +958,7 @@ for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
 //if(spacing.x>0||spacing.y>0){
 //spacing.x--;
 //}
+if(spacing.x-->0&&vCoord1.x<Width-1)continue;
 for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
 
 //...
@@ -967,7 +968,8 @@ Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
 //if(spacing.x>0||spacing.y>0){
 //spacing.y--;
 //}else 
-if(vCoord1.x>spacing.x&&vCoord1.z>spacing.y&&biome.plants(noiseInput,current.biomePlants.Value[current.p].Item1,chancePerlin,current.biomePlants.Value[current.p].Item2,out float result)){
+if(spacing.y-->0&&vCoord1.z<Depth-1)continue;
+if(biome.plants(noiseInput,current.biomePlants.Value[current.p].Item1,chancePerlin,current.biomePlants.Value[current.p].Item2,out float result)){
 Vector3 from=vCoord1;
         from.x+=cnkRgn1.x-Width/2f;
         from.z+=cnkRgn1.y-Depth/2f;
@@ -975,15 +977,19 @@ Vector3 from=vCoord1;
 GetGroundRays.AddNoResize(new RaycastCommand(from,Vector3.down,128f+1f,PhysHelper.TerrainOnlyLayer));
 GetGroundHits.AddNoResize(new RaycastHit    ()                                                     );
 castsvCoords.Add((vCoord1.x,vCoord1.z));
-spacing.x=vCoord1.x+(int)(radius*(result+1f))+1;
-spacing.y=vCoord1.z+(int)(radius*(result+1f))+1;
+//spacing.x=vCoord1.x+(int)(((radius*(result+1f))+1)*spacingMultiplier);
+//spacing.y=vCoord1.z+(int)(((radius*(result+1f))+1)*spacingMultiplier);
 //...
 Debug.LogWarning(spacing+" "+result);
 
 }
+spacing.y=(int)(radius*spacingMultiplier);
+Debug.LogWarning(spacing);
 //}
 
 }
+spacing.y=0;
+spacing.x=(int)(radius*spacingMultiplier);
 }
 
 //...

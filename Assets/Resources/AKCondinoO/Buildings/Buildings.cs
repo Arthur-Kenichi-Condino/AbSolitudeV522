@@ -44,6 +44,9 @@ SphereCollider radiusCollider=(SphereCollider)plantType.GetField("radiusCollider
 //...
 plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).SetValue(null,radiusCollider.radius*plant.transform.lossyScale.y);
 Debug.LogWarning(radiusCollider.radius+" "+plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null));
+
+float spacingMultiplier=(float)plantType.GetField("spacingMultiplier",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);                   
+plantType.GetField("spacing",BindingFlags.Public|BindingFlags.Static).SetValue(null,spacingMultiplier);
                     
 BoxCollider rootsCollider=(BoxCollider)plantType.GetField("rootsCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
 plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).SetValue(null,rootsCollider.size.y/2f);
