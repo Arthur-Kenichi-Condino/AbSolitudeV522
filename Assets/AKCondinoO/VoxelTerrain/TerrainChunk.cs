@@ -903,6 +903,7 @@ public static bool Stop{
 get{bool tmp;lock(Stop_Syn){tmp=Stop_v;      }return tmp;}
 set{         lock(Stop_Syn){    Stop_v=value;}if(value){enqueued.Set();}}
 }[NonSerialized]static readonly object Stop_Syn=new object();[NonSerialized]static bool Stop_v=false;[NonSerialized]readonly Task task;public void Wait(){try{task.Wait();}catch(Exception e){Debug.LogError(e?.Message+"\n"+e?.StackTrace+"\n"+e?.Source);}}
+[NonSerialized]public static Perlin chancePerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
 public NatureTask(bool LOG,int LOG_LEVEL){
 
 //...
@@ -912,7 +913,6 @@ void BG(object state){Thread.CurrentThread.IsBackground=false;Thread.CurrentThre
 try{
 if(state is object[]parameters&&parameters[0]is bool LOG&&parameters[1]is int LOG_LEVEL){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("inicializar trabalho em plano de fundo para posicionar vegetação no terreno");
-Perlin           chancePerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
 Perlin    scaleModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
 Perlin rotationModifierPerlin=new Perlin(frequency:Mathf.Pow(2,-2),lacunarity:2.0,persistence:0.5,octaves:6,seed:0,quality:QualityMode.Low);
 while(!Stop){enqueued.WaitOne();if(Stop){enqueued.Set();goto _Stop;}if(queued.TryDequeue(out NatureData dequeued)){RenewData(dequeued);}else{continue;};if(queued.Count>0){enqueued.Set();}foregroundData.WaitOne();
@@ -952,7 +952,7 @@ Vector2Int spacing=Vector2Int.zero;
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
-          chancePerlin.Seed=cnkRgn1.x+cnkRgn1.y;
+          //chancePerlin.Seed=cnkRgn1.x+cnkRgn1.y;
 Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
 for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
 //if(spacing.x>0||spacing.y>0){
@@ -1035,7 +1035,7 @@ int index=vCoord1.z+vCoord1.x*Depth;
 
 //...
 if(GroundHits[current.d].TryGetValue(index,out RaycastHit floor)){
-if(ObstructionHits[current.d][index].normal==Vector3.zero){
+//if(ObstructionHits[current.d][index].normal==Vector3.zero){
 //Debug.LogWarning(floor.point);
 Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
                            noiseInput.z+=cnkRgn1.y;
@@ -1044,7 +1044,7 @@ var modifiers=biome.plantModifiers(noiseInput,current.biomePlants.Value[current.
 var rotation=Quaternion.FromToRotation(Vector3.up,floor.normal)*Quaternion.Euler(new Vector3(0f,modifiers.rotation,0f));
 
 plants.plantAt.Add((floor.point-(floor.normal*buryRootsDepth*modifiers.scale.y),rotation.eulerAngles,modifiers.scale,current.biomePlants.Value[current.p].Item1));
-}
+//}
 }
 
 }
