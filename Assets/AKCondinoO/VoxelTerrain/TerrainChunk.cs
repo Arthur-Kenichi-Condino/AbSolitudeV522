@@ -732,6 +732,7 @@ enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[
 [NonSerialized]WaitUntil waitUntil_backgroundData;
 [NonSerialized]public bool Start;[NonSerialized]WaitUntil waitTerrain;
 [NonSerialized]WaitUntil waitUntilDequeued;
+[NonSerialized]readonly List<(int layer,string tag,string name,bool isPlant,Type plantType)>colliders=new List<(int,string,string,bool,Type)>();
 [NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
 
 //...
@@ -802,6 +803,8 @@ ObstructionHits[d][index]=default(RaycastHit);
 ++i;}
 }
 }
+colliders.Clear();Plant plantComponent;
+colliders.AddRange(GetObstructionHits.AsArray().ToList().ConvertAll(h=>h.collider==null?(-1,null,null,false,null):((plantComponent=h.collider.GetComponent<Plant>())==null?(h.collider.gameObject.layer,h.collider.tag,h.collider.name,false,null):(h.collider.gameObject.layer,h.collider.tag,h.collider.name,true,plantComponent.GetType()))));
 
 if(d>valueDone){
 Debug.LogWarning("not done");
@@ -872,6 +875,7 @@ public static void StartNew(NatureData state){queued.Enqueue(state);enqueued.Set
 NatureData current{get;set;}AutoResetEvent foregroundData{get;set;}ManualResetEvent backgroundData{get;set;}
 string treesFile{get{return current.treesFile;}set{current.treesFile=value;}}
 PlantsData plants{get;set;}
+List<(int layer,string tag,string name,bool isPlant,Type plantType)>colliders{get;set;}
 void RenewData(NatureData next){
 current=next;
 GetGroundRays=next.GetGroundRays;castsvCoords=next.castsvCoords;
@@ -882,7 +886,7 @@ GetObstructionHits=next.GetObstructionHits;ObstructionHits=next.ObstructionHits;
 //...
 
 foregroundData=next.foregroundData;backgroundData=next.backgroundData;
-plants=next.plants;
+plants=next.plants;colliders=next.colliders;
 }
 void ReleaseData(){
 castsvCoords=null;
@@ -892,8 +896,7 @@ foregroundData=null;backgroundData=null;
 
 //...
 
-plants=null;
-current=null;
+plants=null;colliders=null;current=null;
 }
 #endregion current processing data
 
@@ -947,7 +950,7 @@ if(current.step==NatureStep.calc_plants){
 if(GroundHits[current.d].Count==0){
 Debug.LogWarning("NatureTask step 2.1.");
 //Debug.LogWarning(current.biomePlants.Value.Count);
-float radius=(float)current.biomePlants.Value[current.p].Item1.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);float spacingMultiplier=(float)current.biomePlants.Value[current.p].Item1.GetField("spacing",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+float radius=(float)current.biomePlants.Value[current.p].Item1.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null);float spacingMultiplier=(float)current.biomePlants.Value[current.p].Item1.GetField("spacingMultiplier",BindingFlags.Public|BindingFlags.Static).GetValue(null);
 Vector2Int spacing=Vector2Int.zero;
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
@@ -1022,20 +1025,21 @@ castsvCoords.Add((vCoord1.x,vCoord1.z));
 Debug.LogWarning("NatureTask step 2.3.");
 
 //.../*plants.plantAt.Add((noiseInput,current.biomePlants.Value[0]));*/
-float buryRootsDepth=(float)current.biomePlants.Value[current.p].Item1.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+bool ignoreCollisions=(bool)current.biomePlants.Value[current.p].Item1.GetField("ignoreCollisions",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+float buryRootsDepth=(float)current.biomePlants.Value[current.p].Item1.GetField( "buryRootsDepth" ,BindingFlags.Public|BindingFlags.Static).GetValue(null);
 var cCoord1=plants.cCoord;
 var cnkRgn1=plants.cnkRgn;
 var cnkIdx1=plants.cnkIdx;
    scaleModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
 rotationModifierPerlin.Seed=cnkRgn1.x+cnkRgn1.y;
-Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);
+Vector3Int vCoord1=new Vector3Int(0,Height/2-1,0);int i=0;
 for(vCoord1.x=0             ;vCoord1.x<Width;vCoord1.x++){
 for(vCoord1.z=0             ;vCoord1.z<Depth;vCoord1.z++){
 int index=vCoord1.z+vCoord1.x*Depth;
 
 //...
 if(GroundHits[current.d].TryGetValue(index,out RaycastHit floor)){
-//if(ObstructionHits[current.d][index].normal==Vector3.zero){
+if(ignoreCollisions||ObstructionHits[current.d][index].normal==Vector3.zero||(colliders[i].isPlant&&(bool)colliders[i].plantType.GetField("ignoreCollisions",BindingFlags.Public|BindingFlags.Static).GetValue(null))){
 //Debug.LogWarning(floor.point);
 Vector3 noiseInput=vCoord1;noiseInput.x+=cnkRgn1.x;
                            noiseInput.z+=cnkRgn1.y;
@@ -1044,7 +1048,7 @@ var modifiers=biome.plantModifiers(noiseInput,current.biomePlants.Value[current.
 var rotation=Quaternion.FromToRotation(Vector3.up,floor.normal)*Quaternion.Euler(new Vector3(0f,modifiers.rotation,0f));
 
 plants.plantAt.Add((floor.point-(floor.normal*buryRootsDepth*modifiers.scale.y),rotation.eulerAngles,modifiers.scale,current.biomePlants.Value[current.p].Item1));
-//}
+}if(ObstructionHits[current.d][index].normal!=Vector3.zero){++i;}
 }
 
 }

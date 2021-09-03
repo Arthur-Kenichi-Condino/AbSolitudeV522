@@ -39,18 +39,18 @@ Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<Sim
 if(sO is Plant plant){
 Type plantType;ReadOnlyCollection<(Type type,float chance,Vector3 minScale,Vector3 maxScale)>biomes=(ReadOnlyCollection<(Type,float,Vector3,Vector3)>)(plantType=plant.GetType()).GetField("Biomes").GetValue(null);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("biomes count for "+plantType+":.."+biomes.Count);
-SphereCollider radiusCollider=(SphereCollider)plantType.GetField("radiusCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
+//SphereCollider radiusCollider=(SphereCollider)plantType.GetField("radiusCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
 
 //...
-plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).SetValue(null,radiusCollider.radius*plant.transform.lossyScale.y);
-Debug.LogWarning(radiusCollider.radius+" "+plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null));
+//plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).SetValue(null,radiusCollider.radius*plant.transform.lossyScale.y);
+//Debug.LogWarning(radiusCollider.radius+" "+plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null));
 
-float spacingMultiplier=(float)plantType.GetField("spacingMultiplier",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);                   
-plantType.GetField("spacing",BindingFlags.Public|BindingFlags.Static).SetValue(null,spacingMultiplier);
+//float spacingMultiplier=(float)plantType.GetField("spacingMultiplier",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);                   
+//plantType.GetField("spacing",BindingFlags.Public|BindingFlags.Static).SetValue(null,spacingMultiplier);
                     
-BoxCollider rootsCollider=(BoxCollider)plantType.GetField("rootsCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
-plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).SetValue(null,rootsCollider.size.y/2f);
-Debug.LogWarning((rootsCollider.size.y/2f)+" "+plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).GetValue(null));
+//BoxCollider rootsCollider=(BoxCollider)plantType.GetField("rootsCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
+//plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).SetValue(null,rootsCollider.size.y/2f);
+//Debug.LogWarning((rootsCollider.size.y/2f)+" "+plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).GetValue(null));
 
 foreach(var biome in biomes){
 if(LOG&&LOG_LEVEL<=1)Debug.Log(plantType+"..is in biome.."+biome);

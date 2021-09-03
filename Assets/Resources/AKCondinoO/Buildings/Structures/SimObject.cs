@@ -29,7 +29,7 @@ public string type{get;set;}public int id{get;set;}
 public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]bool disabling;[NonSerialized]bool unplace;[NonSerialized]bool unplacing;[NonSerialized]int unplacedId;
 [NonSerialized]bool releaseId;
-[NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;
+[NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;[NonSerialized]bool validate;
 [NonSerialized]public NetworkObject network;[NonSerialized]bool networkHidden;[NonSerialized]protected bool atServer;
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
 [NonSerialized]public new Collider[]collider;[NonSerialized]public new Rigidbody rigidbody;
@@ -48,6 +48,7 @@ pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=Getc
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am awaking at.."+pos+"..and my cCoord is.."+cCoord+"..,so my cnkIdx is.."+cnkIdx,this);
 
 //...
+previousPosition=transform.position;previousRotation=transform.eulerAngles;
 
 }
 public class SimObjectTask{
@@ -209,6 +210,8 @@ public virtual bool IsOutOfSight{get{return IsOutOfSight_v;}protected set{if(IsO
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now..IsOutOfSight:"+value+"..my id is.."+id,this);
 }}
 }[NonSerialized]protected bool IsOutOfSight_v;
+[NonSerialized]protected Vector3 previousPosition,
+                                 previousRotation;
 [NonSerialized]bool firstLoop=true;
 [NonSerialized]Vector3    actPos;
 [NonSerialized]Vector2Int aCoord,aCoord_Pre;
@@ -270,9 +273,9 @@ if(pos.y<-128){//  marque como fora do mundo (sem opção de testar como dentro do
 if(LOG&&LOG_LEVEL<=-120)Debug.Log("I am out of the World (pos.y.."+pos.y+"..<-128)",this);
 Disable();
 unplace=true;
-}else if(IsOverlappingNonAlloc()){
+}else if(validate&&IsOverlappingNonAlloc()){
 
-//...
+//... if(!firstLoop&&!enabling&&transform.position==previousPosition&&transform.eulerAngles==previousRotation){return false;}
 Debug.LogWarning("IsOverlappingNonAlloc");
 Disable();
 unplace=true;
@@ -296,7 +299,7 @@ if(networkHidden)foreach(var client in NetworkManager.ConnectedClients){if(clien
 network.NetworkShow(client.Key);}
 networkHidden=false;
 }
-firstLoop=false;enabling=false;}
+firstLoop=false;if(enabling||transform.position!=previousPosition||transform.eulerAngles!=previousRotation){validate=true;}else{validate=false;}enabling=false;}
 if(backgroundData.WaitOne(0)){
 if(id!=-1){
 #region get data if loaded or set if saving...
@@ -365,6 +368,7 @@ backgroundData.Reset();foregroundData.Set();SimObjectTask.StartNew(this);
 }
 }
 NetworkUpdate();
+previousPosition=transform.position;previousRotation=transform.eulerAngles;
 }
 protected virtual void NetworkUpdate(){
 if(NetworkManager.Singleton.IsServer){
