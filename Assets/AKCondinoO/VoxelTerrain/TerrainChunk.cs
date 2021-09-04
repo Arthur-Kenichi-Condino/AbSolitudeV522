@@ -734,19 +734,15 @@ enum NatureStep{idle,load_plants_done,calc_plants,save_plants,save_plants_done}[
 [NonSerialized]WaitUntil waitUntilDequeued;
 [NonSerialized]readonly List<(int layer,string tag,string name,bool isPlant,Type plantType)>colliders=new List<(int,string,string,bool,Type)>();
 [NonSerialized]Coroutine update;public IEnumerator Update(bool LOG,int LOG_LEVEL){_Loop:{
-
-//...
+if(LOG&&LOG_LEVEL<=1)Debug.Log("waitTerrain");
 yield return waitTerrain;Start=false;plants.ready=false;
 plants.cnkIdx=chunk.cnkIdx;
 plants.cCoord=chunk.cCoord;
 plants.cnkRgn=chunk.cnkRgn;
-
-//...
-Debug.LogWarning("nature makes its move...plants!");
-Debug.LogWarning("load file to get pValuesDone steps/plants and dValuesDone depths already done for each biome");
+if(LOG&&LOG_LEVEL<=1)Debug.Log("nature makes its move...plants!");
 step=NatureStep.load_plants_done;
 treesFile=string.Format("{0}{1}",path,"trees.MessagePack");
-Debug.LogWarning(treesFile);
+if(LOG&&LOG_LEVEL<=1)Debug.Log("NatureStep.load_plants_done:load file to get valuesDone for each biome;treesFile:.."+treesFile);
 backgroundData.Reset();foregroundData.Set();NatureTask.StartNew(this);
 yield return waitUntil_backgroundData;
 b=0;foreach(KeyValuePair<Type,List<(Type,float,Vector3,Vector3)>>biomePlants in BiomeBase.PlantsByBiome){this.biomePlants=biomePlants;
@@ -983,11 +979,11 @@ castsvCoords.Add((vCoord1.x,vCoord1.z));
 //spacing.x=vCoord1.x+(int)(((radius*(result+1f))+1)*spacingMultiplier);
 //spacing.y=vCoord1.z+(int)(((radius*(result+1f))+1)*spacingMultiplier);
 //...
-Debug.LogWarning(spacing+" "+result);
+//Debug.LogWarning(spacing+" "+result);
 
 }
 spacing.y=(int)(radius*spacingMultiplier);
-Debug.LogWarning(spacing);
+//Debug.LogWarning(spacing);
 //}
 
 }

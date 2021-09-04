@@ -25,14 +25,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0d95224ec76cd544938e42a2287eb71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LOG: 1
+  LOG: 0
   LOG_LEVEL: 1
   GIZMOS_ENABLED: 1
   savingInterval: 120
   DEBUG_UNPLACE: 0
-  radiusCollider: {fileID: 357035262730149215}
-  spacingMultiplier: 0.25
-  rootsCollider: {fileID: 2151113106243719699}
 --- !u!1001 &6341390415836803007
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -90,11 +87,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 789d48b3e70120d43acf080a652ebeec, type: 3}
---- !u!135 &357035262730149215 stripped
-SphereCollider:
-  m_CorrespondingSourceObject: {fileID: 6698353832152625888, guid: 789d48b3e70120d43acf080a652ebeec, type: 3}
-  m_PrefabInstance: {fileID: 6341390415836803007}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8423977532728648407
 PrefabInstance:
   m_ObjectHideFlags: 0

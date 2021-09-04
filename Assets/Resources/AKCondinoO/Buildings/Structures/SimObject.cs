@@ -32,16 +32,17 @@ public Type type{get;protected set;}public int id{get;protected set;}
 [NonSerialized]public(Type type,int id,int?cnkIdx)?loadTuple=null;[NonSerialized]bool loaded;[NonSerialized]bool enable;[NonSerialized]bool enabling;[NonSerialized]bool validate;
 [NonSerialized]public NetworkObject network;[NonSerialized]bool networkHidden;[NonSerialized]protected bool atServer;
 [NonSerialized]public readonly NetworkVariableVector3 networkPosition=new NetworkVariableVector3(new NetworkVariableSettings{WritePermission=NetworkVariablePermission.ServerOnly,ReadPermission=NetworkVariablePermission.Everyone,});
-[NonSerialized]public new Collider[]collider;[NonSerialized]public new Rigidbody rigidbody;
+[NonSerialized]public new Collider[]collider;[NonSerialized]public new Rigidbody rigidbody;[NonSerialized]public new Renderer[]renderer;
 protected virtual void Awake(){if(transform.parent!=Buildings.staticScript.transform){transform.parent=Buildings.staticScript.transform;}
 type=GetType();id=-1;
 saveTransform.type=type.FullName;
 saveStateData.type=type.FullName;
 network=GetComponent<NetworkObject>();
 network.CheckObjectVisibility=((clientId)=>{return!networkHidden;});
-collider=GetComponents<Collider>();rigidbody=GetComponent<Rigidbody>();
+collider=GetComponents<Collider>();rigidbody=GetComponent<Rigidbody>();renderer=GetComponentsInChildren<Renderer>();
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I got instantiated and I am of type.."+type+"..now, add myself to sim objects pool",this);
 foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
+foreach(var ren in renderer){ren.enabled=false;}
 Buildings.Disabled.Add(this);Buildings.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
 DisabledNode=SimObjectPool[type].AddLast(this);
 pos=pos_Pre=transform.position;cCoord=cCoord_Pre=vecPosTocCoord(pos);cnkIdx=GetcnkIdx(cCoord.x,cCoord.y);
@@ -251,7 +252,7 @@ if((resultsLength=Physics.OverlapBoxNonAlloc(collider[i].bounds.center,size/2f,i
 for(int j=0;j<resultsLength;++j){var overlapping=isOverlappingNonAllocResults[j];if(overlapping==null)break;
 if(overlapping==collider[i])continue;if(overlapping.isTrigger)continue;if(overlapping.gameObject==this.gameObject)continue;if(overlapping.GetComponent<Rigidbody>()!=null)continue;
 
-Debug.LogWarning(overlapping.name,overlapping);
+//Debug.LogWarning(overlapping.name,overlapping);
 
 result=true;break;
 }
@@ -262,6 +263,7 @@ return result;}
 void Disable(){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("I am now being deactivated so I can sleep until I'm needed..my id:"+id,this);
 foreach(var col in collider){col.enabled=false;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.FreezeAll;}
+foreach(var ren in renderer){ren.enabled=false;}
 Buildings.Disabled.Add(this);Buildings.Enabled.Remove(this);IsOutOfSight=true;if(LOG&&LOG_LEVEL<=1){Debug.Log("Buildings.Enabled.Count:"+Buildings.Enabled.Count+"..Buildings.Disabled.Count:"+Buildings.Disabled.Count,this);}
 RemoveFromNavMesh();
 if(!networkHidden)foreach(var client in NetworkManager.ConnectedClients){if(client.Key==NetworkManager.Singleton.ServerClientId)continue;
@@ -294,6 +296,7 @@ unplace=true;
 DEBUG_UNPLACE=false;
 }else if(enabling){
 foreach(var col in collider){col.enabled=true;}if(rigidbody){rigidbody.velocity=Vector3.zero;rigidbody.angularVelocity=Vector3.zero;rigidbody.constraints=RigidbodyConstraints.None;}
+foreach(var ren in renderer){ren.enabled=true;}
 AddToNavMesh();
 if(networkHidden)foreach(var client in NetworkManager.ConnectedClients){if(client.Key==NetworkManager.Singleton.ServerClientId)continue;
 network.NetworkShow(client.Key);}

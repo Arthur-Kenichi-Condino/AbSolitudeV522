@@ -36,28 +36,23 @@ foreach(var o in objects){var p=o as GameObject;var sO=p.GetComponent<SimObject>
 Prefabs[t]=p;SimObjectPool[t]=new LinkedList<SimObject>();Loaded[t]=new List<SimObject>();Loading[t]=new List<(Type type,int id,int cnkIdx)>();
 
 //...
+
 if(sO is Plant plant){
 Type plantType;ReadOnlyCollection<(Type type,float chance,Vector3 minScale,Vector3 maxScale)>biomes=(ReadOnlyCollection<(Type,float,Vector3,Vector3)>)(plantType=plant.GetType()).GetField("Biomes").GetValue(null);
 if(LOG&&LOG_LEVEL<=1)Debug.Log("biomes count for "+plantType+":.."+biomes.Count);
-//SphereCollider radiusCollider=(SphereCollider)plantType.GetField("radiusCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
-
-//...
-//plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).SetValue(null,radiusCollider.radius*plant.transform.lossyScale.y);
-//Debug.LogWarning(radiusCollider.radius+" "+plantType.GetField("radius",BindingFlags.Public|BindingFlags.Static).GetValue(null));
-
-//float spacingMultiplier=(float)plantType.GetField("spacingMultiplier",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);                   
-//plantType.GetField("spacing",BindingFlags.Public|BindingFlags.Static).SetValue(null,spacingMultiplier);
-                    
-//BoxCollider rootsCollider=(BoxCollider)plantType.GetField("rootsCollider",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(plant);
-//plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).SetValue(null,rootsCollider.size.y/2f);
-//Debug.LogWarning((rootsCollider.size.y/2f)+" "+plantType.GetField("buryRootsDepth",BindingFlags.Public|BindingFlags.Static).GetValue(null));
-
 foreach(var biome in biomes){
 if(LOG&&LOG_LEVEL<=1)Debug.Log(plantType+"..is in biome.."+biome);
 BiomeBase.PlantsByBiome[biome.type].Add((plantType,biome.chance,biome.minScale,biome.maxScale));
 }
+int poolSize=(int)plantType.GetField("poolSize",BindingFlags.Public|BindingFlags.Static).GetValue(null);
+if(LOG&&LOG_LEVEL<=1)Debug.Log(plantType+" poolSize: "+poolSize);
+for(int i=0;i<poolSize;++i){
+Instantiate(p);
 }
 
+//...
+
+}
 if(LOG&&LOG_LEVEL<=1)Debug.Log("prefab "+o.name+" (type "+t+") registered");
 }
 
@@ -163,9 +158,13 @@ while(!Stop){if(!backgroundData2.WaitOne(0))backgroundData2.Set();Thread.Sleep(1
 
 //...
 
+waitUntilInstantiationRequested=new WaitUntil(()=>instantiating&&backgroundData2.WaitOne(0)
+                                                               &&backgroundData1.WaitOne(0));
+instantiation=StartCoroutine(Instantiation());            
 }
 [NonSerialized]static bool disposed;
 void OnDestroy(){
+StopCoroutine(instantiation);
 #region exit save
 backgroundData1.WaitOne();
 backgroundData1.Reset();foregroundData1.Set();
@@ -207,6 +206,37 @@ if(NetworkManager.Singleton.IsServer){
 if(reloadTimer>0){reloadTimer-=Time.deltaTime;}
 if(backgroundData2.WaitOne(0)){
 if(backgroundData1.WaitOne(0)){
+if(!instantiating){
+if(createdAnything){
+backgroundData1.Reset();foregroundData1.Set();
+}
+
+//...
+
+if(firstLoop||reloadTimer<=0||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
+                              actPos=(Camera.main.transform.position);
+if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
+                              actRgn=(cCoordTocnkRgn(aCoord));
+reloadTimer=reloadInterval;
+foreach(var l in SimObjectPool){var list=l.Value;for(var node=list.First;node!=null;node=node.Next){load_Syn_All.Remove(node.Value.load_Syn);}}
+backgroundData2.Reset();foregroundData2.Set();
+}
+}
+
+//...
+
+}instantiating=true;
+}
+}
+}
+}
+[NonSerialized]bool createdAnything;
+[NonSerialized]System.Diagnostics.Stopwatch instantiatingTimer=new System.Diagnostics.Stopwatch();[NonSerialized]double instantiatingMaxFrameTime=16.0;
+[NonSerialized]bool instantiating=false;[NonSerialized]WaitUntil waitUntilInstantiationRequested;[NonSerialized]Coroutine instantiation;public IEnumerator Instantiation(){System.Diagnostics.Stopwatch instantiatingStopwatch=new System.Diagnostics.Stopwatch();_Loop:{
+yield return waitUntilInstantiationRequested;bool maxFrameTimeElapsed(){bool result=false;if(instantiatingTimer.Elapsed.TotalMilliseconds>instantiatingMaxFrameTime){instantiatingTimer.Restart();result=true;}return result;}instantiatingTimer.Restart();
+instantiatingStopwatch.Restart();
+Debug.LogWarning("instantiating");                
+                
 SimObject Create(Type type,Vector3 position,Vector3 rotation){
 _getSimObject:{}
 if(SimObjectPool[type].Count>0){//  get from pool
@@ -218,6 +248,7 @@ goto _getSimObject;
 }
 #region process loading values
 foreach(var loading in Loading){var type=loading.Key;foreach(var loadTuple in loading.Value){
+if(maxFrameTimeElapsed()){yield return null;}
 if(LOG&&LOG_LEVEL<=1)Debug.Log("loading:..type:"+type+"..id:"+loadTuple.id);
 foreach(var simObjectLoaded in Loaded[type]){
 if(simObjectLoaded.loadTuple.HasValue&&simObjectLoaded.loadTuple.Value.id==loadTuple.id){
@@ -232,7 +263,7 @@ _next:{}
 }loading.Value.Clear();
 }
 #endregion   
-bool createdAnything=false;SimObject Creation(SimObject simObject,Vector3 at,Vector3 rotated){
+SimObject Creation(SimObject simObject,Vector3 at,Vector3 rotated){
 if(LOG&&LOG_LEVEL<=1)Debug.Log("Creation after prefab of:.."+simObject);
 
 //...
@@ -259,9 +290,10 @@ createdAnything=true;
 return simObjectToLoad;}
 while(plantsToCreate.Count>0){var plantsData=plantsToCreate.Dequeue();
 
-Debug.LogWarning("plantsData:"+plantsData.plantAt.Count);
+//Debug.LogWarning("plantsData:"+plantsData.plantAt.Count);
 foreach(var plant in plantsData.plantAt){
 
+if(maxFrameTimeElapsed()){yield return null;}
 Creation(Prefabs[plant.type].GetComponent<SimObject>(),plant.position,plant.rotation).transform.localScale=plant.scale;
 
 }
@@ -290,28 +322,10 @@ Creation(DEBUG_CREATE_SIM_OBJECT,DEBUG_CREATE_SIM_OBJECT_POSITION,DEBUG_CREATE_S
 DEBUG_CREATE_SIM_OBJECT=null;
 //backgroundData1.Reset();foregroundData1.Set();
 }
-if(createdAnything){
-backgroundData1.Reset();foregroundData1.Set();
-}
 
-//...
-
-if(firstLoop||reloadTimer<=0||actPos!=Camera.main.transform.position){if(LOG&&LOG_LEVEL<=-110){Debug.Log("actPos anterior:.."+actPos+"..;actPos novo:.."+Camera.main.transform.position);}
-                              actPos=(Camera.main.transform.position);
-if(firstLoop |reloadTimer<=0 |aCoord!=(aCoord=vecPosTocCoord(actPos))){if(LOG&&LOG_LEVEL<=1){Debug.Log("aCoord novo:.."+aCoord+"..;aCoord_Pre:.."+aCoord_Pre);}
-                              actRgn=(cCoordTocnkRgn(aCoord));
-reloadTimer=reloadInterval;
-foreach(var l in SimObjectPool){var list=l.Value;for(var node=list.First;node!=null;node=node.Next){load_Syn_All.Remove(node.Value.load_Syn);}}
-backgroundData2.Reset();foregroundData2.Set();
-}
-}
-
-//...
-
-}
-}
-}
-}
+Debug.LogWarning("instantiating took "+instantiatingStopwatch.ElapsedMilliseconds+"ms");                
+instantiating=false;
+goto _Loop;}}
 public static void OnTerrainReadyForTrees(TerrainChunk chunk,string path){
 
 //...
